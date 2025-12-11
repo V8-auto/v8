@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payments Management</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #0f1724; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+    button { cursor: pointer; padding: 8px 12px; margin: 5px; border: none; border-radius: 5px; }
+    .add-btn { background: #007bff; color: white; }
+    .edit-btn { background: #ffc107; color: white; }
+    .delete-btn { background: #dc3545; color: white; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 10px; }
+    th, td { padding: 12px 15px; text-align: left; }
+    thead { background: #007bff; color: white; }
+    tbody tr:nth-child(even) { background: #f1f5fb; }
+    tbody tr:hover { background: #e8f0ff; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+    .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .modal-content h2 { margin-bottom: 20px; }
+    .modal-content input, select { width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 5px; border: 1px solid #ccc; }
+    .modal-actions { text-align: right; }
+</style>
+</head>
+<body>
+
+<h1 style="color: #ccc;">Payments Management</h1>
+<button class="add-btn" onclick="openModal('add')">Add Payment</button>
+
+<table>
+    <thead>
+        <tr>
+            <th>Client</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Method</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="payments-table"></tbody>
+</table>
+
+<!-- Modal -->
+<div id="payment-modal" class="modal">
+    <div class="modal-content">
+        <h2 id="modal-title">Add Payment</h2>
+        <select id="payment-client"></select>
+        <input type="number" id="payment-amount" placeholder="Amount">
+        <input type="date" id="payment-date">
+        <select id="payment-method">
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+        </select>
+        <div class="modal-actions">
+            <button onclick="closeModal()">Cancel</button>
+            <button id="modal-submit-btn">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+ const firebaseConfig = {
+  apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+  authDomain: "solidflow-1f753.firebaseapp.com",
+  projectId: "solidflow-1f753",
+  storageBucket: "solidflow-1f753.firebasestorage.app",
+  messagingSenderId: "68885400864",
+  appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+  measurementId: "G-RTL0CM1B44"
+};
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const paymentsCollection = db.collection('payments');
+  const clientsCollection = db.collection('clients');
+  let editId = null;
+
+  // Populate client dropdown
+  function populateClients() {
+    const clientSelect = document.getElementById('payment-client');
+    clientSelect.innerHTML = '';
+    clientsCollection.get().then(snapshot => {
+        snapshot.forEach(doc => {
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.text = doc.data().name;
+            clientSelect.add(option);
+        });
+    });
+  }
+
+  // Modal functions
+  function openModal(type, id = null) {
+    const modal = document.getElementById('payment-modal');
+    modal.style.display = 'block';
+    editId = id;
+    populateClients();
+
+    const title = document.getElementById('modal-title');
+    const submitBtn = document.getElementById('modal-submit-btn');
+    const amountInput = document.getElementById('payment-amount');
+    const dateInput = document.getElementById('payment-date');
+    const methodSelect = document.getElementById('payment-method');
+
+    if(type === 'add') {
+        title.innerText = 'Add Payment';
+        submitBtn.innerText = 'Add';
+        amountInput.value = '';
+        dateInput.value = '';
+        methodSelect.value = 'Cash';
+        submitBtn.onclick = addPayment;
+    } else if(type === 'edit') {
+        title.innerText = 'Edit Payment';
+        submitBtn.innerText = 'Update';
+        paymentsCollection.doc(id).get().then(doc => {
+            if(doc.exists) {
+                const data = doc.data();
+                document.getElementById('payment-client').value = data.clientId;
+                amountInput.value = data.amount;
+                dateInput.value = data.date;
+                methodSelect.value = data.method;
+            }
+        });
+        submitBtn.onclick = updatePayment;
+    }
+  }
+
+  function closeModal() { document.getElementById('payment-modal').style.display = 'none'; }
+
+  function addPayment() {
+    const clientId = document.getElementById('payment-client').value;
+    const amount = parseFloat(document.getElementById('payment-amount').value);
+    const date = document.getElementById('payment-date').value;
+    const method = document.getElementById('payment-method').value;
+
+    paymentsCollection.add({ clientId, amount, date, method }).then(closeModal);
+  }
+
+  function updatePayment() {
+    const clientId = document.getElementById('payment-client').value;
+    const amount = parseFloat(document.getElementById('payment-amount').value);
+    const date = document.getElementById('payment-date').value;
+    const method = document.getElementById('payment-method').value;
+
+    paymentsCollection.doc(editId).update({ clientId, amount, date, method }).then(closeModal);
+  }
+
+  function deletePayment(id) {
+    if(confirm("Are you sure you want to delete this payment?")) {
+      paymentsCollection.doc(id).delete();
+    }
+  }
+
+  // Real-time rendering
+  paymentsCollection.onSnapshot(snapshot => {
+    const tbody = document.getElementById('payments-table');
+    tbody.innerHTML = '';
+    snapshot.forEach(doc => {
+      const payment = doc.data();
+      clientsCollection.doc(payment.clientId).get().then(clientDoc => {
+        const clientName = clientDoc.exists ? clientDoc.data().name : 'Unknown';
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${clientName}</td>
+          <td>$${payment.amount.toFixed(2)}</td>
+          <td>${payment.date}</td>
+          <td>${payment.method}</td>
+          <td>
+            <button class="edit-btn" onclick="openModal('edit', '${doc.id}')">Edit</button>
+            <button class="delete-btn" onclick="deletePayment('${doc.id}')">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    });
+  });
+
+  // Close modal when clicking outside
+  window.onclick = function(event) {
+    const modal = document.getElementById('payment-modal');
+    if(event.target === modal) closeModal();
+  }
+</script>
+</body>
+</html>

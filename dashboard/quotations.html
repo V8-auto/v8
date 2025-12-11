@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quotations Management</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #0f1724; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+    button { cursor: pointer; padding: 8px 12px; margin: 5px; border: none; border-radius: 5px; }
+    .add-btn { background: #007bff; color: white; }
+    .edit-btn { background: #ffc107; color: white; }
+    .delete-btn { background: #dc3545; color: white; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 10px; }
+    th, td { padding: 12px 15px; text-align: left; }
+    thead { background: #007bff; color: white; }
+    tbody tr:nth-child(even) { background: #f1f5fb; }
+    tbody tr:hover { background: #e8f0ff; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+    .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .modal-content h2 { margin-bottom: 20px; }
+    .modal-content input, select { width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 5px; border: 1px solid #ccc; }
+    .modal-actions { text-align: right; }
+</style>
+</head>
+<body>
+
+<h1 style="color: #ccc;">Quotations Management</h1>
+<button class="add-btn" onclick="window.location.href='/dashboard/quote.html'">Create Quote</button>
+<button class="add-btn" onclick="openModal('add')">Add Quotation</button>
+
+<table>
+    <thead>
+        <tr>
+            <th>Quotation #</th>
+            <th>Client</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="quotations-table"></tbody>
+</table>
+
+<!-- Modal -->
+<div id="quotation-modal" class="modal">
+    <div class="modal-content">
+        <h2 id="modal-title">Add Quotation</h2>
+        <select id="quotation-client"></select>
+        <input type="text" id="quotation-number" placeholder="Quotation Number">
+        <input type="date" id="quotation-date">
+        <input type="number" id="quotation-amount" placeholder="Amount">
+        <select id="quotation-status">
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Rejected">Rejected</option>
+        </select>
+        <div class="modal-actions">
+            <button onclick="closeModal()">Cancel</button>
+            <button id="modal-submit-btn">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+  authDomain: "solidflow-1f753.firebaseapp.com",
+  projectId: "solidflow-1f753",
+  storageBucket: "solidflow-1f753.firebasestorage.app",
+  messagingSenderId: "68885400864",
+  appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+  measurementId: "G-RTL0CM1B44"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const quotationsCollection = db.collection('quotations');
+const clientsCollection = db.collection('clients');
+let editId = null;
+
+function populateClients() {
+    const clientSelect = document.getElementById('quotation-client');
+    clientSelect.innerHTML = '';
+    clientsCollection.get().then(snapshot => {
+        snapshot.forEach(doc => {
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.text = doc.data().name;
+            clientSelect.add(option);
+        });
+    });
+}
+
+function openModal(type, id = null) {
+    const modal = document.getElementById('quotation-modal');
+    modal.style.display = 'block';
+    editId = id;
+    populateClients();
+
+    const title = document.getElementById('modal-title');
+    const submitBtn = document.getElementById('modal-submit-btn');
+
+    const numberInput = document.getElementById('quotation-number');
+    const dateInput = document.getElementById('quotation-date');
+    const amountInput = document.getElementById('quotation-amount');
+    const statusSelect = document.getElementById('quotation-status');
+
+    if(type === 'add') {
+        title.innerText = 'Add Quotation';
+        submitBtn.innerText = 'Add';
+        numberInput.value = '';
+        dateInput.value = '';
+        amountInput.value = '';
+        statusSelect.value = 'Pending';
+        submitBtn.onclick = addQuotation;
+    } else if(type === 'edit') {
+        title.innerText = 'Edit Quotation';
+        submitBtn.innerText = 'Update';
+        quotationsCollection.doc(id).get().then(doc => {
+            if(doc.exists) {
+                const data = doc.data();
+                document.getElementById('quotation-client').value = data.clientId;
+                numberInput.value = data.number;
+                dateInput.value = data.date;
+                amountInput.value = data.amount;
+                statusSelect.value = data.status;
+            }
+        });
+        submitBtn.onclick = updateQuotation;
+    }
+}
+
+function closeModal() { document.getElementById('quotation-modal').style.display = 'none'; }
+
+function addQuotation() {
+    const clientId = document.getElementById('quotation-client').value;
+    const number = document.getElementById('quotation-number').value;
+    const date = document.getElementById('quotation-date').value;
+    const amount = parseFloat(document.getElementById('quotation-amount').value);
+    const status = document.getElementById('quotation-status').value;
+
+    quotationsCollection.add({ clientId, number, date, amount, status }).then(closeModal);
+}
+
+function updateQuotation() {
+    const clientId = document.getElementById('quotation-client').value;
+    const number = document.getElementById('quotation-number').value;
+    const date = document.getElementById('quotation-date').value;
+    const amount = parseFloat(document.getElementById('quotation-amount').value);
+    const status = document.getElementById('quotation-status').value;
+
+    quotationsCollection.doc(editId).update({ clientId, number, date, amount, status }).then(closeModal);
+}
+
+function deleteQuotation(id) {
+    if(confirm("Are you sure you want to delete this quotation?")) {
+        quotationsCollection.doc(id).delete();
+    }
+}
+
+// Real-time rendering
+quotationsCollection.onSnapshot(snapshot => {
+    const tbody = document.getElementById('quotations-table');
+    tbody.innerHTML = '';
+    snapshot.forEach(doc => {
+        const quotation = doc.data();
+        clientsCollection.doc(quotation.clientId).get().then(clientDoc => {
+            const clientName = clientDoc.exists ? clientDoc.data().name : 'Unknown';
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${quotation.number}</td>
+                <td>${clientName}</td>
+                <td>${quotation.date}</td>
+                <td>$${quotation.amount.toFixed(2)}</td>
+                <td>${quotation.status}</td>
+                <td>
+                    <button class="edit-btn" onclick="openModal('edit','${doc.id}')">Edit</button>
+                    <button class="delete-btn" onclick="deleteQuotation('${doc.id}')">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    });
+});
+
+window.onclick = function(event) {
+    const modal = document.getElementById('quotation-modal');
+    if(event.target === modal) closeModal();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Invoicing SaaS — demo</title>
+    <style>
+      :root {
+        --brand: #0b73ff;
+        --muted: #666;
+        --card: #fff;
+        --bg: #f4f6fb;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial;
+      }
+      body {
+        background: var(--bg);
+        color: #111;
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 28px auto;
+        padding: 18px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand .logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--brand), #6ad1ff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+      }
+      .card {
+        background: var(--card);
+        padding: 14px;
+        border-radius: 10px;
+        box-shadow: 0 6px 18px rgba(20, 30, 80, 0.06);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 14px;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      button {
+        background: var(--brand);
+        color: white;
+        border: 0;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--brand);
+        border: 1px solid rgba(11, 115, 255, 0.12);
+      }
+      input,
+      select,
+      textarea {
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #e6e9ef;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      label {
+        font-size: 13px;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 6px;
+      }
+      .small {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .invoice-preview {
+        padding: 18px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #eef2f7;
+      }
+      .line-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .list {
+        max-height: 520px;
+        overflow: auto;
+      }
+      .invoice-card {
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #eef2f7;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .primary-total {
+        font-weight: 700;
+        color: var(--brand);
+      }
+      .right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+      }
+      hr {
+        border: 0;
+        border-top: 1px dashed #e9edf6;
+        margin: 14px 0;
+      }
+      .footer {
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 14px;
+        font-size: 13px;
+      }
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .wrap {
+          padding: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="warning">
+        ⚠️ <strong>Demo mode:</strong> Data is stored in memory only. Refreshing
+        the page will clear all invoices.
+      </div>
+
+      <header>
+        <div class="brand">
+          <div class="logo">IS</div>
+          <div>
+            <div style="font-weight: 700; font-size: 16px">
+              Invoicing SaaS — Demo
+            </div>
+            <div class="small">In-memory storage (session only)</div>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="newInvoiceBtn">New invoice</button>
+          <button id="downloadAll" class="ghost">Export all (JSON)</button>
+          <button id="clearAll" class="ghost">Clear data</button>
+        </div>
+      </header>
+
+      <div class="grid">
+        <div>
+          <div class="card">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+              "
+            >
+              <div style="font-weight: 700">Invoice editor</div>
+              <div class="small">Draft in memory</div>
+            </div>
+
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px"
+            >
+              <div>
+                <label
+                  >Invoice #: <input id="invoiceNumber" placeholder="INV-0001"
+                /></label>
+              </div>
+              <div>
+                <label>Issue date: <input id="issueDate" type="date" /></label>
+              </div>
+              <div>
+                <label
+                  >Client name:
+                  <input id="clientName" placeholder="Client Inc."
+                /></label>
+              </div>
+              <div>
+                <label
+                  >Client email:
+                  <input id="clientEmail" placeholder="client@example.com"
+                /></label>
+              </div>
+            </div>
+
+            <hr />
+
+            <div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 8px;
+                "
+              >
+                <div style="font-weight: 700">Line items</div>
+                <button id="addLine" class="ghost">Add item</button>
+              </div>
+
+              <table id="linesTable" class="invoice-preview">
+                <thead>
+                  <tr>
+                    <th style="width: 50%">Description</th>
+                    <th style="width: 12%">Qty</th>
+                    <th style="width: 18%">Unit price</th>
+                    <th style="width: 12%">Total</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="linesBody"></tbody>
+              </table>
+
+              <div
+                style="
+                  display: flex;
+                  justify-content: flex-end;
+                  gap: 12px;
+                  margin-top: 10px;
+                "
+              >
+                <div style="width: 220px">
+                  <label
+                    >Tax % <input id="taxPct" type="number" min="0" value="0"
+                  /></label>
+                </div>
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  justify-content: flex-end;
+                  gap: 16px;
+                  margin-top: 12px;
+                  align-items: center;
+                "
+              >
+                <div class="muted">Subtotal:</div>
+                <div id="subtotal" class="primary-total">0.00</div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: flex-end;
+                  gap: 16px;
+                  margin-top: 4px;
+                  align-items: center;
+                "
+              >
+                <div class="muted">Tax:</div>
+                <div id="taxAmt" class="primary-total">0.00</div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: flex-end;
+                  gap: 16px;
+                  margin-top: 4px;
+                  align-items: center;
+                  font-size: 18px;
+                "
+              >
+                <div style="font-weight: 700">Total:</div>
+                <div id="grandTotal" class="primary-total">0.00</div>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 12px">
+                <button id="saveInvoice">Save invoice</button>
+                <button id="printInvoice" class="ghost">Print / PDF</button>
+                <button id="downloadInvoice" class="ghost">
+                  Download JSON
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer small">
+            This is a demo app with in-memory storage. Data persists only during
+            the current session.
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+              "
+            >
+              <div style="font-weight: 700">Invoices</div>
+              <div class="small">Saved in memory</div>
+            </div>
+
+            <div class="list" id="invoicesList">
+              <!-- invoice cards -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template id="lineRowTpl">
+      <tr>
+        <td><input class="li-desc" placeholder="Item description" /></td>
+        <td><input class="li-qty" type="number" min="0" value="1" /></td>
+        <td>
+          <input
+            class="li-price"
+            type="number"
+            min="0"
+            step="0.01"
+            value="0.00"
+          />
+        </td>
+        <td class="li-total">0.00</td>
+        <td class="line-actions">
+          <button class="removeItem ghost">Remove</button>
+        </td>
+      </tr>
+    </template>
+
+
+<script src="/assets/js/api.js"></script>
+
+  </body>
+</html>

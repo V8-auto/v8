@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register - SolidFlow</title>
+<style>
+    body { font-family: Arial; background: #f5f7fa; display:flex; justify-content:center; align-items:center; height:100vh; }
+    .container { background:white; padding:20px; border-radius:10px; width:300px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+    input { width:100%; padding:8px; margin:8px 0; box-sizing:border-box; }
+    button { width:100%; padding:10px; background:#007bff; color:white; border:none; border-radius:5px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Register</h2>
+    <input type="text" id="name" placeholder="Full Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button onclick="registerUser()">Register</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+    authDomain: "solidflow-1f753.firebaseapp.com",
+    projectId: "solidflow-1f753",
+    storageBucket: "solidflow-1f753.firebasestorage.app",
+    messagingSenderId: "68885400864",
+    appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+    measurementId: "G-RTL0CM1B44"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function registerUser() {
+    const name = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    if(!name || !email || !password) { 
+        msg.textContent="All fields required!"; 
+        return; 
+    }
+
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(userCredential => {
+            const user = userCredential.user;
+            return db.collection('users').doc(user.uid).set({
+                username: name,
+                email: email,
+                password: password,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        })
+        .then(() => {
+            msg.style.color = "green";
+            msg.textContent = "Registered successfully! Redirecting...";
+            setTimeout(() => window.location.href="dashboard.html", 1500);
+        })
+        .catch(error => {
+            msg.style.color = "red";
+            msg.textContent = error.message;
+        });
+}
+</script>
+</body>
+</html>

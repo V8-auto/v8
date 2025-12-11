@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - SolidFlow</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+    body {
+      background: #f0f2f5;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .logo {
+      font-size: 30px;
+      color: #007bff;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    label {
+      font-size: 14px;
+      color: #444;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 6px;
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 5px;
+    }
+
+    button:hover {
+      background: #005fcc;
+    }
+
+    .extra-links {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .extra-links a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #333;
+      color: white;
+      padding: 14px 18px;
+      border-radius: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="logo">SolidFlow</div>
+    <h2>Sign In</h2>
+
+    <label>Email</label>
+    <input type="email" id="email" placeholder="you@example.com" />
+
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" />
+
+    <button onclick="login()">Login</button>
+
+    <div class="extra-links">
+      <p><a href="/forgot.html">Forgot Password?</a></p>
+      <p>Don't have an account? <a href="/register.html">Register</a></p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Authentication failed</div>
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+    authDomain: "solidflow-1f753.firebaseapp.com",
+    projectId: "solidflow-1f753",
+    storageBucket: "solidflow-1f753.appspot.com",
+    messagingSenderId: "68885400864",
+    appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+    measurementId: "G-RTL0CM1B44"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  async function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      // Sign in with Firebase Auth
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+
+      // Fetch user info from Firestore "users" collection
+      const snapshot = await db.collection('users')
+  .where('email', '==', email)
+  .limit(1)
+  .get();
+
+if (snapshot.empty) {
+  throw new Error('User record not found in Firestore');
+}
+
+const userData = snapshot.docs[0].data();
+      // Optionally store user info locally
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      // Redirect to dashboard
+      window.location.href = '/dashboard/index.html';
+    } catch (err) {
+      console.error(err);
+      showToast('Login failed — check email & password');
+    }
+  }
+
+  function showToast(message) {
+    alert(message); // simple toast replacement
+  }
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</body>
+</html>

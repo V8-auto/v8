@@ -1,0 +1,159 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f5f7fa;
+    color: #1a1a1a;
+}
+
+/* NAVBAR */
+.navbar {
+    background: white;
+    padding: 15px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 25px;
+}
+
+.nav-links li {
+    cursor: pointer;
+    font-size: 15px;
+    color: #333;
+}
+
+.profile {
+    font-size: 22px;
+    cursor: pointer;
+}
+
+/* CONTAINER */
+.container {
+    width: 90%;
+    margin: 30px auto;
+}
+
+/* KPI CARDS */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+    font-size: 26px;
+    margin-bottom: 10px;
+}
+
+/* QUICK ACTIONS */
+.quick-actions {
+    margin: 30px 0;
+    display: flex;
+    gap: 15px;
+}
+
+.quick-actions button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.quick-actions button:hover {
+    background: #005fcc;
+}
+
+/* TABLE */
+.table-section {
+    margin-top: 40px;
+}
+
+.table-section h2 {
+    margin-bottom: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+thead {
+    background: #007bff;
+    color: white;
+}
+
+th, td {
+    padding: 14px;
+    font-size: 14px;
+}
+
+tbody tr:nth-child(even) {
+    background: #f1f5fb;
+}
+
+.status {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: white;
+}
+
+.paid { background: #28a745; }
+.pending { background: #ffc107; color: black; }
+.overdue { background: #dc3545; }
+
+.view-btn {
+    background: #333;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+    .cards {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .quick-actions {
+        flex-direction: column;
+    }
+
+    table {
+        font-size: 12px;
+    }
+}
