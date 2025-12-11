@@ -66,9 +66,23 @@
         z-index: 40;
         backdrop-filter: blur(6px) saturate(120%);
       }
+       .close-btn {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: white;     /* match sidebar text color */
+          display: none;    /* hidden by default */
+        }
+        .sidebar.open .close-btn {
+          display: block;   /* show when sidebar opens */
+        }
       .brand {
-        display: flex;
-        gap: 12px;
+        display: block;
+        gap: 20px;
         align-items: center;
       }
        .menu-toggle {
@@ -81,10 +95,10 @@
         padding: 6px 8px;
       }
       .logo {
-        height: 40px;
-        width: 40px;
+        height: 80px;
+        width: 80px;
         border-radius: 10px;
-        background: var(--accent1);
+        background: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -322,7 +336,14 @@
         cursor: pointer;
         border: 1px solid rgba(255, 255, 255, 0.02);
       }
-
+       @media (min-width: 1024px) {
+          .hambtn {
+            display: none;
+          }
+          .close-btn {
+            display: none;
+          }
+        }
       /* SETTINGS drawer & profile modal */
       .settings-drawer {
         position: fixed;
@@ -411,9 +432,7 @@
         .searchbar {
           width: 100%;
         }
-        .nav a .label {
-          display: none;
-        }
+        
         .panel {
           padding: 12px;
         }
@@ -481,10 +500,11 @@
   <body>
     <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar open" aria-hidden="false">
+      <button id="closeSidebar" class="close-btn" aria-label="Close menu">✕</button>
       <div class="brand">
-        <div class="logo">SF</div>
+        <div class="logo"><img src="/assets/img/solidflo-logo.png" style="height: 60px;" alt=""></div>
         <div>
-          <h1>SolidFlow</h1>
+          
           <p class="mini muted">Invoices & Billing</p>
         </div>
       </div>
@@ -1048,11 +1068,16 @@
       /* -------------------------
    Sidebar mobile toggle and click-out
    ------------------------- */
-      const sidebarEl = document.getElementById("sidebar");
+     const sidebarEl = document.getElementById("sidebar");
       const hambtn = document.getElementById("hambtn");
+         const closeBtn = document.getElementById("closeSidebar");
       hambtn.addEventListener("click", () =>
         sidebarEl.classList.toggle("open")
       );
+      closeBtn.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        sidebar.setAttribute("aria-hidden", "true");
+      });
       document.addEventListener("click", (e) => {
         if (window.innerWidth <= 820) {
           const inside =
@@ -1082,11 +1107,11 @@
    ------------------------- */
       document
         .getElementById("newInvoiceBtn")
-        .addEventListener("click", async () => {window.location.href = "/dashboard/invoice.html";
+        .addEventListener("click", async () => {window.location.href = "invoice.html";
         });
       document
         .getElementById("newQuoteBtn")
-        .addEventListener("click", async () => {window.location.href = "/dashboard/quote.html";
+        .addEventListener("click", async () => {window.location.href = "quote.html";
         });
     </script>
    

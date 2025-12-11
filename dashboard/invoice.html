@@ -56,6 +56,21 @@
         z-index: 40;
         backdrop-filter: blur(6px) saturate(120%);
       }
+      .close-btn {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: white;     /* match sidebar text color */
+          display: none;    /* hidden by default */
+        }
+        .sidebar.open .close-btn {
+          display: block;   /* show when sidebar opens */
+        }
+
         @media (max-width: 820px) {
         .sidebar {
           position: fixed;
@@ -815,6 +830,14 @@
         cursor: pointer;
         border: 1px solid rgba(255, 255, 255, 0.02);
       }
+       @media (min-width: 1024px) {
+          .hambtn {
+            display: none;
+          }
+          .close-btn {
+            display: none;
+          }
+        }
       .nav {
         margin-top: 6px;
         display: flex;
@@ -871,11 +894,12 @@
         <button class="hambtn" id="hambtn" style="color: #cfe9f7;" aria-label="Open menu">☰</button>
       </div>
        <aside id="sidebar" class="sidebar" aria-hidden="true">
+         <button id="closeSidebar" class="close-btn" aria-label="Close menu">✕</button>
       <div class="brand">
         <div class="logo">S-F</div>
         <div>
-          <h1>SolidFlow</h1>
-          <p class="mini muted">Invoices & Billing</p>
+         
+          <p class="mini muted" style="color: #cfe9f7;">Invoices & Billing</p>
         </div>
       </div>
 
@@ -1407,9 +1431,14 @@ function calculateTotalAmount() {
 }
    const sidebarEl = document.getElementById("sidebar");
       const hambtn = document.getElementById("hambtn");
+      const closeBtn = document.getElementById("closeSidebar");
       hambtn.addEventListener("click", () =>
         sidebarEl.classList.toggle("open")
       );
+      closeBtn.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        sidebar.setAttribute("aria-hidden", "true");
+      });
       document.addEventListener("click", (e) => {
         if (window.innerWidth <= 820) {
           const inside =
