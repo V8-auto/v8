@@ -14,25 +14,6 @@
         font-family: Arial, sans-serif;
         background: #0f1724;
       }
-
-      /* Top Header with Logo and Buttons */
-      .top-header {
-        background: #0f1724;
-        padding: 15px 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-      }
-      body {
-        padding-top: 90px;
-      }
       .logo-section {
         display: flex;
         align-items: center;
@@ -56,13 +37,45 @@
         font-weight: bold;
         color: #333;
       }
-
+    .main-container {
+        display: flex;
+        height: 100vh;      /* full viewport height */
+        overflow: hidden;   /* no body scroll */
+        align-items: stretch; /* make children fill height */
+      }
+      .sidebar {
+        width: 260px;
+        background: rgba(15, 23, 36);
+        border-right: 1px solid rgba(255, 255, 255, 0.03);
+        padding: 28px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        transform: translateX(0);
+        transition: var(--transition);
+        z-index: 40;
+        backdrop-filter: blur(6px) saturate(120%);
+      }
+        @media (max-width: 820px) {
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          height: 100vh;
+          transform: translateX(-320px);
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+      }
       .invoice-container {
-        max-width: 210mm;
-        margin: 0 auto;
-        background: white;
-        padding: 40px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        background-color: #cfe9f7;
+        flex: 1;              /* fills remaining width next to sidebar */
+        overflow-y: auto;     /* vertical scroll if content overflows */
+        padding: 10px;        /* optional internal padding */
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
       }
 
       /* Action Buttons */
@@ -497,12 +510,19 @@
     print-color-adjust: exact !important;
   }
   
-  body {
+  body,html {
     margin: 0;
     padding: 0;
     background: white;
   }
-  
+  .main-container {
+  display: flex;
+  height: 100vh; /* full viewport height */
+  overflow: hidden; /* prevent body scroll */
+}
+  #sidebar {
+      display: none !important;
+    }
   /* Main invoice container */
   .invoice-container {
     width: 100%;
@@ -511,28 +531,10 @@
     padding: 15mm 10mm; /* Adjust margins for A4 paper */
     box-shadow: none;
     background: white;
+    display: flex;
+    flex-direction: column;
   }
-  
-  /* Header section */
-  .header {
-    border-bottom: 2px solid #333 !important;
-    padding-bottom: 6px !important;
-    margin-bottom: 8px !important;
-  }
-  
-  .header img {
-    max-width: 250px !important; /* Smaller logo for print */
-  }
-  
- .header-info {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: flex-start !important;
-    gap: 15px !important;
-    margin-top: 6px !important;
-  }
-  
+    
   /* LEFT SIDE: Contact info */
   .contact-info img {
     width: 110px !important;
@@ -560,15 +562,16 @@
   }
   
   /* Invoice meta */
-   .invoice-meta {
+  .invoice-meta {
     flex: 0 0 auto !important;
     width: 40% !important;
-    max-width: 40% !important;
+    max-width: 100% !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-end !important;
     gap: 4px !important;
     margin-bottom: 0 !important;
+    margin-left: auto !important;
   }
   
   .invoice-type {
@@ -800,59 +803,135 @@
           display: none !important;
         }
       }
+       .hambtn {
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        background: var(--glass);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+      }
+      .nav {
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        color: #cfe9f7;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: var(--transition);
+        font-size: 14px;
+      }
+      .nav a .ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+      }
+      .nav a:hover {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        transform: translateX(4px);
+      }
+      .nav a.active {
+        background: linear-gradient(
+          90deg,
+          rgba(124, 58, 237, 0.15),
+          rgba(6, 182, 212, 0.06)
+        );
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+      }
+      .spacer {
+        flex: 1;
+      }
     </style>
   </head>
   <body>
-    <div class="top-header">
-      <div class="logo-section">
-        <div class="logo">V8</div>
-        <div class="logo-text" style="color: #ccc">V8 Powered Auto</div>
+   
+    <div class="main-container">
+      <div class="top-left">
+        <button class="hambtn" id="hambtn" style="color: #cfe9f7;" aria-label="Open menu">☰</button>
       </div>
-      <div class="action-buttons" id="actionMenu">
-        <button
-          class="menu-toggle"
-          onclick="toggleMenu()"
+       <aside id="sidebar" class="sidebar" aria-hidden="true">
+      <div class="brand">
+        <div class="logo">S-F</div>
+        <div>
+          <h1>SolidFlow</h1>
+          <p class="mini muted">Invoices & Billing</p>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <a class="active" href="/dashboard/index.html"
+          ><span class="ico">🏠</span><span class="label">Dashboard</span></a
         >
-          ☰ Menu
-        </button>
-        <div class="menu-items" style="display: flex; gap: 10px">
-          <button
-            class="btn btn-success"
-            onclick="window.location.href='/dashboard/index.html'"
-          >
-            Home
-          </button>
-          <button
-            class="btn btn-success"
-            onclick="window.location.href='/dashboard/invoice.html'"
-          >
-            Invoice
-          </button>
-          <button
-            class="btn btn-success"
-            onclick="window.location.href='/dashboard/quote.html'"
-          >
-            Quotation
-          </button>
-          <button class="btn btn-secondary" onclick="createNew()">
-            Create New
-          </button>
+        <a href="/dashboard/invoices.html"
+          ><span class="ico">📄</span><span class="label">Invoices</span></a
+        >
+        <a href="/dashboard/clients.html"
+          ><span class="ico">👥</span><span class="label">Clients</span></a
+        >
+        <a href="/dashboard/payments.html"
+          ><span class="ico">💳</span><span class="label">Payments</span></a
+        >
          <button class="btn btn-secondary" onclick="saveInvoiceToFirebase()">
   Save
 </button>
           <button class="btn btn-primary" onclick="savePDF()">
             Save as PDF
           </button>
+        <a href="#"
+          ><span class="ico">📊</span><span class="label">Reports</span></a
+        >
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="flex">
+        <div
+          style="
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: var(--glass);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          👤
+        </div>
+        <div>
+          <div style="font-weight: 700" id="profileName">User</div>
+          <div class="mini muted" id="profileRole">Admin</div>
         </div>
       </div>
-    </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div style="display: flex; gap: 20px">
       <div class="invoice-container" id="invoice" style="flex: block">
       
         <!-- Header -->
         <div class="header">
-  <div class="header-info">
+  <div class="header-info" style="display: flex;">
     <!-- LEFT SIDE: Logo and Contact Info -->
     <div class="contact-info">
       <div><img src="/assets/img/v8-logo.png" alt="" style="width: 200px;"></div>
@@ -1245,6 +1324,13 @@ window.invoiceCounter = invoiceCounter;
       initializeInvoice();
       // Initialize
       calculateTotals();
+
+      const overlay = document.getElementById("sidebarOverlay");
+        overlay.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        sidebar.setAttribute("aria-hidden", true);
+      });
+
     </script>
     <script
       type="text/javascript"
@@ -1270,38 +1356,69 @@ window.invoiceCounter = invoiceCounter;
       const analytics = getAnalytics(app);
     </script>
     <script>
-async function saveInvoiceToFirebase() {
-   const clientId = document.getElementById('invoice-client').value;
-    const number = document.getElementById('invoice-number').value;
-    const date = document.getElementById('invoice-date').value;
-    const amount = parseFloat(document.getElementById('invoice-amount').value);
-    const status = document.getElementById('invoice-status').value;
-
-    invoicesCollection.add({ clientId, number, date, amount, status })
-
-  // Create invoice object
+async function saveInvoiceFirebase() {
   const invoiceData = {
-    invoiceNumber,
-    clientName,
-    issueDate,
-    amount: totalAmount,
-    createdAt: new Date()
+    invoiceNumber: document.getElementById("invoiceNumber").value,
+    issueDate: document.getElementById("issueDate").value,
+    merchantCode: document.getElementById("merchantCode").value,
+    serviceType: document.getElementById("serviceType").value,
+
+    clientName: document.getElementById("clientName").value,
+    emailAddress: document.getElementById("emailAddress").value,
+    clientInfo: document.getElementById("clientInfo").value,
+
+    regNumber: document.getElementById("regNumber").value,
+    make: document.getElementById("make").value,
+    model: document.getElementById("model").value,
+    engine: document.getElementById("engine").value,
+    vinNumber: document.getElementById("vinNumber").value,
+    odometer: document.getElementById("odometer").value,
+    preAuth: document.getElementById("preAuth").value,
+    authCode: document.getElementById("authCode").value,
+
+    items: Array.from(document.querySelectorAll("#itemsBody tr.item-row")).map(row => ({
+      description: row.querySelector(".item-desc").value,
+      quantity: parseFloat(row.querySelector(".item-qty").value),
+      unitPrice: parseFloat(row.querySelector(".item-price").value),
+      netPrice: parseFloat(row.querySelector(".net-price").textContent.replace(/[^\d\.]/g,''))
+    })),
+
+    subtotal: document.getElementById("subtotal").textContent,
+    vat: document.getElementById("vat").textContent,
+    total: document.getElementById("total").textContent,
+
+    createdAt: new Date().toISOString()
   };
 
   try {
-    const docRef = await addDoc(collection(window.db, "invoices"), invoiceData);
-    alert("Invoice saved!");
+    // Save invoice using invoiceNumber as document ID (for easy editing)
+    const docRef = doc(window.db, "invoices", invoiceData.invoiceNumber);
+    await setDoc(docRef, invoiceData);
+    alert("Invoice saved successfully!");
   } catch (e) {
-    console.error("Error adding document: ", e);
+    console.error("Error saving invoice:", e);
     alert("Failed to save invoice.");
   }
 }
-
 // Example total calculator — replace with your own logic
 function calculateTotalAmount() {
   const totalElement = document.getElementById("totalAmount");
   return parseFloat(totalElement?.value || 0);
 }
+   const sidebarEl = document.getElementById("sidebar");
+      const hambtn = document.getElementById("hambtn");
+      hambtn.addEventListener("click", () =>
+        sidebarEl.classList.toggle("open")
+      );
+      document.addEventListener("click", (e) => {
+        if (window.innerWidth <= 820) {
+          const inside =
+            sidebarEl.contains(e.target) ||
+            hambtn.contains(e.target) ||
+            document.getElementById("settingsDrawer").contains(e.target);
+          if (!inside) sidebarEl.classList.remove("open");
+        }
+      });
 </script>
 
   </body>
