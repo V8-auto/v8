@@ -330,11 +330,7 @@
         top: 0;
         width: 380px;
         height: 100%;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.02),
-          rgba(255, 255, 255, 0.01)
-        );
+        background: rgb(15, 23, 36);
         border-left: 1px solid rgba(255, 255, 255, 0.03);
         padding: 20px;
         transition: var(--transition);
@@ -486,7 +482,7 @@
     <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar open" aria-hidden="false">
       <div class="brand">
-        <div class="logo">IP</div>
+        <div class="logo">SF</div>
         <div>
           <h1>SolidFlow</h1>
           <p class="mini muted">Invoices & Billing</p>
@@ -512,8 +508,10 @@
       </nav>
 
       <div class="spacer"></div>
-
+        <button class="btn ghost" id="openSettings">Settings</button>
+        <button class="btn ghost" id="openProfile">Profile</button>
       <div class="flex">
+
         <div
           style="
             width: 44px;
@@ -528,6 +526,7 @@
           👤
         </div>
         <div>
+          
           <div style="font-weight: 700" id="profileName">User</div>
           <div class="mini muted" id="profileRole">Admin</div>
         </div>
@@ -571,9 +570,9 @@
         </div>
 
         <div class="actions">
-          <button class="btn ghost" id="openSettings">Settings</button>
-          <button class="btn ghost" id="openProfile">Profile</button>
+          
           <button class="btn primary" id="newInvoiceBtn">+ New Invoice</button>
+           <button class="btn primary" id="newQuoteBtn">+ New Quote</button>
         </div>
       </header>
 
@@ -1083,15 +1082,11 @@
    ------------------------- */
       document
         .getElementById("newInvoiceBtn")
-        .addEventListener("click", async () => {
-          // quick create minimal invoice via mock
-          const created = mockApi.simulateNewInvoice();
-          if (created) {
-            await refreshDashboard(await mockApi.loadSettings());
-            alert("Created invoice " + created.id);
-          } else {
-            alert("No invoice created this time, try again.");
-          }
+        .addEventListener("click", async () => {window.location.href = "invoice.html";
+        });
+      document
+        .getElementById("newQuoteBtn")
+        .addEventListener("click", async () => {window.location.href = "quote.html";
         });
     </script>
    
@@ -1165,4 +1160,3 @@ invoicesCollection.onSnapshot(snapshot => {
     </script>
   </body>
 </html>
-
