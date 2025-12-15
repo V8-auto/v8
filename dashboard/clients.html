@@ -1,162 +1,758 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clients Management - Firebase</title>
-<style>
-    body { font-family: Arial, sans-serif; background: #0f1724; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-    button { cursor: pointer; padding: 8px 12px; margin: 5px; border: none; border-radius: 5px; }
-    .add-btn { background: #007bff; color: white; }
-    .edit-btn { background: #ffc107; color: white; }
-    .delete-btn { background: #dc3545; color: white; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 10px; }
-    th, td { padding: 12px 15px; text-align: left; }
-    thead { background: #007bff; color: white; }
-    tbody tr:nth-child(even) { background: #f1f5fb; }
-    tbody tr:hover { background: #e8f0ff; }
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-    .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    .modal-content h2 { margin-bottom: 20px; }
-    .modal-content input { width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 5px; border: 1px solid #ccc; }
-    .modal-actions { text-align: right; }
-</style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clients List</title>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/assets/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/assets/favicon-16x16.png"
+    />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<h1 style="color: #ccc;">Clients Management</h1>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        display: flex;
+        min-height: 100vh;
+      }
 
-<button class="add-btn" onclick="openModal('add')">Add Client</button>
+      /* Sidebar styles */
+      .sidebar {
+        width: 260px;
+        background: rgb(1, 1, 41);
+        border-right: 1px solid rgba(255, 255, 255, 0.03);
+        padding: 28px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: fixed;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        transition: transform 0.3s ease;
+        z-index: 1000;
+      }
+      @media (max-width: 768px) {
+        .sidebar.mobile-hidden {
+          transform: translateX(-100%);
+        }
+      }
+      .top-left {
+        position: fixed;
+        left: 16px;
+        top: 14px;
+        z-index: 60;
+      }
+      .hambtn {
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        background: var(--glass);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+      }
+      @media (min-width: 1024px) {
+        .hambtn {
+          display: none;
+        }
+        .close-btn {
+          display: none;
+        }
+      }
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: white; 
+        display: none; 
+      }
+      .sidebar.open .close-btn {
+        display: block; 
+      }
+      .brand {
+        display: block;
+        gap: 20px;
+        align-items: center;
+      }
+      .logo {
+        height: 80px;
+        width: 80px;
+        border-radius: 10px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .nav {
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        color: #cfe9f7;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 14px;
+      }
+      .nav a:hover {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        transform: translateX(4px);
+      }
+      .nav a.active {
+        background: linear-gradient(
+          90deg,
+          rgba(124, 58, 237, 0.15),
+          rgba(6, 182, 212, 0.06)
+        );
+        color: #fff;
+      }
+      .ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .flex {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
 
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="clients-table"></tbody>
-</table>
+      /* Mobile menu toggle */
+      .mobile-toggle {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: rgb(1, 1, 41);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 20px;
+      }
 
-<!-- Modal -->
-<div id="client-modal" class="modal">
-    <div class="modal-content">
-        <h2 id="modal-title">Add Client</h2>
-        <input type="text" id="client-name" placeholder="Name">
-        <input type="email" id="client-email" placeholder="Email">
-        <input type="tel" id="client-phone" placeholder="Phone">
-        <div class="modal-actions">
-            <button onclick="closeModal()">Cancel</button>
-            <button id="modal-submit-btn">Save</button>
+      .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+
+      /* Main content area */
+      .main-content {
+        flex: 1;
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        overflow: auto;
+        margin-left: 260px;
+      }
+
+      /* Left side - Invoice list */
+      .invoices-section {
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Right side - Stats */
+      .stats-section {
+        width: 380px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .stats-card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .stats-card h3 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .total-amount {
+        font-size: 36px;
+        font-weight: bold;
+        color: #2196f3;
+        margin-bottom: 5px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-item {
+        text-align: center;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 6px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .chart-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .chart-card h3 {
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      .search-box {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .search-box input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      .btn-primary {
+        background: #2196f3;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #1976d2;
+      }
+      .btn-success {
+        background: #4caf50;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #388e3c;
+      }
+
+      /* Table wrapper for horizontal scroll on mobile */
+      .table-wrapper {
+        overflow-x: auto;
+        margin-top: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+      }
+      thead {
+        background: #333;
+        color: white;
+      }
+      th {
+        padding: 12px;
+        text-align: left;
+        font-size: 12px;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+      tbody tr:hover {
+        background: #f5f5f5;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        background: #4caf50;
+        color: white;
+      }
+
+      .edit-btn,
+      .delete-btn {
+        padding: 6px 12px;
+        margin-right: 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .edit-btn {
+        background: #2196f3;
+        color: white;
+      }
+
+      .delete-btn {
+        background: #f44336;
+        color: white;
+      }
+
+      /* Tablet breakpoint */
+      @media (max-width: 1200px) {
+        .main-content {
+          flex-direction: column;
+        }
+        .stats-section {
+          width: 100%;
+        }
+      }
+
+      /* Mobile breakpoint */
+      @media (max-width: 768px) {
+        .mobile-toggle {
+          display: block;
+        }
+
+        .sidebar {
+          transform: translateX(-100%);
+        }
+
+        .sidebar.mobile-visible {
+          transform: translateX(0);
+        }
+
+        .mobile-overlay.active {
+          display: block;
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 15px 15px 15px;
+        }
+
+        .invoices-section {
+          padding: 20px 15px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .header > div {
+          width: 100%;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .search-box {
+          flex-direction: column;
+        }
+
+        .search-box input {
+          width: 100%;
+          min-width: unset;
+        }
+
+        .total-amount {
+          font-size: 28px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .chart-card {
+          height: auto !important;
+        }
+
+        table {
+          font-size: 12px;
+        }
+
+        th,
+        td {
+          padding: 8px 6px;
+        }
+
+        .edit-btn,
+        .delete-btn {
+          padding: 4px 8px;
+          font-size: 11px;
+          display: block;
+          width: 100%;
+          margin-bottom: 4px;
+        }
+      }
+
+      /* Small mobile */
+      @media (max-width: 480px) {
+        .logo {
+          height: 60px;
+          width: 60px;
+        }
+
+        .logo img {
+          height: 40px !important;
+        }
+
+        h1 {
+          font-size: 20px;
+        }
+
+        .stats-card {
+          padding: 15px;
+        }
+
+        .total-amount {
+          font-size: 24px;
+        }
+
+        .stat-value {
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-toggle" onclick="toggleMobileMenu()">☰</button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar mobile-hidden">
+      <button id="closeSidebar" class="close-btn" aria-label="Close menu">
+        ✕
+      </button>
+      <div class="brand">
+        <div class="logo">
+          <img
+            src="/assets/img/solidflo-logo.png"
+            style="height: 60px"
+            alt=""
+          />
         </div>
+        <div>
+          <p style="color: #9aa7b2; font-size: 12px">Invoices & Billing</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="/dashboard/index.html">
+          <span class="ico">🏠</span><span>Dashboard</span>
+        </a>
+        <a href="/dashboard/invoices.html">
+          <span class="ico">📄</span><span>Invoices</span>
+        </a>
+        <a href="/dashboard/quotations.html">
+          <span class="ico">📄</span><span>Quotations</span>
+        </a>
+        <a class="active" href="/dashboard/clients.html">
+          <span class="ico">👥</span><span>Clients</span>
+        </a>
+        <a href="/dashboard/payments.html">
+          <span class="ico">💳</span><span>Payments</span>
+        </a>
+        <a href="#"> <span class="ico">📊</span><span>Reports</span> </a>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="flex">
+        <div
+          style="
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          👤
+        </div>
+        <div>
+          <div style="font-weight: 700; color: white">User</div>
+          <div style="font-size: 12px; color: #9aa7b2">Admin</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Left side - Invoices list -->
+      <div class="invoices-section">
+        <div class="header">
+          <div>
+            <h1>Clients</h1>
+            <p style="color: #666">View and manage all clients</p>
+          </div>
+          <button class="btn btn-success" onclick="openModal()">
+            + New Client
+          </button>
+        </div>
+
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by name or email..."
+            onkeyup="handleSearch()"
+          />
+          <button class="btn btn-primary" onclick="displayClientsTable()">
+            Refresh
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="clients-table">
+              <tr>
+                <td colspan="5" class="loading">Loading Clients...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right side - Stats -->
+      <div class="stats-section">
+        <!-- Total Revenue Card -->
+        <div class="stats-card">
+          <h3>Total Revenue</h3>
+          <div class="total-amount" id="totalRevenue">R 0.00</div>
+          <div style="color: #666; font-size: 14px">From all Clients</div>
+
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="totalInvoices">0</div>
+              <div class="stat-label">Total Clients</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="avgInvoice">R 0</div>
+              <div class="stat-label">Avg Invoice</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Revenue Chart -->
+        <div class="chart-card">
+          <h3>Monthly Revenue (Last 6 Months)</h3>
+          <div style="position: relative; height: 300px">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<script>
-  // --- Firebase config ---
-  const firebaseConfig = {
+    <script>
+      // Mobile menu toggle
+      function toggleMobileMenu() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.querySelector(".mobile-overlay");
+
+        sidebar.classList.toggle("mobile-visible");
+        sidebar.classList.toggle("mobile-hidden");
+        overlay.classList.toggle("active");
+      }
+
+   // Firebase config
+const firebaseConfig = {
   apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
   authDomain: "solidflow-1f753.firebaseapp.com",
   projectId: "solidflow-1f753",
   storageBucket: "solidflow-1f753.firebasestorage.app",
   messagingSenderId: "68885400864",
   appId: "1:68885400864:web:7788e19a073d9a8e79db45",
-  measurementId: "G-RTL0CM1B44"
+  measurementId: "G-RTL0CM1B44",
 };
 
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const clientsCollection = db.collection('clients');
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-  let editId = null;
+let currentUserId = null;
+let clientsCollection = null;
+let editId = null;
 
-  // Modal functions
-  function openModal(type, id = null) {
-    const modal = document.getElementById('client-modal');
-    modal.style.display = 'block';
-    editId = id;
-
-    const title = document.getElementById('modal-title');
-    const submitBtn = document.getElementById('modal-submit-btn');
-    const nameInput = document.getElementById('client-name');
-    const emailInput = document.getElementById('client-email');
-    const phoneInput = document.getElementById('client-phone');
-
-    if(type === 'add') {
-        title.innerText = 'Add Client';
-        submitBtn.innerText = 'Add';
-        nameInput.value = '';
-        emailInput.value = '';
-        phoneInput.value = '';
-        submitBtn.onclick = addClient;
-    } else if(type === 'edit') {
-        title.innerText = 'Edit Client';
-        submitBtn.innerText = 'Update';
-        // Fetch data for selected client
-        clientsCollection.doc(id).get().then(doc => {
-            if(doc.exists) {
-                const data = doc.data();
-                nameInput.value = data.name;
-                emailInput.value = data.email;
-                phoneInput.value = data.phone;
-            }
-        });
-        submitBtn.onclick = updateClient;
-    }
+// Wait for authentication
+auth.onAuthStateChanged((user) => {
+  if (user && user.emailVerified) {
+    currentUserId = user.uid;
+    firebaseReady = true;
+    
+    // Load user profile
+    loadUserProfile(user);
+    
+    // Load invoices
+    displayInvoicesTable();
+  } else {
+    // Redirect to login if not authenticated
+    window.location.href = "/login.html";
   }
+});
 
-  function closeModal() {
-    document.getElementById('client-modal').style.display = 'none';
-  }
-
-  // Add client
-  function addClient() {
-    const name = document.getElementById('client-name').value;
-    const email = document.getElementById('client-email').value;
-    const phone = document.getElementById('client-phone').value;
-
-    clientsCollection.add({ name, email, phone }).then(() => {
-        closeModal();
+// Load user profile info
+function loadUserProfile(user) {
+  db.collection("users").doc(user.uid).get()
+    .then((doc) => {
+      if (doc.exists) {
+        const userData = doc.data();
+        // Update profile display if you have these elements
+        const profileName = document.querySelector('.flex div:last-child div:first-child');
+        const profileRole = document.querySelector('.flex div:last-child div:last-child');
+        
+        if (profileName) {
+          profileName.textContent = userData.name || 'User';
+        }
+        if (profileRole) {
+          profileRole.textContent = (userData.role || 'user').charAt(0).toUpperCase() + (userData.role || 'user').slice(1);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error loading profile:", error);
     });
-  }
+}
 
-  // Update client
-  function updateClient() {
-    const name = document.getElementById('client-name').value;
-    const email = document.getElementById('client-email').value;
-    const phone = document.getElementById('client-phone').value;
+// Setup real-time listener for clients
+function setupClientsListener() {
+  if (!clientsCollection) return;
 
-    clientsCollection.doc(editId).update({ name, email, phone }).then(() => {
-        closeModal();
-    });
-  }
+  clientsCollection.onSnapshot((snapshot) => {
+    const tbody = document.getElementById("clients-table");
+    tbody.innerHTML = "";
 
-  // Delete client
-  function deleteClient(id) {
-    if(confirm("Are you sure you want to delete this client?")) {
-      clientsCollection.doc(id).delete();
+    if (snapshot.empty) {
+      tbody.innerHTML =
+        '<tr><td colspan="5" class="loading">No clients found. Click "New Client" to add one.</td></tr>';
+      updateStats([]);
+      return;
     }
-  }
 
-  // Render table in real-time
-  clientsCollection.onSnapshot(snapshot => {
-    const tbody = document.getElementById('clients-table');
-    tbody.innerHTML = '';
-    snapshot.forEach(doc => {
+    const clients = [];
+    snapshot.forEach((doc) => {
       const client = doc.data();
-      const row = document.createElement('tr');
+      clients.push({ id: doc.id, ...client });
+      
+      const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${client.name}</td>
-        <td>${client.email}</td>
-        <td>${client.phone}</td>
+        <td>${client.name || "-"}</td>
+        <td>${client.address || "-"}</td>
+        <td>${client.email || "-"}</td>
+        <td>${client.phone || "-"}</td>
         <td>
           <button class="edit-btn" onclick="openModal('edit', '${doc.id}')">Edit</button>
           <button class="delete-btn" onclick="deleteClient('${doc.id}')">Delete</button>
@@ -164,13 +760,150 @@
       `;
       tbody.appendChild(row);
     });
-  });
 
-  // Close modal on outside click
-  window.onclick = function(event) {
-    const modal = document.getElementById('client-modal');
-    if(event.target === modal) closeModal();
+    updateStats(clients);
+  }, (error) => {
+    console.error("Error fetching clients:", error);
+    const tbody = document.getElementById("clients-table");
+    tbody.innerHTML = '<tr><td colspan="5" class="loading">Error loading clients</td></tr>';
+  });
+}
+
+// Modal functions
+function openModal(type = 'add', id = null) {
+  editId = id;
+  
+  if (type === 'edit' && id) {
+    // Load client data for editing
+    clientsCollection.doc(id).get().then((doc) => {
+      if (doc.exists) {
+        const client = doc.data();
+        // You'll need to populate your modal fields here
+        // For now, using prompt as placeholder
+        const name = prompt("Edit Name:", client.name);
+        const address = prompt("Edit Address:", client.address);
+        const email = prompt("Edit Email:", client.email);
+        const phone = prompt("Edit Phone:", client.phone);
+        
+        if (name !== null) {
+          updateClient(id, { name, address, email, phone });
+        }
+      }
+    });
+  } else {
+    // Add new client (using prompts as placeholder)
+    const name = prompt("Client Name:");
+    if (name) {
+      const address = prompt("Address:");
+      const email = prompt("Email:");
+      const phone = prompt("Phone:");
+      addClient({ name, address, email, phone });
+    }
   }
-</script>
-</body>
+}
+
+function closeModal() {
+  editId = null;
+  // Add your modal close logic here
+}
+
+// Add client
+function addClient(clientData) {
+  if (!clientsCollection) {
+    alert("Please wait, initializing...");
+    return;
+  }
+
+  clientsCollection.add({
+    ...clientData,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    console.log("Client added successfully");
+    closeModal();
+  }).catch((error) => {
+    console.error("Error adding client:", error);
+    alert("Error adding client: " + error.message);
+  });
+}
+
+// Update client
+function updateClient(id, clientData) {
+  if (!clientsCollection) return;
+
+  clientsCollection.doc(id).update({
+    ...clientData,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    console.log("Client updated successfully");
+    closeModal();
+  }).catch((error) => {
+    console.error("Error updating client:", error);
+    alert("Error updating client: " + error.message);
+  });
+}
+
+// Delete client
+function deleteClient(id) {
+  if (confirm("Are you sure you want to delete this client?")) {
+    clientsCollection.doc(id).delete()
+      .then(() => {
+        console.log("Client deleted successfully");
+      })
+      .catch((error) => {
+        console.error("Error deleting client:", error);
+        alert("Error deleting client: " + error.message);
+      });
+  }
+}
+
+// Search functionality
+function handleSearch() {
+  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+  const rows = document.querySelectorAll("#clients-table tr");
+
+  rows.forEach((row) => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? "" : "none";
+  });
+}
+
+function displayClientsTable() {
+  // Refresh handled by snapshot listener
+  document.getElementById("searchInput").value = "";
+  handleSearch();
+}
+
+// Update statistics
+function updateStats(clients) {
+  const totalClients = clients.length;
+  document.getElementById("totalInvoices").textContent = totalClients;
+  
+  // You can calculate revenue from invoices later
+  // For now, just showing client count
+  document.getElementById("totalRevenue").textContent = "R 0.00";
+  document.getElementById("avgInvoice").textContent = "R 0";
+}
+
+// Mobile menu toggle
+
+
+// Security - Disable right-click and dev tools
+document.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  return false;
+});
+
+document.addEventListener("keydown", (e) => {
+  if (
+    e.keyCode === 123 || // F12
+    (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+    (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+    (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+  ) {
+    e.preventDefault();
+    return false;
+  }
+});
+    </script>
+  </body>
 </html>

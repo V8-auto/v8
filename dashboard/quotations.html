@@ -1,73 +1,646 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quotations Management</title>
-<style>
-    body { font-family: Arial, sans-serif; background: #0f1724; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-    button { cursor: pointer; padding: 8px 12px; margin: 5px; border: none; border-radius: 5px; }
-    .add-btn { background: #007bff; color: white; }
-    .edit-btn { background: #ffc107; color: white; }
-    .delete-btn { background: #dc3545; color: white; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 10px; }
-    th, td { padding: 12px 15px; text-align: left; }
-    thead { background: #007bff; color: white; }
-    tbody tr:nth-child(even) { background: #f1f5fb; }
-    tbody tr:hover { background: #e8f0ff; }
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-    .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    .modal-content h2 { margin-bottom: 20px; }
-    .modal-content input, select { width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 5px; border: 1px solid #ccc; }
-    .modal-actions { text-align: right; }
-</style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quotations List</title>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/assets/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/assets/favicon-16x16.png"
+    />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-<h1 style="color: #ccc;">Quotations Management</h1>
-<button class="add-btn" onclick="window.location.href='/dashboard/quote.html'">Create Quote</button>
-<button class="add-btn" onclick="openModal('add')">Add Quotation</button>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<table>
-    <thead>
-        <tr>
-            <th>Quotation #</th>
-            <th>Client</th>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="quotations-table"></tbody>
-</table>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        display: flex;
+        min-height: 100vh;
+      }
 
-<!-- Modal -->
-<div id="quotation-modal" class="modal">
-    <div class="modal-content">
-        <h2 id="modal-title">Add Quotation</h2>
-        <select id="quotation-client"></select>
-        <input type="text" id="quotation-number" placeholder="Quotation Number">
-        <input type="date" id="quotation-date">
-        <input type="number" id="quotation-amount" placeholder="Amount">
-        <select id="quotation-status">
-            <option value="Approved">Approved</option>
-            <option value="Pending">Pending</option>
-            <option value="Rejected">Rejected</option>
-        </select>
-        <div class="modal-actions">
-            <button onclick="closeModal()">Cancel</button>
-            <button id="modal-submit-btn">Save</button>
+      /* Sidebar styles */
+      .sidebar {
+        width: 260px;
+        background: rgb(1, 1, 41);
+        border-right: 1px solid rgba(255, 255, 255, 0.03);
+        padding: 28px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: fixed;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        transition: transform 0.3s ease;
+        z-index: 1000;
+      }
+
+      @media (max-width: 768px) {
+        .sidebar.mobile-hidden {
+          transform: translateX(-100%);
+        }
+      }
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: white; /* match sidebar text color */
+        display: none; /* hidden by default */
+      }
+      .sidebar.open .close-btn {
+        display: block; /* show when sidebar opens */
+      }
+      .brand {
+        display: block;
+        gap: 20px;
+        align-items: center;
+      }
+      .logo {
+        height: 80px;
+        width: 80px;
+        border-radius: 10px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .nav {
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        color: #cfe9f7;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 14px;
+      }
+      .nav a:hover {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        transform: translateX(4px);
+      }
+      .nav a.active {
+        background: linear-gradient(
+          90deg,
+          rgba(124, 58, 237, 0.15),
+          rgba(6, 182, 212, 0.06)
+        );
+        color: #fff;
+      }
+      .ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .flex {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      /* Mobile menu toggle */
+      .mobile-toggle {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: rgb(1, 1, 41);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 20px;
+      }
+
+      .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+
+      /* Main content area */
+      .main-content {
+        flex: 1;
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        overflow: auto;
+        margin-left: 260px;
+      }
+
+      /* Left side - Invoice list */
+      .invoices-section {
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Right side - Stats */
+      .stats-section {
+        width: 380px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .stats-card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .stats-card h3 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .total-amount {
+        font-size: 36px;
+        font-weight: bold;
+        color: #2196f3;
+        margin-bottom: 5px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-item {
+        text-align: center;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 6px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .chart-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .chart-card h3 {
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      .search-box {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .search-box input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      .btn-primary {
+        background: #2196f3;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #1976d2;
+      }
+      .btn-success {
+        background: #4caf50;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #388e3c;
+      }
+
+      /* Table wrapper for horizontal scroll on mobile */
+      .table-wrapper {
+        overflow-x: auto;
+        margin-top: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 700px;
+      }
+      thead {
+        background: #333;
+        color: white;
+      }
+      th {
+        padding: 12px;
+        text-align: left;
+        font-size: 12px;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+      tbody tr {
+        cursor: pointer;
+      }
+      tbody tr:hover {
+        background: #f5f5f5;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        background: #4caf50;
+        color: white;
+      }
+
+      /* Tablet breakpoint */
+      @media (max-width: 1200px) {
+        .main-content {
+          flex-direction: column;
+        }
+        .stats-section {
+          width: 100%;
+        }
+      }
+
+      /* Mobile breakpoint */
+      @media (max-width: 768px) {
+        .mobile-toggle {
+          display: block;
+        }
+
+        .sidebar {
+          transform: translateX(-100%);
+        }
+
+        .sidebar.mobile-visible {
+          transform: translateX(0);
+        }
+
+        .mobile-overlay.active {
+          display: block;
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 15px 15px 15px;
+        }
+
+        .invoices-section {
+          padding: 20px 15px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .header > div {
+          width: 100%;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .search-box {
+          flex-direction: column;
+        }
+
+        .search-box input {
+          width: 100%;
+          min-width: unset;
+        }
+
+        .total-amount {
+          font-size: 28px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .chart-card {
+          height: auto !important;
+        }
+
+        .chart-card > div {
+          height: 250px !important;
+        }
+
+        table {
+          font-size: 12px;
+        }
+
+        th,
+        td {
+          padding: 8px 6px;
+        }
+
+        th:last-child,
+        td:last-child {
+          text-align: center;
+        }
+      }
+
+      /* Small mobile */
+      @media (max-width: 480px) {
+        .logo {
+          height: 60px;
+          width: 60px;
+        }
+
+        .logo img {
+          height: 40px !important;
+        }
+
+        h1 {
+          font-size: 20px;
+        }
+
+        .stats-card {
+          padding: 15px;
+        }
+
+        .total-amount {
+          font-size: 24px;
+        }
+
+        .stat-value {
+          font-size: 20px;
+        }
+
+        .btn {
+          padding: 8px 16px;
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-toggle" onclick="toggleMobileMenu()">☰</button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar mobile-hidden">
+      <button id="closeSidebar" class="close-btn" aria-label="Close menu">
+        ✕
+      </button>
+      <div class="brand">
+        <div class="logo">
+          <img
+            src="/assets/img/solidflo-logo.png"
+            style="height: 60px"
+            alt=""
+          />
         </div>
+        <div>
+          <p style="color: #9aa7b2; font-size: 12px">Quotations & Billing</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="/dashboard/index.html">
+          <span class="ico">🏠</span><span>Dashboard</span>
+        </a>
+        <a href="/dashboard/invoices.html">
+          <span class="ico">📄</span><span>Invoices</span>
+        </a>
+        <a class="active" href="/dashboard/quotations.html">
+          <span class="ico">📄</span><span>Quotations</span>
+        </a>
+        <a href="/dashboard/clients.html">
+          <span class="ico">👥</span><span>Clients</span>
+        </a>
+        <a href="/dashboard/payments.html">
+          <span class="ico">💳</span><span>Payments</span>
+        </a>
+        <a href="#"> <span class="ico">📊</span><span>Reports</span> </a>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="flex">
+        <div
+          style="
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          👤
+        </div>
+        <div>
+          <div style="font-weight: 700; color: white">User</div>
+          <div style="font-size: 12px; color: #9aa7b2">Admin</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Left side - Quotations list -->
+      <div class="invoices-section">
+        <div class="header">
+          <div>
+            <h1>Quotations</h1>
+            <p style="color: #666">View and manage all quotations</p>
+          </div>
+          <button
+            class="btn btn-success"
+            onclick="window.location.href='/dashboard/quote.html'"
+          >
+            + New Quote
+          </button>
+        </div>
+
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by quotation number or client name..."
+            onkeyup="handleSearch()"
+          />
+          <button class="btn btn-primary" onclick="displayInvoicesTable()">
+            Refresh
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Quotation #</th>
+                <th>Client</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th style="text-align: center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invoicesTableBody">
+              <tr>
+                <td colspan="6" class="loading">Loading quotations...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right side - Stats -->
+      <div class="stats-section">
+        <!-- Total Revenue Card -->
+        <div class="stats-card">
+          <h3>Total Revenue</h3>
+          <div class="total-amount" id="totalRevenue">R 0.00</div>
+          <div style="color: #666; font-size: 14px">From all quotations</div>
+
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="totalInvoices">0</div>
+              <div class="stat-label">Total Quotations</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="avgInvoice">R 0</div>
+              <div class="stat-label">Avg Quotation</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Revenue Chart -->
+        <div class="chart-card">
+          <h3>Monthly Revenue (Last 6 Months)</h3>
+          <div style="position: relative; height: 300px">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<script>
+    <script>
+      // Mobile menu toggle
+      function toggleMobileMenu() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.querySelector(".mobile-overlay");
+
+        sidebar.classList.toggle("mobile-visible");
+        sidebar.classList.toggle("mobile-hidden");
+        overlay.classList.toggle("active");
+      }
+
+     // Initialize Firebase
+let firebaseReady = false;
+let monthlyChartInstance = null;
+let currentUserId = null;
+let allQuotations = [];
+
 const firebaseConfig = {
   apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
   authDomain: "solidflow-1f753.firebaseapp.com",
@@ -75,125 +648,411 @@ const firebaseConfig = {
   storageBucket: "solidflow-1f753.firebasestorage.app",
   messagingSenderId: "68885400864",
   appId: "1:68885400864:web:7788e19a073d9a8e79db45",
-  measurementId: "G-RTL0CM1B44"
+  measurementId: "G-RTL0CM1B44",
 };
-firebase.initializeApp(firebaseConfig);
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
 const db = firebase.firestore();
 
-const quotationsCollection = db.collection('quotations');
-const clientsCollection = db.collection('clients');
-let editId = null;
-
-function populateClients() {
-    const clientSelect = document.getElementById('quotation-client');
-    clientSelect.innerHTML = '';
-    clientsCollection.get().then(snapshot => {
-        snapshot.forEach(doc => {
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.text = doc.data().name;
-            clientSelect.add(option);
-        });
-    });
-}
-
-function openModal(type, id = null) {
-    const modal = document.getElementById('quotation-modal');
-    modal.style.display = 'block';
-    editId = id;
-    populateClients();
-
-    const title = document.getElementById('modal-title');
-    const submitBtn = document.getElementById('modal-submit-btn');
-
-    const numberInput = document.getElementById('quotation-number');
-    const dateInput = document.getElementById('quotation-date');
-    const amountInput = document.getElementById('quotation-amount');
-    const statusSelect = document.getElementById('quotation-status');
-
-    if(type === 'add') {
-        title.innerText = 'Add Quotation';
-        submitBtn.innerText = 'Add';
-        numberInput.value = '';
-        dateInput.value = '';
-        amountInput.value = '';
-        statusSelect.value = 'Pending';
-        submitBtn.onclick = addQuotation;
-    } else if(type === 'edit') {
-        title.innerText = 'Edit Quotation';
-        submitBtn.innerText = 'Update';
-        quotationsCollection.doc(id).get().then(doc => {
-            if(doc.exists) {
-                const data = doc.data();
-                document.getElementById('quotation-client').value = data.clientId;
-                numberInput.value = data.number;
-                dateInput.value = data.date;
-                amountInput.value = data.amount;
-                statusSelect.value = data.status;
-            }
-        });
-        submitBtn.onclick = updateQuotation;
-    }
-}
-
-function closeModal() { document.getElementById('quotation-modal').style.display = 'none'; }
-
-function addQuotation() {
-    const clientId = document.getElementById('quotation-client').value;
-    const number = document.getElementById('quotation-number').value;
-    const date = document.getElementById('quotation-date').value;
-    const amount = parseFloat(document.getElementById('quotation-amount').value);
-    const status = document.getElementById('quotation-status').value;
-
-    quotationsCollection.add({ clientId, number, date, amount, status }).then(closeModal);
-}
-
-function updateQuotation() {
-    const clientId = document.getElementById('quotation-client').value;
-    const number = document.getElementById('quotation-number').value;
-    const date = document.getElementById('quotation-date').value;
-    const amount = parseFloat(document.getElementById('quotation-amount').value);
-    const status = document.getElementById('quotation-status').value;
-
-    quotationsCollection.doc(editId).update({ clientId, number, date, amount, status }).then(closeModal);
-}
-
-function deleteQuotation(id) {
-    if(confirm("Are you sure you want to delete this quotation?")) {
-        quotationsCollection.doc(id).delete();
-    }
-}
-
-// Real-time rendering
-quotationsCollection.onSnapshot(snapshot => {
-    const tbody = document.getElementById('quotations-table');
-    tbody.innerHTML = '';
-    snapshot.forEach(doc => {
-        const quotation = doc.data();
-        clientsCollection.doc(quotation.clientId).get().then(clientDoc => {
-            const clientName = clientDoc.exists ? clientDoc.data().name : 'Unknown';
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${quotation.number}</td>
-                <td>${clientName}</td>
-                <td>${quotation.date}</td>
-                <td>$${quotation.amount.toFixed(2)}</td>
-                <td>${quotation.status}</td>
-                <td>
-                    <button class="edit-btn" onclick="openModal('edit','${doc.id}')">Edit</button>
-                    <button class="delete-btn" onclick="deleteQuotation('${doc.id}')">Delete</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    });
+auth.onAuthStateChanged((user) => {
+  if (user && user.emailVerified) {
+    currentUserId = user.uid;
+    firebaseReady = true;
+    
+    // Load user profile
+    loadUserProfile(user);
+    
+    // Load invoices
+    displayInvoicesTable();
+  } else {
+    // Redirect to login if not authenticated
+    window.location.href = "/login.html";
+  }
 });
 
-window.onclick = function(event) {
-    const modal = document.getElementById('quotation-modal');
-    if(event.target === modal) closeModal();
+// Load user profile info
+function loadUserProfile(user) {
+  db.collection("users").doc(user.uid).get()
+    .then((doc) => {
+      if (doc.exists) {
+        const userData = doc.data();
+        // Update profile display if you have these elements
+        const profileName = document.querySelector('.flex div:last-child div:first-child');
+        const profileRole = document.querySelector('.flex div:last-child div:last-child');
+        
+        if (profileName) {
+          profileName.textContent = userData.name || 'User';
+        }
+        if (profileRole) {
+          profileRole.textContent = (userData.role || 'user').charAt(0).toUpperCase() + (userData.role || 'user').slice(1);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error loading profile:", error);
+    });
 }
-</script>
 
-</body>
+// Fetch all quotations for current user
+async function fetchAllInvoices() {
+  if (!firebaseReady || !currentUserId) {
+    console.log("Waiting for authentication...");
+    return [];
+  }
+
+  try {
+    const snapshot = await db
+      .collection("users")
+      .doc(currentUserId)
+      .collection("quotations")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const quotations = [];
+    snapshot.forEach((doc) => {
+      quotations.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return quotations;
+  } catch (error) {
+    console.error("Error fetching quotes:", error);
+    
+    // If the error is because orderBy field doesn't exist, try without orderBy
+    if (error.code === 'failed-precondition' || error.message.includes('index')) {
+      console.log("Fetching without orderBy...");
+      try {
+        const snapshot = await db
+          .collection("users")
+          .doc(currentUserId)
+          .collection("quotations")
+          .get();
+
+        const quotations = [];
+        snapshot.forEach((doc) => {
+          quotations.push({
+            id: doc.id,
+            ...doc.data(),
+          });
+        });
+
+        // Sort manually by createdAt if it exists
+        quotations.sort((a, b) => {
+          if (a.createdAt && b.createdAt) {
+            return b.createdAt.toDate() - a.createdAt.toDate();
+          }
+          return 0;
+        });
+
+        return quotations;
+      } catch (innerError) {
+        console.error("Error fetching quotations (fallback):", innerError);
+        return [];
+      }
+    }
+    
+    return [];
+  }
+}
+
+// Calculate and display stats
+async function updateStats() {
+  const quotations = await fetchAllInvoices();
+
+  let totalRevenue = 0;
+  const monthlyData = {};
+
+  quotations.forEach((quotation) => {
+    // Calculate total revenue
+    if (quotation.total) {
+      const amount =
+        parseFloat(quotation.total.replace(/[^\d.-]/g, "")) || 0;
+      totalRevenue += amount;
+
+      // Group by month for chart
+      if (quotation.issueDate) {
+        const date = new Date(quotation.issueDate);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + amount;
+      }
+    }
+  });
+
+  const avgQuotation =
+    quotations.length > 0 ? totalRevenue / quotations.length : 0;
+
+  // Update stats display
+  const totalRevenueEl = document.getElementById("totalRevenue");
+  const totalInvoicesEl = document.getElementById("totalInvoices");
+  const avgInvoiceEl = document.getElementById("avgInvoice");
+
+  if (totalRevenueEl) {
+    totalRevenueEl.textContent =
+      "R " + totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  if (totalInvoicesEl) {
+    totalInvoicesEl.textContent = quotations.length;
+  }
+
+  if (avgInvoiceEl) {
+    avgInvoiceEl.textContent =
+      "R " + avgQuotation.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  // Update chart
+  updateMonthlyChart(monthlyData);
+}
+
+// Create monthly revenue chart
+function updateMonthlyChart(monthlyData) {
+  const canvas = document.getElementById("monthlyChart");
+
+  if (!canvas) return;
+
+  // Get last 6 months
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const now = new Date();
+  const last6Months = [];
+
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const monthLabel = monthNames[date.getMonth()];
+
+    last6Months.push({
+      label: monthLabel,
+      value: monthlyData[monthKey] || 0,
+    });
+  }
+
+  const labels = last6Months.map((m) => m.label);
+  const data = last6Months.map((m) => m.value);
+
+  // Destroy existing chart
+  if (monthlyChartInstance) {
+    monthlyChartInstance.destroy();
+  }
+
+  const ctx = canvas.getContext("2d");
+
+  monthlyChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Revenue (R)",
+          data: data,
+          backgroundColor: "rgba(33, 150, 243, 0.7)",
+          borderColor: "#2196f3",
+          borderWidth: 2,
+          borderRadius: 6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          callbacks: {
+            label: function (context) {
+              return (
+                "R " +
+                context.parsed.y
+                  .toFixed(2)
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+              );
+            },
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              return "R " + (value / 1000).toFixed(0) + "k";
+            },
+          },
+          grid: {
+            color: "rgba(0, 0, 0, 0.05)",
+          },
+        },
+        x: {
+          grid: {
+            display: false,
+          },
+        },
+      },
+    },
+  });
+}
+
+// Display quotations in table
+async function displayInvoicesTable() {
+  const quotations = await fetchAllInvoices();
+  allQuotations = quotations; // Store for search
+  
+  const tableBody = document.getElementById("invoicesTableBody");
+
+  if (!tableBody) {
+    console.error("Table body element not found");
+    return;
+  }
+
+  if (quotations.length === 0) {
+    tableBody.innerHTML =
+      '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No quotations found. Create your first quotation!</td></tr>';
+    
+    // Still update stats even if no quotations
+    await updateStats();
+    return;
+  }
+
+  tableBody.innerHTML = quotations
+    .map(
+      (quotation) => `
+    <tr onclick="openInvoice('${quotation.quoteNumber}')">
+      <td>${quotation.quoteNumber || 'N/A'}</td>
+      <td>${quotation.clientName || "N/A"}</td>
+      <td>${quotation.issueDate || "N/A"}</td>
+      <td>${quotation.total || "R 0.00"}</td>
+      <td><span class="status-badge">${quotation.status || 'Saved'}</span></td>
+      <td style="text-align: center;">
+        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${quotation.quoteNumber}')">
+          View
+        </button>
+      </td>
+    </tr>
+  `,
+    )
+    .join("");
+
+  // Update stats after loading quotations
+  await updateStats();
+}
+
+// Open quotation
+function openInvoice(quoteNumber) {
+  sessionStorage.setItem("loadQuoteNumber", quoteNumber);
+  window.location.href = "/dashboard/quote.html";
+}
+
+// Search functionality
+async function handleSearch() {
+  const searchTerm = document
+    .getElementById("searchInput")
+    .value.toLowerCase();
+
+  if (!allQuotations.length) {
+    allQuotations = await fetchAllInvoices();
+  }
+
+  const filtered = allQuotations.filter(
+    (quotation) =>
+      (quotation.quoteNumber && quotation.quoteNumber.toLowerCase().includes(searchTerm)) ||
+      (quotation.clientName &&
+        quotation.clientName.toLowerCase().includes(searchTerm)),
+  );
+
+  const tableBody = document.getElementById("invoicesTableBody");
+
+  if (!tableBody) return;
+
+  if (filtered.length === 0) {
+    tableBody.innerHTML =
+      '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No matching quotations found</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = filtered
+    .map(
+      (quotation) => `
+    <tr onclick="openInvoice('${quotation.quoteNumber}')">
+      <td>${quotation.quoteNumber || 'N/A'}</td>
+      <td>${quotation.clientName || "N/A"}</td>
+      <td>${quotation.issueDate || "N/A"}</td>
+      <td>${quotation.total || "R 0.00"}</td>
+      <td><span class="status-badge">${quotation.status || 'Saved'}</span></td>
+      <td style="text-align: center;">
+        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${quotation.quoteNumber}')">
+          View
+        </button>
+      </td>
+    </tr>
+  `,
+    )
+    .join("");
+}
+function loadUserProfile(user) {
+  db.collection("users").doc(user.uid).get()
+    .then((doc) => {
+      if (doc.exists) {
+        const userData = doc.data();
+        // Update profile display if you have these elements
+        const profileName = document.querySelector('.flex div:last-child div:first-child');
+        const profileRole = document.querySelector('.flex div:last-child div:last-child');
+        
+        if (profileName) {
+          profileName.textContent = userData.name || 'User';
+        }
+        if (profileRole) {
+          profileRole.textContent = (userData.role || 'user').charAt(0).toUpperCase() + (userData.role || 'user').slice(1);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error loading profile:", error);
+    });
+}
+// Load on page load
+document.addEventListener("DOMContentLoaded", () => {
+  // Wait for auth to complete before loading
+  // displayInvoicesTable will be called in onAuthStateChanged
+});
+
+// Security - Disable right-click and dev tools
+document.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  return false;
+});
+
+document.addEventListener("keydown", (e) => {
+  if (
+    e.keyCode === 123 || // F12
+    (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+    (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+    (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+  ) {
+    e.preventDefault();
+    return false;
+  }
+});
+    </script>
+  </body>
 </html>

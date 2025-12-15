@@ -1,1187 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SolidFlow — Modern SaaS Dashboard (Mocked API + Settings)</title>
+<html class="solidflo home">
+<head>
+    <meta charset="utf-8">
 
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Free Online Invoicing for Small Businesses - solidflo</title>
 
-    <style>
-      :root {
-        --bg: #0f1724;
-        --muted: #9aa7b2;
-        --accent1: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
-        --glass: rgba(255, 255, 255, 0.04);
-        --success: #22c55e;
-        --warn: #f59e0b;
-        --danger: #ef4444;
-        --transition: 300ms cubic-bezier(0.2, 0.9, 0.25, 1);
-        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
-          "Helvetica Neue", Arial;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        background: radial-gradient(
-            1200px 400px at 10% 10%,
-            rgba(124, 58, 237, 0.08),
-            transparent 8%
-          ),
-          radial-gradient(
-            1000px 300px at 90% 90%,
-            rgba(6, 182, 212, 0.06),
-            transparent 8%
-          ),
-          var(--bg);
-        color: #e6eef6;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        display: flex;
-        overflow: hidden;
-      }
+    <meta name="description" content="solidflo is free online invoicing for small businesses. Create and send invoices and estimates, track time and expenses and accept online payments.">
+    <meta name="keywords" content="invoicing, billing, payments, online invoice, subscription billing, recurring invoicing">
 
-      /* Sidebar */
-      .sidebar {
-        width: 260px;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.03),
-          rgba(255, 255, 255, 0.01)
-        );
-        border-right: 1px solid rgba(255, 255, 255, 0.03);
-        padding: 28px 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        transform: translateX(0);
-        transition: var(--transition);
-        z-index: 40;
-        backdrop-filter: blur(6px) saturate(120%);
-      }
-       .close-btn {
-          position: absolute;
-          top: 15px;
-          right: 15px;
-          background: none;
-          border: none;
-          font-size: 24px;
-          cursor: pointer;
-          color: white;     /* match sidebar text color */
-          display: none;    /* hidden by default */
-        }
-        .sidebar.open .close-btn {
-          display: block;   /* show when sidebar opens */
-        }
-      .brand {
-        display: block;
-        gap: 20px;
-        align-items: center;
-      }
-       .menu-toggle {
-        display: none;
-        background: transparent;
-        border: none;
-        color: #fff;
-        font-size: 20px;
-        cursor: pointer;
-        padding: 6px 8px;
-      }
-      .logo {
-        height: 80px;
-        width: 80px;
-        border-radius: 10px;
-        background: transparent;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        color: white;
-        font-size: 18px;
-      }
-      .brand h1 {
-        font-size: 16px;
-        margin: 0;
-      }
-      .brand p {
-        margin: 0;
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .nav {
-        margin-top: 6px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      .nav a {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        color: #cfe9f7;
-        text-decoration: none;
-        border-radius: 10px;
-        transition: var(--transition);
-        font-size: 14px;
-      }
-      .nav a .ico {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.02);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--muted);
-      }
-      .nav a:hover {
-        background: linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.02),
-          rgba(255, 255, 255, 0.01)
-        );
-        transform: translateX(4px);
-      }
-      .nav a.active {
-        background: linear-gradient(
-          90deg,
-          rgba(124, 58, 237, 0.15),
-          rgba(6, 182, 212, 0.06)
-        );
-        color: #fff;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-      }
-      .spacer {
-        flex: 1;
-      }
-      .flex {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-      }
+    <meta name="robots" content="index, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="solidflo">
 
-      /* App */
-      .app {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        overflow: auto;
-        padding: 28px;
-        gap: 18px;
-      }
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-      }
-      .searchbar {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: var(--glass);
-        padding: 10px 14px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.02);
-        width: 520px;
-      }
-      .searchbar input {
-        background: transparent;
-        border: 0;
-        outline: 0;
-        color: inherit;
-        width: 100%;
-      }
-      .actions {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-      }
-      .btn {
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 0;
-        cursor: pointer;
-        font-weight: 600;
-        display: inline-flex;
-        gap: 10px;
-        align-items: center;
-      }
-      .btn.primary {
-        background: linear-gradient(90deg, #7c3aed, #06b6d4);
-        color: white;
-        box-shadow: 0 8px 30px rgba(6, 182, 212, 0.08);
-      }
-      .btn.ghost {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        color: var(--muted);
-      }
-      .kpis {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 18px;
-        margin-top: 8px;
-      }
-      .kpi {
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.02),
-          rgba(255, 255, 255, 0.01)
-        );
-        padding: 18px;
-        border-radius: 14px;
-        min-height: 100px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        border: 1px solid rgba(255, 255, 255, 0.02);
-        transition: transform var(--transition);
-      }
-      .kpi:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
-      }
-      .kpi .label {
-        color: var(--muted);
-        font-size: 13px;
-      }
-      .kpi .value {
-        font-size: 22px;
-        font-weight: 700;
-      }
+    <link nonce="rmrEFV9OLcQIzSSh" href="/assets/css/style.css" media="all" rel="stylesheet" type="text/css">
+    <link nonce="rmrEFV9OLcQIzSSh" href="/assets/css/fonts.css" media="all" rel="stylesheet" type="text/css">
 
-      .row {
-        display: grid;
-        grid-template-columns: 1fr 420px;
-        gap: 18px;
-        margin-top: 18px;
-      }
-      .panel {
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.02),
-          rgba(255, 255, 255, 0.01)
-        );
-        padding: 18px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.02);
-      }
-      .panel h3 {
-        margin: 0 0 10px 0;
-      }
-      .table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
-      }
-      .table thead th {
-        text-align: left;
-        color: var(--muted);
-        padding: 12px 10px;
-      }
-      .table tbody td {
-        padding: 12px 10px;
-        border-top: 1px solid rgba(255, 255, 255, 0.02);
-      }
-      .badge {
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 12px;
-      }
-      .paid {
-        background: rgba(34, 197, 94, 0.12);
-        color: var(--success);
-      }
-      .pending {
-        background: rgba(245, 158, 11, 0.12);
-        color: var(--warn);
-      }
-      .overdue {
-        background: rgba(239, 68, 68, 0.12);
-        color: var(--danger);
-      }
-      .footer {
-        margin-top: 20px;
-        color: var(--muted);
-        font-size: 13px;
-      }
+    <script nonce="rmrEFV9OLcQIzSSh" src="/assets/js/jquery-1.11.3.min.8fb8fe.js" type="text/javascript" defer></script>
 
-      /* top-left mobile control */
-      .top-left {
-        position: fixed;
-        left: 16px;
-        top: 14px;
-        z-index: 60;
-      }
-      .hambtn {
-        width: 46px;
-        height: 46px;
-        border-radius: 10px;
-        background: var(--glass);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--muted);
-        cursor: pointer;
-        border: 1px solid rgba(255, 255, 255, 0.02);
-      }
-       @media (min-width: 1024px) {
-          .hambtn {
-            display: none;
-          }
-          .close-btn {
-            display: none;
-          }
-        }
-      /* SETTINGS drawer & profile modal */
-      .settings-drawer {
-        position: fixed;
-        right: -420px;
-        top: 0;
-        width: 380px;
-        height: 100%;
-        background: rgb(15, 23, 36);
-        border-left: 1px solid rgba(255, 255, 255, 0.03);
-        padding: 20px;
-        transition: var(--transition);
-        z-index: 60;
-        overflow: auto;
-      }
-      .settings-drawer.open {
-        right: 0;
-      }
-      .profile-modal {
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) scale(0.9);
-        width: 360px;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.03),
-          rgba(255, 255, 255, 0.01)
-        );
-        padding: 20px;
-        border-radius: 12px;
-        transition: var(--transition);
-        box-shadow: 0 30px 80px rgba(2, 6, 23, 0.6);
-        z-index: 80;
-        display: none;
-      }
-      .profile-modal.open {
-        display: block;
-        transform: translate(-50%, -50%) scale(1);
-      }
+    <link rel="canonical"
+          href="https://solidflo.co.za">
 
-      /* responsive */
-      @media (max-width: 1100px) {
-        .kpis {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        .row {
-          grid-template-columns: 1fr 360px;
-        }
-        .searchbar {
-          width: 380px;
-        }
-      }
-      @media (max-width: 820px) {
-        .sidebar {
-          position: fixed;
-          left: 0;
-          top: 0;
-          height: 100vh;
-          transform: translateX(-320px);
-        }
-        .sidebar.open {
-          transform: translateX(0);
-        }
-        .app {
-          padding: 18px;
-        }
-        .header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 12px;
-        }
-        .row {
-          grid-template-columns: 1fr;
-        }
-        .content-shift {
-          transform: translateX(0);
-        }
-        .kpis {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      @media (max-width: 420px) {
-        .kpis {
-          grid-template-columns: 1fr;
-        }
-        .searchbar {
-          width: 100%;
-        }
-        
-        .panel {
-          padding: 12px;
-        }
-        .row {
-          grid-template-columns: 1fr;
-        }
-      }
+    <link rel="shortcut icon" href="/images/solidflo_shortcut_icon.ico">
 
-      /* small helpers */
-      .muted {
-        color: var(--muted);
-      }
-      input[type="text"],
-      input[type="email"],
-      select {
-        width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.03);
-        background: transparent;
-        color: inherit;
-        margin-top: 6px;
-      }
-      label {
-        display: block;
-        margin-top: 12px;
-        color: var(--muted);
-        font-size: 13px;
-      }
-      .save-row {
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-        margin-top: 16px;
-      }
-    </style>
-    <style>
-      .paid {
-        color: #28a745;
-        font-weight: bold;
-      }
-      .pending {
-        color: #ffc107;
-        font-weight: bold;
-      }
-      .overdue {
-        color: #dc3545;
-        font-weight: bold;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      th,
-      td {
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-        text-align: left;
-      }
-      tr:hover {
-        background: #f1f5fb;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- SIDEBAR -->
-    <aside id="sidebar" class="sidebar open" aria-hidden="false">
-      <button id="closeSidebar" class="close-btn" aria-label="Close menu">✕</button>
-      <div class="brand">
-        <div class="logo"><img src="/assets/img/solidflo-logo.png" style="height: 60px;" alt=""></div>
-        <div>
-          
-          <p class="mini muted">Invoices & Billing</p>
-        </div>
-      </div>
+    <link rel="apple-touch-icon-precomposed" sizes="144x144"
+          href="/images/solidflo_icon_apple_144.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114"
+          href="/images/solidflo_icon_apple_114.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72"
+          href="/images/solidflo_icon_apple_72.png">
+    <link rel="apple-touch-icon-precomposed"
+          href="/images/solidflo_icon_apple.png">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'self' https://*.zendesk.com https://*.ingest.sentry.io https://*.zdassets.com https://www.google.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.stripe.com https://cdn.rawgit.com  https://eversign.com https://solidflo.co.za https://*.solidflo.co.za https://solidflo.co.za https://solidflo-api.solidflo.co.za; script-src 'unsafe-inline' https:  'strict-dynamic' 'nonce-rmrEFV9OLcQIzSSh'; img-src data: 'self' https://*.zendesk.com https://*.ingest.sentry.io https://*.zdassets.com https://www.google.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.stripe.com https://cdn.rawgit.com  https://eversign.com https://solidflo.co.za https://*.solidflo.co.za https://solidflo.co.za https://solidflo-api.solidflo.co.za https://*.s3.amazonaws.com; style-src 'self' https://*.zendesk.com https://*.ingest.sentry.io https://*.zdassets.com https://www.google.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.stripe.com https://cdn.rawgit.com  https://eversign.com https://solidflo.co.za https://*.solidflo.co.za https://solidflo.co.za https://solidflo-api.solidflo.co.za 'unsafe-inline'; font-src 'self'  https://eversign.com https://solidflo.co.za https://*.solidflo.co.za https://solidflo.co.za https://solidflo-api.solidflo.co.za https://fonts.googleapis.com data: ; frame-src 'self' https://*.zendesk.com https://*.ingest.sentry.io https://*.zdassets.com https://www.google.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.stripe.com https://cdn.rawgit.com  https://eversign.com https://solidflo.co.za https://*.solidflo.co.za https://solidflo.co.za https://solidflo-api.solidflo.co.za; object-src 'none'; media-src 'unsafe-inline' data: 'self' https://*.zendesk.com https://*.ingest.sentry.io https://*.zdassets.com https://www.google.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.stripe.com https://cdn.rawgit.com  https://eversign.com https://solidflo.co.za https://*.solidflo.co.za https://solidflo.co.za https://solidflo-api.solidflo.co.za; child-src 'self' blob: ; manifest-src 'self'; connect-src 'self' 'self' https://*.zendesk.com https://*.ingest.sentry.io https://*.zdassets.com https://www.google.com https://www.google-analytics.com https://www.gstatic.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://*.stripe.com https://cdn.rawgit.com  https://eversign.com https://solidflo.co.za https://*.solidflo.co.za https://solidflo.co.za https://solidflo-api.solidflo.co.za; base-uri 'self'; upgrade-insecure-requests;">
+</head>
 
-      <nav class="nav" aria-label="Main navigation">
-        <a class="active" href="#"
-          ><span class="ico">🏠</span><span class="label">Dashboard</span></a
-        >
-        <a href="/dashboard/invoices.html"
-          ><span class="ico">📄</span><span class="label">Invoices</span></a
-        >
-        <a href="/dashboard/clients.html"
-          ><span class="ico">👥</span><span class="label">Clients</span></a
-        >
-        <a href="/dashboard/payments.html"
-          ><span class="ico">💳</span><span class="label">Payments</span></a
-        >
-        <a href="#"
-          ><span class="ico">📊</span><span class="label">Reports</span></a
-        >
-      </nav>
+<body>
 
-      <div class="spacer"></div>
-        <button class="btn ghost" id="openSettings">Settings</button>
-        <button class="btn ghost" id="openProfile">Profile</button>
-      <div class="flex">
+<input type="hidden" name="current_page" value="home">
 
-        <div
-          style="
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            background: var(--glass);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          "
-        >
-          👤
-        </div>
-        <div>
-          
-          <div style="font-weight: 700" id="profileName">User</div>
-          <div class="mini muted" id="profileRole">Admin</div>
-        </div>
-      </div>
-    </aside>
 
-    <!-- APP -->
-    <div class="app" id="app">
-      <!-- mobile hamburger -->
-      <div class="top-left">
-        <button class="hambtn" id="hambtn" aria-label="Open menu">☰</button>
-      </div>
+<header>
 
-      <header class="header">
-        <div class="flex" style="gap: 18px; align-items: center">
-          <div class="searchbar" role="search">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              style="opacity: 0.8"
-            >
-              <path
-                d="M21 21l-4.35-4.35"
-                stroke="#a3b9c3"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
-            <input
-              id="searchInput"
-              placeholder="Search invoices, clients or IDs..."
-              aria-label="Search"
-            />
-          </div>
-
-          <div class="mini muted" id="welcomeText">
-            Welcome back — here's your 30 day summary
-          </div>
-        </div>
-
-        <div class="actions">
-          
-          <button class="btn primary" id="newInvoiceBtn">+ New Invoice</button>
-           <button class="btn primary" id="newQuoteBtn">+ New Quote</button>
-        </div>
-      </header>
-
-      <!-- KPI CARDS -->
-      <section class="kpis" aria-label="Key metrics" id="kpis">
-        <!-- populated by JS -->
-      </section>
-
-      <!-- ROW -->
-      <div class="row">
-        <div class="panel">
-          <h3>Revenue (last 12 months)</h3>
-          <canvas id="revChart" style="width: 100%; height: 260px"></canvas>
-        </div>
-
-        <div class="panel">
-          <h3>Invoice Status</h3>
-          <canvas id="statusChart" style="width: 100%; height: 220px"></canvas>
-          <div style="margin-top: 12px" class="muted mini">
-            Breakdown of paid / pending / overdue
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" style="margin-top: 18px">
-        <h3>Recent Invoices</h3>
-        <table
-          class="table"
-          role="table"
-          aria-label="Recent invoices"
-          style="margin-top: 12px"
-        >
-          <thead>
-            <tr>
-              <th>Invoice</th>
-              <th>Client</th>
-              <th>Date</th>
-              <th>Amount</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="invoices-table">
-            <!-- rows injected by Firebase Firestore -->
-          </tbody>
-        </table>
-
-        <div class="footer">© 2025 SolidFlow • Built for quick billing</div>
-      </div>
+    <div class="mobile header">
+        <a class="logo" href="/">
+            <img alt="solidflo - Free, Unlimited Invoicing For Your Business" src="/images/solidflo_index_x2.png">
+        </a>
     </div>
 
-    <!-- Settings Drawer -->
-    <aside id="settingsDrawer" class="settings-drawer" aria-hidden="true">
-      <h3>Settings</h3>
-      <label>Theme</label>
-      <select id="settingTheme">
-        <option value="modern">Modern SaaS</option>
-        <option value="dark">Dark</option>
-        <option value="minimal">Minimal</option>
-      </select>
+    <div>
+        <div class="row">
+            <div class="header_logo">
+                <a class="logo" href="/">
+                    <img alt="solidflo - Free, Unlimited Invoicing For Your Business" src="/images/solidflo_index_x2.png">
+                </a>
+            </div>
+            <ul class="header_links ">
+                <li class="standard">
+                    <a class="header_link main_header_link" role="button" href="">Features</a>
+                </li>
 
-      <label>Auto-refresh (seconds)</label>
-      <input type="text" id="settingRefresh" value="8" />
-
-      <label>Show currency</label>
-      <select id="settingCurrency">
-        <option value="USD">USD ($)</option>
-        <option value="EUR">EUR (€)</option>
-        <option value="ZAR">ZAR (R)</option>
-      </select>
-
-      <div class="save-row">
-        <button class="btn ghost" id="cancelSettings">Cancel</button>
-        <button class="btn primary" id="saveSettings">Save</button>
-      </div>
-    </aside>
-
-    <!-- Profile Modal -->
-    <div
-      id="profileModal"
-      class="profile-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-hidden="true"
-    >
-      <h3>Profile</h3>
-      <label for="profile_name">Full name</label>
-      <input type="text" id="profile_name" value="User" />
-      <label for="profile_email">Email</label>
-      <input type="email" id="profile_email" value="user@example.com" />
-      <label for="profile_role">Role</label>
-      <select id="profile_role">
-        <option>Admin</option>
-        <option>Manager</option>
-        <option>Viewer</option>
-      </select>
-
-      <div class="save-row">
-        <button class="btn ghost" id="closeProfile">Close</button>
-        <button class="btn primary" id="saveProfile">Save</button>
-      </div>
-    </div>
-
-    <script>
-      /* -------------------------
-   Mock API (simulates latency and evolving data)
-   ------------------------- */
-      const mockApi = (() => {
-        // internal mock state
-        let invoices = [
-          {
-            id: "INV-00123",
-            client: "John Carter",
-            date: "2025-12-12",
-            amount: 620,
-            status: "overdue",
-          },
-          {
-            id: "INV-00124",
-            client: "Alpha Corp",
-            date: "2025-12-12",
-            amount: 1200,
-            status: "paid",
-          },
-          {
-            id: "INV-00125",
-            client: "Mark Tech",
-            date: "2025-12-13",
-            amount: 460,
-            status: "pending",
-          },
-          {
-            id: "INV-00126",
-            client: "Sigma Ltd",
-            date: "2025-12-14",
-            amount: 980,
-            status: "paid",
-          },
-        ];
-
-        let nextIndex = 127;
-
-        function randomDelay(min = 200, max = 700) {
-          return Math.floor(Math.random() * (max - min) + min);
-        }
-
-        return {
-          async fetchDashboard() {
-            await new Promise((r) => setTimeout(r, randomDelay()));
-            // compute KPIs
-            const totalOutstanding = invoices
-              .filter((i) => i.status !== "paid")
-              .reduce((s, i) => s + i.amount, 0);
-            const dueThisWeek = invoices.filter(
-              (i) => i.status === "overdue" || i.status === "pending"
-            ).length;
-            const paymentsThisMonth = invoices
-              .filter((i) => i.status === "paid")
-              .reduce((s, i) => s + i.amount, 0);
-            const totalClients = new Set(invoices.map((i) => i.client)).size;
-            // monthly revenue mock
-            const months = [
-              "Jan",
-              "Feb",
-              "Mar",
-              "Apr",
-              "May",
-              "Jun",
-              "Jul",
-              "Aug",
-              "Sep",
-              "Oct",
-              "Nov",
-              "Dec",
-            ];
-            const revenue = months.map((m, i) =>
-              Math.round(800 + i * 100 + Math.random() * 300)
-            );
-            return {
-              totalOutstanding,
-              dueThisWeek,
-              paymentsThisMonth,
-              totalClients,
-              months,
-              revenue,
-            };
-          },
-
-          async fetchInvoices() {
-            await new Promise((r) => setTimeout(r, randomDelay()));
-            // return a copy newest-first
-            return invoices.slice().reverse();
-          },
-
-          // simulate push new invoice occasionally
-          simulateNewInvoice() {
-            if (Math.random() < 0.55) {
-              // ~55% chance per cycle
-              const id = `INV-00${nextIndex++}`;
-              const amounts = [320, 420, 560, 780, 1500];
-              const statuses = ["pending", "paid", "overdue"];
-              const invoice = {
-                id,
-                client: ["Nova Co", "Delta Ltd", "Omega LLC", "Beta Inc"][
-                  Math.floor(Math.random() * 4)
-                ],
-                date: new Date().toISOString().slice(0, 10),
-                amount: amounts[Math.floor(Math.random() * amounts.length)],
-                status: statuses[Math.floor(Math.random() * statuses.length)],
-              };
-              // push into invoices
-              invoices.push(invoice);
-              // keep array manageable
-              if (invoices.length > 40) invoices.shift();
-              return invoice;
-            }
-            return null;
-          },
-
-          // accept "save settings" and persist in localStorage
-          async saveSettings(settings) {
-            await new Promise((r) => setTimeout(r, randomDelay()));
-            localStorage.setItem(
-              "invoicepro_settings",
-              JSON.stringify(settings)
-            );
-            return { ok: true };
-          },
-
-          async loadSettings() {
-            await new Promise((r) => setTimeout(r, randomDelay()));
-            const raw = localStorage.getItem("invoicepro_settings");
-            if (raw) return JSON.parse(raw);
-            return { theme: "modern", refresh: 8, currency: "USD" };
-          },
-
-          async saveProfile(profile) {
-            await new Promise((r) => setTimeout(r, randomDelay()));
-            localStorage.setItem("invoicepro_profile", JSON.stringify(profile));
-            return { ok: true };
-          },
-
-          async loadProfile() {
-            await new Promise((r) => setTimeout(r, randomDelay()));
-            const raw = localStorage.getItem("invoicepro_profile");
-            if (raw) return JSON.parse(raw);
-            return { name: "User", email: "user@example.com", role: "Admin" };
-          },
-        };
-      })();
-
-      /* -------------------------
-   UI: charts, table, periodic poll
-   ------------------------- */
-
-      let revChart, statusChart;
-      const invoicesTbody = document.getElementById("invoicesTbody");
-      const kpisContainer = document.getElementById("kpis");
-
-      async function initCharts() {
-        const revCtx = document.getElementById("revChart").getContext("2d");
-        revChart = new Chart(revCtx, {
-          type: "line",
-          data: {
-            labels: [],
-            datasets: [
-              {
-                label: "Revenue",
-                data: [],
-                borderWidth: 2,
-                tension: 0.35,
-                borderColor: "#7c3aed",
-                backgroundColor: (ctx) => {
-                  const g = ctx.createLinearGradient(0, 0, 0, 300);
-                  g.addColorStop(0, "rgba(124,58,237,0.28)");
-                  g.addColorStop(1, "rgba(6,182,212,0.02)");
-                  return g;
-                },
-                fill: true,
-                pointRadius: 0,
-              },
-            ],
-          },
-          options: {
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { color: "#9aa7b2" } },
-              y: {
-                grid: { color: "rgba(255,255,255,0.03)" },
-                ticks: { color: "#9aa7b2" },
-              },
-            },
-          },
-        });
-
-        const statusCtx = document
-          .getElementById("statusChart")
-          .getContext("2d");
-        statusChart = new Chart(statusCtx, {
-          type: "doughnut",
-          data: {
-            labels: ["Paid", "Pending", "Overdue"],
-            datasets: [
-              {
-                data: [0, 0, 0],
-                backgroundColor: ["#06b6d4", "#f59e0b", "#ef4444"],
-                hoverOffset: 6,
-                borderWidth: 0,
-              },
-            ],
-          },
-          options: {
-            plugins: {
-              legend: { position: "bottom", labels: { color: "#cfe9f7" } },
-            },
-          },
-        });
-      }
-
-      function renderKpis(data, currencySymbol = "R") {
-        kpisContainer.innerHTML = "";
-        const items = [
-          {
-            label: "Total Outstanding",
-            value: `${currencySymbol}${data.totalOutstanding}`,
-          },
-          { label: "Due This Week", value: `${data.dueThisWeek}` },
-          {
-            label: "Payments This Month",
-            value: `${currencySymbol}${data.paymentsThisMonth}`,
-          },
-          { label: "Total Clients", value: `${data.totalClients}` },
-        ];
-        items.forEach((it) => {
-          const div = document.createElement("div");
-          div.className = "kpi panel";
-          div.innerHTML = `<div class="label">${it.label}</div><div class="value">${it.value}</div><div class="mini muted"></div>`;
-          kpisContainer.appendChild(div);
-        });
-      }
-
-
-      async function refreshDashboard(settings) {
-        try {
-          const data = await mockApi.fetchDashboard();
-          const currency = settings?.currency || "ZAR";
-          const symbol =
-            currency === "EUR" ? "€" : currency === "ZAR" ? "R" : "$";
-          renderKpis(data, symbol);
-          // update revChart
-          revChart.data.labels = data.months;
-          revChart.data.datasets[0].data = data.revenue;
-          revChart.update();
-          // update status chart aggregating invoices
-          const invoices = await mockApi.fetchInvoices();
-          const counts = { paid: 0, pending: 0, overdue: 0 };
-          invoices.forEach(
-            (i) => (counts[i.status] = (counts[i.status] || 0) + 1)
-          );
-          statusChart.data.datasets[0].data = [
-            counts.paid,
-            counts.pending,
-            counts.overdue,
-          ];
-          statusChart.update();
-          renderInvoicesTable(invoices);
-        } catch (err) {
-          console.error("dashboard refresh failed", err);
-        }
-      }
-
-      /* -------------------------
-   Settings & Profile logic
-   ------------------------- */
-
-      const settingsDrawer = document.getElementById("settingsDrawer");
-      const openSettings = document.getElementById("openSettings");
-      const cancelSettings = document.getElementById("cancelSettings");
-      const saveSettings = document.getElementById("saveSettings");
-      const settingTheme = document.getElementById("settingTheme");
-      const settingRefresh = document.getElementById("settingRefresh");
-      const settingCurrency = document.getElementById("settingCurrency");
-
-      openSettings.addEventListener("click", async () => {
-        settingsDrawer.classList.add("open");
-        const settings = await mockApi.loadSettings();
-        settingTheme.value = settings.theme;
-        settingRefresh.value = settings.refresh;
-        settingCurrency.value = settings.currency;
-        settingsDrawer.setAttribute("aria-hidden", "false");
-      });
-
-      cancelSettings.addEventListener("click", () => {
-        settingsDrawer.classList.remove("open");
-        settingsDrawer.setAttribute("aria-hidden", "true");
-      });
-
-      saveSettings.addEventListener("click", async () => {
-        const s = {
-          theme: settingTheme.value,
-          refresh: parseInt(settingRefresh.value) || 8,
-          currency: settingCurrency.value,
-        };
-        await mockApi.saveSettings(s);
-        settingsDrawer.classList.remove("open");
-        settingsDrawer.setAttribute("aria-hidden", "true");
-        console.log("Settings saved", s);
-        // apply settings immediately (currency)
-        const profile = await mockApi.loadProfile();
-        initPeriodicRefresh(s);
-        refreshDashboard(s);
-      });
-
-      /* Profile modal */
-      const profileModal = document.getElementById("profileModal");
-      const openProfile = document.getElementById("openProfile");
-      const closeProfile = document.getElementById("closeProfile");
-      const saveProfile = document.getElementById("saveProfile");
-      const profileNameEl = document.getElementById("profile_name");
-      const profileEmailEl = document.getElementById("profile_email");
-      const profileRoleEl = document.getElementById("profile_role");
-      const profileDisplayName = document.getElementById("profileName");
-      const profileDisplayRole = document.getElementById("profileRole");
-
-      openProfile.addEventListener("click", async () => {
-        const p = await mockApi.loadProfile();
-        profileNameEl.value = p.name;
-        profileEmailEl.value = p.email;
-        profileRoleEl.value = p.role;
-        profileModal.classList.add("open");
-        profileModal.setAttribute("aria-hidden", "false");
-      });
-
-      closeProfile.addEventListener("click", () => {
-        profileModal.classList.remove("open");
-        profileModal.setAttribute("aria-hidden", "true");
-      });
-
-      saveProfile.addEventListener("click", async () => {
-        const newP = {
-          name: profileNameEl.value,
-          email: profileEmailEl.value,
-          role: profileRoleEl.value,
-        };
-        await mockApi.saveProfile(newP);
-        profileModal.classList.remove("open");
-        profileModal.setAttribute("aria-hidden", "true");
-        profileDisplayName.textContent = newP.name;
-        profileDisplayRole.textContent = newP.role;
-      });
-
-      /* -------------------------
-   Polling / live updates
-   ------------------------- */
-      let pollIntervalId = null;
-      async function initPeriodicRefresh(settings) {
-        if (pollIntervalId) clearInterval(pollIntervalId);
-        const cfg = settings || (await mockApi.loadSettings());
-        const every = (cfg.refresh || 8) * 1000;
-        // initial run
-        await refreshDashboard(cfg);
-        // set interval
-        pollIntervalId = setInterval(async () => {
-          // simulate push
-          const newInv = mockApi.simulateNewInvoice();
-          if (newInv) {
-            // show small transient toast (console for now)
-            console.log("New invoice pushed:", newInv);
-          }
-          await refreshDashboard(cfg);
-        }, every);
-      }
-
-      /* -------------------------
-   Sidebar mobile toggle and click-out
-   ------------------------- */
-     const sidebarEl = document.getElementById("sidebar");
-      const hambtn = document.getElementById("hambtn");
-         const closeBtn = document.getElementById("closeSidebar");
-      hambtn.addEventListener("click", () =>
-        sidebarEl.classList.toggle("open")
-      );
-      closeBtn.addEventListener("click", () => {
-        sidebar.classList.remove("open");
-        sidebar.setAttribute("aria-hidden", "true");
-      });
-      document.addEventListener("click", (e) => {
-        if (window.innerWidth <= 820) {
-          const inside =
-            sidebarEl.contains(e.target) ||
-            hambtn.contains(e.target) ||
-            document.getElementById("settingsDrawer").contains(e.target);
-          if (!inside) sidebarEl.classList.remove("open");
-        }
-      });
-
-      /* -------------------------
-   Initialize
-   ------------------------- */
-      (async function init() {
-        await initCharts();
-        // load profile into UI header
-        const p = await mockApi.loadProfile();
-        profileDisplayName.textContent = p.name;
-        profileDisplayRole.textContent = p.role;
-        // start refresh based on settings
-        const settings = await mockApi.loadSettings();
-        initPeriodicRefresh(settings);
-      })();
-
-      /* -------------------------
-   Utility: simple new invoice button
-   ------------------------- */
-      document
-        .getElementById("newInvoiceBtn")
-        .addEventListener("click", async () => {window.location.href = "invoice.html";
-        });
-      document
-        .getElementById("newQuoteBtn")
-        .addEventListener("click", async () => {window.location.href = "quote.html";
-        });
-    </script>
-   
-    
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
-  authDomain: "solidflow-1f753.firebaseapp.com",
-  projectId: "solidflow-1f753",
-  storageBucket: "solidflow-1f753.firebasestorage.app",
-  messagingSenderId: "68885400864",
-  appId: "1:68885400864:web:7788e19a073d9a8e79db45",
-  measurementId: "G-RTL0CM1B44"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const invoicesCollection = db.collection('invoices');
-const clientsCollection = db.collection('clients');
-let editId = null;
-
-// Populate client dropdown
-function populateClients() {
-    const clientSelect = document.getElementById('invoice-client');
-    clientSelect.innerHTML = '';
-    clientsCollection.get().then(snapshot => {
-        snapshot.forEach(doc => {
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.text = doc.data().name;
-            clientSelect.add(option);
-        });
-    });
-}
-invoicesCollection.onSnapshot(snapshot => {
-    const tbody = document.getElementById('invoices-table');
-    tbody.innerHTML = '';
-    snapshot.forEach(doc => {
-        const invoice = doc.data();
-        clientsCollection.doc(invoice.clientId).get().then(clientDoc => {
-            const clientName = clientDoc.exists ? clientDoc.data().name : 'Unknown';
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${invoice.number}</td>
-                <td>${clientName}</td>
-                <td>${invoice.date}</td>
-                <td>$${invoice.amount.toFixed(2)}</td>
-                <td><span class="status ${invoice.status.toLowerCase()}">${invoice.status}</span></td>
+                                    <li class="standard">
+                        <a class="header_link main_header_link" role="button" href="">Customers</a>
+                    </li>
                 
-            `;
-            tbody.appendChild(row);
-        });
-    });
-});
-    </script>
- 
-    <script>
-      const auth = firebase.auth();
+                <li class="standard">
+                    <a class="header_link main_header_link" role="button" href="">Pricing</a>
+                </li>
 
-      // Redirect if not logged in
-      auth.onAuthStateChanged((user) => {
-        if (!user) {
-          window.location.href = "login.html";
-        } else {
-          console.log("Logged in user:", user.email);
-        }
-      });
-    </script>
-  </body>
+                <li class="standard">
+                    <a class="header_link main_header_link" role="button" href="">Help
+                        Center</a>
+                </li>
+
+                                    <li class="header_login">
+                        <a class="main_header_link" href="/login.html">
+                                            <span class="highlight_button login">
+                                                Login
+                                            </span>
+                        </a>
+                    </li>
+
+                    <li class="header_signup">
+                        <a class="main_header_link no_pr" href="/register.html">
+                                            <span class="highlight_button signup">
+                                                Sign Up Free
+                                            </span>
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+</header>
+
+<div class="main">
+
+    <div class="hero" style="height: 100vh;">
+        <div class="wrapper">
+            <div class="restrainer">
+                <div class="inner">
+                    <div class="width">
+
+                        <h1 class="hero_heading">Your Business. Your Clients. <br>One Free, Powerful Invoicing Platform.</h1>
+
+                        <a class="hero_sublink" href="">See why over 250,000 small businesses love
+                            solidflo</a>
+
+                        <a class="cta" href="/register.html">Start using <img
+                                    src="/images/assets/solidflo_btn.png"
+                                    width="78"> for free</a>
+
+                        <a class="take_the_tour" href="">Take the tour</a>
+
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+
+    
+<section id="quick_sign_up" class="quick_sign_up" style="  ">
+
+    <div class="inner">
+        <h2 class="cta_text">Send your first invoice today <span class="cursive"> — It's free!</span></h2>
+    </div>
+
+</section>
+
+   
+</div>
+
+<script nonce="rmrEFV9OLcQIzSSh" src="/assets/js/sticky/jquery.sticky.112dbb.js" type="text/javascript" defer></script>
+<script nonce="rmrEFV9OLcQIzSSh" src="/assets/js/scripts.main.shared.2c81f8.js" type="text/javascript" defer></script>
+<script nonce="rmrEFV9OLcQIzSSh" src="/assets/js/scripts.main.solidflo.45c1dc.js" type="text/javascript" defer></script>
+
+
+
+
+</body>
 </html>

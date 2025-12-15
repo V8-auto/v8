@@ -1,74 +1,338 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register - SolidFlow</title>
-<style>
-    body { font-family: Arial; background: #f5f7fa; display:flex; justify-content:center; align-items:center; height:100vh; }
-    .container { background:white; padding:20px; border-radius:10px; width:300px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-    input { width:100%; padding:8px; margin:8px 0; box-sizing:border-box; }
-    button { width:100%; padding:10px; background:#007bff; color:white; border:none; border-radius:5px; cursor:pointer; }
-</style>
-</head>
-<body>
-<div class="container">
-    <h2>Register</h2>
-    <input type="text" id="name" placeholder="Full Name" required>
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button onclick="registerUser()">Register</button>
-</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - SolidFlow</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: rgb(4, 4, 107);
+        border-radius: 8px;
+      }
+      .logo img {
+        height: 60px;
+      }
+      h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 28px;
+      }
+      .input-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 500;
+        font-size: 14px;
+      }
+      input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+      button {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: transform 0.2s;
+        margin-top: 10px;
+      }
+      button:hover {
+        transform: translateY(-2px);
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .message {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 14px;
+        display: none;
+      }
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+      .login-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+        font-size: 14px;
+      }
+      .login-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .login-link a:hover {
+        text-decoration: underline;
+      }
+      .password-requirements {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+      @media (max-width: 480px) {
+        .container {
+          padding: 25px;
+        }
+        h2 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img src="/assets/img/solidflo-logo.png" alt="SolidFlow Logo" />
+      </div>
+      <h2>Create Account</h2>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+      <form id="registerForm" onsubmit="registerUser(event)">
+        <div class="input-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" placeholder="John Doe" required />
+        </div>
 
-<script>
-const firebaseConfig = {
-    apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
-    authDomain: "solidflow-1f753.firebaseapp.com",
-    projectId: "solidflow-1f753",
-    storageBucket: "solidflow-1f753.firebasestorage.app",
-    messagingSenderId: "68885400864",
-    appId: "1:68885400864:web:7788e19a073d9a8e79db45",
-    measurementId: "G-RTL0CM1B44"
-};
+        <div class="input-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="john@example.com"
+            required
+          />
+        </div>
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter password"
+            required
+            minlength="6"
+          />
+          <div class="password-requirements">
+            Password must be at least 6 characters long
+          </div>
+        </div>
 
-function registerUser() {
-    const name = document.getElementById('username').value;
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    if(!name || !email || !password) { 
-        msg.textContent="All fields required!"; 
-        return; 
-    }
+        <div class="input-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            placeholder="Re-enter password"
+            required
+          />
+        </div>
 
-    auth.createUserWithEmailAndPassword(email, password)
-        .then(userCredential => {
-            const user = userCredential.user;
-            return db.collection('users').doc(user.uid).set({
-                username: name,
-                email: email,
-                password: password,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        })
-        .then(() => {
-            msg.style.color = "green";
-            msg.textContent = "Registered successfully! Redirecting...";
-            setTimeout(() => window.location.href="dashboard.html", 1500);
-        })
-        .catch(error => {
-            msg.style.color = "red";
-            msg.textContent = error.message;
+        <button type="submit" id="registerBtn">Create Account</button>
+      </form>
+
+      <div id="message" class="message"></div>
+
+      <div class="login-link">
+        Already have an account? <a href="/login.html">Login here</a>
+      </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+        authDomain: "solidflow-1f753.firebaseapp.com",
+        projectId: "solidflow-1f753",
+        storageBucket: "solidflow-1f753.firebasestorage.app",
+        messagingSenderId: "68885400864",
+        appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+        measurementId: "G-RTL0CM1B44",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      function showMessage(text, type) {
+        const msg = document.getElementById("message");
+        msg.textContent = text;
+        msg.className = `message ${type}`;
+        msg.style.display = "block";
+      }
+
+     function registerUser(event) {
+  event.preventDefault();
+  
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  const registerBtn = document.getElementById("registerBtn");
+
+  // Validation
+  if (!name || !email || !password || !confirmPassword) {
+    showMessage("All fields are required!", "error");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showMessage("Passwords do not match!", "error");
+    return;
+  }
+
+  if (password.length < 6) {
+    showMessage("Password must be at least 6 characters long!", "error");
+    return;
+  }
+
+  // Disable button during registration
+  registerBtn.disabled = true;
+  registerBtn.textContent = "Creating Account...";
+
+  // Create user account
+  auth.createUserWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      
+      // Send email verification
+      return user.sendEmailVerification().then(() => {
+        // Store user data in Firestore (DO NOT store password!)
+        return db.collection("users").doc(user.uid).set({
+          name: name,
+          email: email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          emailVerified: false,
+          role: "user"
+          // REMOVED: collections field - this was the problem!
         });
-}
-</script>
-</body>
+      }).then(() => {
+        // Initialize subcollections with placeholder documents
+        const batch = db.batch();
+        
+        // Create a placeholder document in each subcollection
+        // These will make the subcollections visible in Firestore
+        const clientsRef = db.collection("users").doc(user.uid).collection("clients").doc("_init");
+        batch.set(clientsRef, {
+          _placeholder: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        const invoicesRef = db.collection("users").doc(user.uid).collection("invoices").doc("_init");
+        batch.set(invoicesRef, {
+          _placeholder: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        const paymentsRef = db.collection("users").doc(user.uid).collection("payments").doc("_init");
+        batch.set(paymentsRef, {
+          _placeholder: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        const purchaseOrdersRef = db.collection("users").doc(user.uid).collection("purchaseOrders").doc("_init");
+        batch.set(purchaseOrdersRef, {
+          _placeholder: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        const quotationsRef = db.collection("users").doc(user.uid).collection("quotations").doc("_init");
+        batch.set(quotationsRef, {
+          _placeholder: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        return batch.commit();
+      });
+    })
+    .then(() => {
+      showMessage(
+        "✓ Account created successfully! Please check your email (" + email + ") to verify your account before logging in.",
+        "success"
+      );
+      
+      // Sign out the user so they must verify email before logging in
+      auth.signOut();
+      
+      // Redirect to login page after 5 seconds
+      setTimeout(() => {
+        window.location.href = "/login.html";
+      }, 5000);
+    })
+    .catch((error) => {
+      registerBtn.disabled = false;
+      registerBtn.textContent = "Create Account";
+      
+      let errorMessage = error.message;
+      
+      // Provide user-friendly error messages
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "This email is already registered. Please login instead.";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Invalid email address format.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "Password is too weak. Please use a stronger password.";
+      }
+      
+      showMessage("Error: " + errorMessage, "error");
+    });
+}    </script>
+  </body>
 </html>

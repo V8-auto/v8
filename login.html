@@ -1,178 +1,369 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - SolidFlow</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - SolidFlow</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: rgb(4, 4, 107);
+        border-radius: 8px;
+      }
+      .logo img {
+        height: 60px;
+      }
+      h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 28px;
+      }
+      .input-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 500;
+        font-size: 14px;
+      }
+      input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+      button {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: transform 0.2s;
+        margin-top: 10px;
+      }
+      button:hover {
+        transform: translateY(-2px);
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .message {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 14px;
+        display: none;
+      }
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+      .message.warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+        display: block;
+      }
+      .forgot-password {
+        text-align: right;
+        margin-top: -10px;
+        margin-bottom: 15px;
+      }
+      .forgot-password a {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .forgot-password a:hover {
+        text-decoration: underline;
+      }
+      .register-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+        font-size: 14px;
+      }
+      .register-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .register-link a:hover {
+        text-decoration: underline;
+      }
+      .divider {
+        text-align: center;
+        margin: 25px 0;
+        position: relative;
+      }
+      .divider::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 100%;
+        height: 1px;
+        background: #e0e0e0;
+      }
+      .divider span {
+        background: white;
+        padding: 0 15px;
+        position: relative;
+        color: #999;
+        font-size: 13px;
+      }
+      @media (max-width: 480px) {
+        .container {
+          padding: 25px;
+        }
+        h2 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img src="/assets/img/solidflo-logo.png" alt="SolidFlow Logo" />
+      </div>
+      <h2>Welcome Back</h2>
 
-    body {
-      background: #f0f2f5;
-      display: flex;
-      height: 100vh;
-      justify-content: center;
-      align-items: center;
-    }
+      <form id="loginForm" onsubmit="loginUser(event)">
+        <div class="input-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="john@example.com"
+            required
+          />
+        </div>
 
-    .auth-container {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter password"
+            required
+          />
+        </div>
 
-    .logo {
-      font-size: 30px;
-      color: #007bff;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 25px;
-    }
+        <div class="forgot-password">
+          <a href="#" onclick="handleForgotPassword(event)">Forgot Password?</a>
+        </div>
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-    }
+        <button type="submit" id="loginBtn">Login</button>
+      </form>
 
-    label {
-      font-size: 14px;
-      color: #444;
-    }
+      <div id="message" class="message"></div>
 
-    input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-top: 6px;
-      margin-bottom: 18px;
-      font-size: 14px;
-    }
+      <div class="divider">
+        <span>OR</span>
+      </div>
 
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 5px;
-    }
-
-    button:hover {
-      background: #005fcc;
-    }
-
-    .extra-links {
-      margin-top: 12px;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    .extra-links a {
-      color: #007bff;
-      text-decoration: none;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background: #333;
-      color: white;
-      padding: 14px 18px;
-      border-radius: 8px;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: 0.3s;
-      pointer-events: none;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  </style>
-</head>
-<body>
-  <div class="auth-container">
-    <div class="logo">SolidFlow</div>
-    <h2>Sign In</h2>
-
-    <label>Email</label>
-    <input type="email" id="email" placeholder="you@example.com" />
-
-    <label>Password</label>
-    <input type="password" id="password" placeholder="••••••••" />
-
-    <button onclick="login()">Login</button>
-
-    <div class="extra-links">
-      <p><a href="/forgot.html">Forgot Password?</a></p>
-      <p>Don't have an account? <a href="/register.html">Register</a></p>
+      <div class="register-link">
+        Don't have an account? <a href="/register.html">Register here</a>
+      </div>
     </div>
-  </div>
 
-  <div id="toast" class="toast">Authentication failed</div>
-<script>
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
-    authDomain: "solidflow-1f753.firebaseapp.com",
-    projectId: "solidflow-1f753",
-    storageBucket: "solidflow-1f753.appspot.com",
-    messagingSenderId: "68885400864",
-    appId: "1:68885400864:web:7788e19a073d9a8e79db45",
-    measurementId: "G-RTL0CM1B44"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+        authDomain: "solidflow-1f753.firebaseapp.com",
+        projectId: "solidflow-1f753",
+        storageBucket: "solidflow-1f753.firebasestorage.app",
+        messagingSenderId: "68885400864",
+        appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+        measurementId: "G-RTL0CM1B44",
+      };
 
-    try {
-      // Sign in with Firebase Auth
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      const user = userCredential.user;
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
 
-      // Fetch user info from Firestore "users" collection
-      const snapshot = await db.collection('users')
-  .where('email', '==', email)
-  .limit(1)
-  .get();
+      function showMessage(text, type) {
+        const msg = document.getElementById("message");
+        msg.textContent = text;
+        msg.className = `message ${type}`;
+        msg.style.display = "block";
+      }
 
-if (snapshot.empty) {
-  throw new Error('User record not found in Firestore');
-}
+      function loginUser(event) {
+        event.preventDefault();
 
-const userData = snapshot.docs[0].data();
-      // Optionally store user info locally
-      localStorage.setItem('user', JSON.stringify(userData));
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const loginBtn = document.getElementById("loginBtn");
 
-      // Redirect to dashboard
-      window.location.href = '/dashboard/index.html';
-    } catch (err) {
-      console.error(err);
-      showToast('Login failed — check email & password');
-    }
-  }
+        // Validation
+        if (!email || !password) {
+          showMessage("Please enter both email and password!", "error");
+          return;
+        }
 
-  function showToast(message) {
-    alert(message); // simple toast replacement
-  }
-</script>
+        // Disable button during login
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Logging in...";
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-</body>
+        // Sign in user
+        auth
+          .signInWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            const user = userCredential.user;
+
+            // Check if email is verified
+            if (!user.emailVerified) {
+              showMessage(
+                "Please verify your email before logging in. Check your inbox for the verification link.",
+                "warning",
+              );
+
+              // Sign out unverified user
+              auth.signOut();
+              loginBtn.disabled = false;
+              loginBtn.textContent = "Login";
+              return;
+            }
+
+            // Update last login timestamp
+            db.collection("users")
+              .doc(user.uid)
+              .update({
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                emailVerified: true,
+              })
+              .catch((error) => {
+                console.log("Could not update last login:", error);
+              });
+
+            showMessage("✓ Login successful! Redirecting...", "success");
+
+            // Redirect to dashboard after 1.5 seconds
+            setTimeout(() => {
+              window.location.href = "/dashboard.html";
+            }, 1500);
+          })
+          .catch((error) => {
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Login";
+
+            let errorMessage = error.message;
+
+            // Provide user-friendly error messages
+            if (error.code === "auth/user-not-found") {
+              errorMessage =
+                "No account found with this email. Please register first.";
+            } else if (error.code === "auth/wrong-password") {
+              errorMessage = "Incorrect password. Please try again.";
+            } else if (error.code === "auth/invalid-email") {
+              errorMessage = "Invalid email address format.";
+            } else if (error.code === "auth/user-disabled") {
+              errorMessage =
+                "This account has been disabled. Please contact support.";
+            } else if (error.code === "auth/too-many-requests") {
+              errorMessage =
+                "Too many failed login attempts. Please try again later.";
+            }
+
+            showMessage("Error: " + errorMessage, "error");
+          });
+      }
+
+      function handleForgotPassword(event) {
+        event.preventDefault();
+
+        const email = document.getElementById("email").value.trim();
+
+        if (!email) {
+          showMessage("Please enter your email address first.", "warning");
+          return;
+        }
+
+        if (confirm("Send password reset email to " + email + "?")) {
+          auth
+            .sendPasswordResetEmail(email)
+            .then(() => {
+              showMessage(
+                "✓ Password reset email sent! Check your inbox and follow the instructions.",
+                "success",
+              );
+            })
+            .catch((error) => {
+              let errorMessage = error.message;
+
+              if (error.code === "auth/user-not-found") {
+                errorMessage = "No account found with this email address.";
+              } else if (error.code === "auth/invalid-email") {
+                errorMessage = "Invalid email address format.";
+              }
+
+              showMessage("Error: " + errorMessage, "error");
+            });
+        }
+      }
+
+      // Check if user is already logged in
+      auth.onAuthStateChanged((user) => {
+        if (user && user.emailVerified) {
+          // User is already logged in and verified, redirect to dashboard
+          window.location.href = "/dashboard/index.html";
+        }
+      });
+    </script>
+  </body>
 </html>

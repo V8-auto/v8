@@ -4,7 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>SolidFlow — Modern SaaS Dashboard (Mocked API + Settings)</title>
-
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/assets/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/assets/favicon-16x16.png"
+    />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -66,26 +78,28 @@
         z-index: 40;
         backdrop-filter: blur(6px) saturate(120%);
       }
-       .close-btn {
-          position: absolute;
-          top: 15px;
-          right: 15px;
-          background: none;
-          border: none;
-          font-size: 24px;
-          cursor: pointer;
-          color: white;     /* match sidebar text color */
-          display: none;    /* hidden by default */
-        }
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: white; /* match sidebar text color */
+        display: none; /* hidden by default */
+      }
+      @media (max-width: 768px) {
         .sidebar.open .close-btn {
-          display: block;   /* show when sidebar opens */
+          display: block; /* Show only on mobile when sidebar is open */
         }
+      }
       .brand {
         display: block;
         gap: 20px;
         align-items: center;
       }
-       .menu-toggle {
+      .menu-toggle {
         display: none;
         background: transparent;
         border: none;
@@ -183,6 +197,36 @@
         justify-content: space-between;
         align-items: center;
         gap: 16px;
+      }
+      /* For phones (up to 576px) */
+      @media (max-width: 576px) {
+        #welcomeText {
+          padding-right: 15px;
+        }
+      }
+      /* Hide by default */
+      .mobile-only {
+        display: none;
+      }
+
+      /* Show on tablets (768px - 1024px) */
+      @media (max-width: 1024px) {
+        .mobile-only {
+          display: block;
+        }
+      }
+
+      /* Show on mobile (up to 767px) */
+      @media (max-width: 767px) {
+        .mobile-only {
+          display: block;
+        }
+      }
+      /* For tablets (577px to 768px) */
+      @media (min-width: 577px) and (max-width: 768px) {
+        #welcomeText {
+          padding-right: 20px;
+        }
       }
       .searchbar {
         display: flex;
@@ -316,7 +360,11 @@
         color: var(--muted);
         font-size: 13px;
       }
-
+      @media (max-width: 768px) {
+        .sidebar.mobile-hidden {
+          transform: translateX(-100%);
+        }
+      }
       /* top-left mobile control */
       .top-left {
         position: fixed;
@@ -336,14 +384,14 @@
         cursor: pointer;
         border: 1px solid rgba(255, 255, 255, 0.02);
       }
-       @media (min-width: 1024px) {
-          .hambtn {
-            display: none;
-          }
-          .close-btn {
-            display: none;
-          }
+      @media (min-width: 1024px) {
+        .hambtn {
+          display: none;
         }
+        .close-btn {
+          display: none;
+        }
+      }
       /* SETTINGS drawer & profile modal */
       .settings-drawer {
         position: fixed;
@@ -351,7 +399,17 @@
         top: 0;
         width: 380px;
         height: 100%;
-        background: rgb(15, 23, 36);
+        background: radial-gradient(
+            1200px 400px at 10% 10%,
+            rgba(124, 58, 237, 0.08),
+            transparent 8%
+          ),
+          radial-gradient(
+            1000px 300px at 90% 90%,
+            rgba(6, 182, 212, 0.06),
+            transparent 8%
+          ),
+          var(--bg);
         border-left: 1px solid rgba(255, 255, 255, 0.03);
         padding: 20px;
         transition: var(--transition);
@@ -432,7 +490,7 @@
         .searchbar {
           width: 100%;
         }
-       
+
         .panel {
           padding: 12px;
         }
@@ -496,15 +554,237 @@
         background: #f1f5fb;
       }
     </style>
+    <style>
+      .mobile-toggle {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: rgb(1, 1, 41);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 20px;
+      }
+
+      .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+      @media (max-width: 768px) {
+        .mobile-toggle {
+          display: block;
+        }
+
+        .sidebar {
+          transform: translateX(-100%);
+        }
+
+        .sidebar.mobile-visible {
+          transform: translateX(0);
+        }
+
+        .mobile-overlay.active {
+          display: block;
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 15px 15px 15px;
+        }
+
+        .invoices-section {
+          padding: 20px 15px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .header > div {
+          width: 100%;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .search-box {
+          flex-direction: column;
+        }
+
+        .search-box input {
+          width: 100%;
+          min-width: unset;
+        }
+
+        .total-amount {
+          font-size: 28px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .chart-card {
+          height: auto !important;
+        }
+
+        table {
+          font-size: 12px;
+        }
+
+        th,
+        td {
+          padding: 8px 6px;
+        }
+
+        .edit-btn,
+        .delete-btn {
+          padding: 4px 8px;
+          font-size: 11px;
+          display: block;
+          width: 100%;
+          margin-bottom: 4px;
+        }
+      }
+
+      .settings-drawer {
+        background-color: #1f2130;
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      h3 {
+        margin-bottom: 24px;
+        font-size: 24px;
+        color: #333;
+      }
+      label {
+        display: block;
+        margin-top: 20px;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #555;
+        font-size: 14px;
+      }
+      input[type="text"],
+      input[type="email"],
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #4285f4;
+      }
+      .logo-upload {
+        margin-top: 20px;
+      }
+      .logo-preview {
+        margin-top: 12px;
+        max-width: 150px;
+        max-height: 150px;
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        display: none;
+      }
+      .logo-preview img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+      }
+      input[type="file"] {
+        padding: 8px 0;
+      }
+      .save-row {
+        margin-top: 30px;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+      .btn {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn.ghost {
+        background: #f5f5f5;
+        color: #666;
+      }
+      .btn.ghost:hover {
+        background: #e8e8e8;
+      }
+      .btn.primary {
+        background: #4285f4;
+        color: white;
+      }
+      .btn.primary:hover {
+        background: #3367d6;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .status {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        display: none;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+    </style>
+    <!-- Add Chart.js Library -->
   </head>
   <body>
-    <!-- SIDEBAR -->
-    <aside id="sidebar" class="sidebar open" aria-hidden="false">
-      <button id="closeSidebar" class="close-btn" aria-label="Close menu">✕</button>
+    <button class="mobile-toggle mobile-only" style="background-color: transparent; color: white;" onclick="document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.mobile-overlay').classList.toggle('active');">☰</button>
+    <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
+    <aside id="sidebar" class="sidebar mobile-hidden" aria-hidden="true">
+      <button id="closeSidebar" class="close-btn" aria-label="Close menu">
+        ✕
+      </button>
       <div class="brand">
-        <div class="logo"><img src="/assets/img/solidflo-logo.png" style="height: 60px;" alt=""></div>
+        <div class="logo">
+          <img
+            src="/assets/img/solidflo-logo.png"
+            style="height: 60px"
+            alt=""
+          />
+        </div>
         <div>
-          
           <p class="mini muted">Invoices & Billing</p>
         </div>
       </div>
@@ -516,6 +796,9 @@
         <a href="/dashboard/invoices.html"
           ><span class="ico">📄</span><span class="label">Invoices</span></a
         >
+        <a class="active" href="/dashboard/quotations.html">
+          <span class="ico">📄</span><span>Quotations</span>
+        </a>
         <a href="/dashboard/clients.html"
           ><span class="ico">👥</span><span class="label">Clients</span></a
         >
@@ -528,16 +811,53 @@
       </nav>
 
       <div class="spacer"></div>
-        <button class="btn ghost" id="openSettings">Settings</button>
-        <button class="btn ghost" id="openProfile">Profile</button>
-      <div class="flex">
-
+      <button
+        class="btn ghost"
+        style="
+          background-color: radial-gradient(
+              1200px 400px at 10% 10%,
+              rgba(124, 58, 237, 0.08),
+              transparent 8%
+            ),
+            radial-gradient(
+              1000px 300px at 90% 90%,
+              rgba(6, 182, 212, 0.06),
+              transparent 8%
+            ),
+            var(--bg);
+          color: white;
+        "
+        id="openSettings"
+      >
+        Settings
+      </button>
+      <button
+        class="btn ghost"
+        style="
+          background-color: radial-gradient(
+              1200px 400px at 10% 10%,
+              rgba(124, 58, 237, 0.08),
+              transparent 8%
+            ),
+            radial-gradient(
+              1000px 300px at 90% 90%,
+              rgba(6, 182, 212, 0.06),
+              transparent 8%
+            ),
+            var(--bg);
+          color: white;
+        "
+        id="logoutBtn"
+      >
+        Logout
+      </button>
+     <div class="flex">
         <div
           style="
             width: 44px;
             height: 44px;
             border-radius: 10px;
-            background: var(--glass);
+            background: rgba(255, 255, 255, 0.04);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -546,9 +866,8 @@
           👤
         </div>
         <div>
-          
-          <div style="font-weight: 700" id="profileName">User</div>
-          <div class="mini muted" id="profileRole">Admin</div>
+          <div style="font-weight: 700; color: white">User</div>
+          <div style="font-size: 12px; color: #9aa7b2">Admin</div>
         </div>
       </div>
     </aside>
@@ -556,12 +875,12 @@
     <!-- APP -->
     <div class="app" id="app">
       <!-- mobile hamburger -->
-      <div class="top-left">
-        <button class="hambtn" id="hambtn" aria-label="Open menu">☰</button>
-      </div>
 
       <header class="header">
-        <div class="flex" style="gap: 18px; align-items: center">
+        <div
+          class="flex"
+          style="gap: 18px; align-items: center; padding-top: 50px"
+        >
           <div class="searchbar" role="search">
             <svg
               width="16"
@@ -590,9 +909,8 @@
         </div>
 
         <div class="actions">
-          
           <button class="btn primary" id="newInvoiceBtn">+ New Invoice</button>
-           <button class="btn primary" id="newQuoteBtn">+ New Quote</button>
+          <button class="btn primary" id="newQuoteBtn">+ New Quote</button>
         </div>
       </header>
 
@@ -619,23 +937,21 @@
 
       <div class="panel" style="margin-top: 18px">
         <h3>Recent Invoices</h3>
-        <table
-          class="table"
-          role="table"
-          aria-label="Recent invoices"
-          style="margin-top: 12px"
-        >
+        <table>
           <thead>
             <tr>
-              <th>Invoice</th>
+              <th>Invoice #</th>
               <th>Client</th>
               <th>Date</th>
-              <th>Amount</th>
+              <th>Total</th>
               <th>Status</th>
+              <th style="text-align: center">Actions</th>
             </tr>
           </thead>
-          <tbody id="invoices-table">
-            <!-- rows injected by Firebase Firestore -->
+          <tbody id="invoicesTableBody">
+            <tr>
+              <td colspan="6" class="loading">Loading invoices...</td>
+            </tr>
           </tbody>
         </table>
 
@@ -644,9 +960,35 @@
     </div>
 
     <!-- Settings Drawer -->
-    <aside id="settingsDrawer" class="settings-drawer" aria-hidden="true">
+    <aside id="settingsDrawer" class="settings-drawer">
       <h3>Settings</h3>
-      <label>Theme</label>
+
+      <label>Business Name</label>
+      <input
+        type="text"
+        id="settingName"
+        placeholder="Enter your business name"
+      />
+
+      <label>Email</label>
+      <input type="email" id="settingEmail" placeholder="Enter your email" />
+
+      <div class="logo-upload">
+        <label>Logo</label>
+        <input type="file" id="settingLogo" accept="image/*" />
+        <div class="logo-preview" id="logoPreview">
+          <img id="logoImg" src="" alt="Logo preview" />
+        </div>
+      </div>
+
+      <label>Currency</label>
+      <select id="settingCurrency">
+        <option value="USD">USD ($)</option>
+        <option value="EUR">EUR (€)</option>
+        <option value="ZAR">ZAR (R)</option>
+      </select>
+
+      <label>Theme (Local only)</label>
       <select id="settingTheme">
         <option value="modern">Modern SaaS</option>
         <option value="dark">Dark</option>
@@ -656,12 +998,7 @@
       <label>Auto-refresh (seconds)</label>
       <input type="text" id="settingRefresh" value="8" />
 
-      <label>Show currency</label>
-      <select id="settingCurrency">
-        <option value="USD">USD ($)</option>
-        <option value="EUR">EUR (€)</option>
-        <option value="ZAR">ZAR (R)</option>
-      </select>
+      <div class="status" id="statusMsg"></div>
 
       <div class="save-row">
         <button class="btn ghost" id="cancelSettings">Cancel</button>
@@ -819,6 +1156,9 @@
               JSON.stringify(settings)
             );
             return { ok: true };
+            showStatus("Settings saved successfully!", "success");
+            displayUserLogo(); // ← Add this line
+            settingsDrawer.classList.remove("open");
           },
 
           async loadSettings() {
@@ -847,121 +1187,9 @@
    UI: charts, table, periodic poll
    ------------------------- */
 
-      let revChart, statusChart;
+      let statusChart;
       const invoicesTbody = document.getElementById("invoicesTbody");
       const kpisContainer = document.getElementById("kpis");
-
-      async function initCharts() {
-        const revCtx = document.getElementById("revChart").getContext("2d");
-        revChart = new Chart(revCtx, {
-          type: "line",
-          data: {
-            labels: [],
-            datasets: [
-              {
-                label: "Revenue",
-                data: [],
-                borderWidth: 2,
-                tension: 0.35,
-                borderColor: "#7c3aed",
-                backgroundColor: (ctx) => {
-                  const g = ctx.createLinearGradient(0, 0, 0, 300);
-                  g.addColorStop(0, "rgba(124,58,237,0.28)");
-                  g.addColorStop(1, "rgba(6,182,212,0.02)");
-                  return g;
-                },
-                fill: true,
-                pointRadius: 0,
-              },
-            ],
-          },
-          options: {
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { color: "#9aa7b2" } },
-              y: {
-                grid: { color: "rgba(255,255,255,0.03)" },
-                ticks: { color: "#9aa7b2" },
-              },
-            },
-          },
-        });
-
-        const statusCtx = document
-          .getElementById("statusChart")
-          .getContext("2d");
-        statusChart = new Chart(statusCtx, {
-          type: "doughnut",
-          data: {
-            labels: ["Paid", "Pending", "Overdue"],
-            datasets: [
-              {
-                data: [0, 0, 0],
-                backgroundColor: ["#06b6d4", "#f59e0b", "#ef4444"],
-                hoverOffset: 6,
-                borderWidth: 0,
-              },
-            ],
-          },
-          options: {
-            plugins: {
-              legend: { position: "bottom", labels: { color: "#cfe9f7" } },
-            },
-          },
-        });
-      }
-
-      function renderKpis(data, currencySymbol = "R") {
-        kpisContainer.innerHTML = "";
-        const items = [
-          {
-            label: "Total Outstanding",
-            value: `${currencySymbol}${data.totalOutstanding}`,
-          },
-          { label: "Due This Week", value: `${data.dueThisWeek}` },
-          {
-            label: "Payments This Month",
-            value: `${currencySymbol}${data.paymentsThisMonth}`,
-          },
-          { label: "Total Clients", value: `${data.totalClients}` },
-        ];
-        items.forEach((it) => {
-          const div = document.createElement("div");
-          div.className = "kpi panel";
-          div.innerHTML = `<div class="label">${it.label}</div><div class="value">${it.value}</div><div class="mini muted"></div>`;
-          kpisContainer.appendChild(div);
-        });
-      }
-
-
-      async function refreshDashboard(settings) {
-        try {
-          const data = await mockApi.fetchDashboard();
-          const currency = settings?.currency || "ZAR";
-          const symbol =
-            currency === "EUR" ? "€" : currency === "ZAR" ? "R" : "$";
-          renderKpis(data, symbol);
-          // update revChart
-          revChart.data.labels = data.months;
-          revChart.data.datasets[0].data = data.revenue;
-          revChart.update();
-          // update status chart aggregating invoices
-          const invoices = await mockApi.fetchInvoices();
-          const counts = { paid: 0, pending: 0, overdue: 0 };
-          invoices.forEach(
-            (i) => (counts[i.status] = (counts[i.status] || 0) + 1)
-          );
-          statusChart.data.datasets[0].data = [
-            counts.paid,
-            counts.pending,
-            counts.overdue,
-          ];
-          statusChart.update();
-          renderInvoicesTable(invoices);
-        } catch (err) {
-          console.error("dashboard refresh failed", err);
-        }
-      }
 
       /* -------------------------
    Settings & Profile logic
@@ -1043,6 +1271,309 @@
         profileDisplayRole.textContent = newP.role;
       });
 
+      const settingLogo = document.getElementById("settingLogo");
+      const logoPreview = document.getElementById("logoPreview");
+      const logoImg = document.getElementById("logoImg");
+
+      // Preview logo when selected
+      if (settingLogo) {
+        settingLogo.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              logoImg.src = e.target.result;
+              logoPreview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+
+      // Function to upload and save logo to Firestore subcollection
+      async function uploadLogoToCollection(logoFile) {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          throw new Error("No user logged in");
+        }
+
+        try {
+          // 1. Upload image to Firebase Storage
+          const logoRef = ref(
+            storage,
+            `users/${user.uid}/logos/logo_${Date.now()}`
+          );
+          await uploadBytes(logoRef, logoFile);
+          const logoUrl = await getDownloadURL(logoRef);
+
+          // 2. Save to Firestore "logo" subcollection
+          const logoDocRef = db
+            .collection("users")
+            .doc(user.uid)
+            .collection("logo")
+            .doc("current"); // Use "current" as the doc ID for the active logo
+
+          await logoDocRef.set({
+            logoUrl: logoUrl,
+            fileName: logoFile.name,
+            fileSize: logoFile.size,
+            fileType: logoFile.type,
+            uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            isActive: true,
+          });
+
+          console.log("Logo uploaded successfully:", logoUrl);
+          return logoUrl;
+        } catch (error) {
+          console.error("Error uploading logo:", error);
+          throw error;
+        }
+      }
+
+      // Function to load logo from Firestore subcollection
+      async function loadLogoFromCollection() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        try {
+          const logoDocRef = db
+            .collection("users")
+            .doc(user.uid)
+            .collection("logo")
+            .doc("current");
+
+          const logoDoc = await logoDocRef.get();
+
+          if (logoDoc.exists && logoDoc.data().logoUrl) {
+            const logoUrl = logoDoc.data().logoUrl;
+            logoImg.src = logoUrl;
+            logoPreview.style.display = "block";
+            return logoUrl;
+          }
+        } catch (error) {
+          console.error("Error loading logo:", error);
+        }
+      }
+      import { getAuth } from "firebase/auth";
+      import { collection, getDocs, query, orderBy } from "firebase/firestore";
+      import { db } from "./firebase";
+
+      const invoicesTableBody = document.getElementById("invoicesTableBody");
+
+      async function loadInvoices() {
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user) {
+          invoicesTableBody.innerHTML = `
+      <tr>
+        <td colspan="6">Please log in to view invoices.</td>
+      </tr>
+    `;
+          return;
+        }
+
+        try {
+          const invoicesRef = collection(db, "users", user.uid, "invoices");
+          const q = query(invoicesRef, orderBy("date", "desc"));
+          const snapshot = await getDocs(q);
+
+          if (snapshot.empty) {
+            invoicesTableBody.innerHTML = `
+        <tr>
+          <td colspan="6">No invoices found.</td>
+        </tr>
+      `;
+            return;
+          }
+
+          invoicesTableBody.innerHTML = "";
+
+          snapshot.forEach((docSnap) => {
+            const invoice = docSnap.data();
+
+            invoicesTableBody.insertAdjacentHTML(
+              "beforeend",
+              `
+        <tr>
+          <td>${invoice.invoiceNumber}</td>
+          <td>${invoice.clientName}</td>
+          <td>${formatDate(invoice.date)}</td>
+          <td>${formatCurrency(invoice.total)}</td>
+          <td>
+            <span class="status ${invoice.status}">
+              ${invoice.status}
+            </span>
+          </td>
+          <td style="text-align:center">
+            <button onclick="viewInvoice('${docSnap.id}')">View</button>
+            <button onclick="editInvoice('${docSnap.id}')">Edit</button>
+          </td>
+        </tr>
+        `
+            );
+          });
+        } catch (error) {
+          console.error(error);
+          invoicesTableBody.innerHTML = `
+      <tr>
+        <td colspan="6">Failed to load invoices.</td>
+      </tr>
+    `;
+        }
+      }
+      function viewInvoice(id) {
+        console.log("View invoice:", id);
+      }
+
+      function editInvoice(id) {
+        console.log("Edit invoice:", id);
+      }
+
+      // Add to your existing saveSettings button click handler
+      // Replace the logo upload section with this:
+      saveSettings.addEventListener("click", async () => {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showStatus("Please log in first", "error");
+          return;
+        }
+
+        saveSettings.disabled = true;
+        saveSettings.textContent = "Saving...";
+
+        try {
+          // Upload logo if selected
+          const logoFile = settingLogo.files[0];
+          let logoUrl = null;
+
+          if (logoFile) {
+            logoUrl = await uploadLogoToCollection(logoFile);
+          }
+
+          // Also save logo URL to main user document for easy access
+          const userDocRef = db.collection("users").doc(user.uid);
+          await userDocRef.set(
+            {
+              name: settingName.value,
+              email: settingEmail.value,
+              currency: settingCurrency.value,
+              autoRefresh: settingRefresh.value,
+              logoUrl: logoUrl, // Save logo URL here too
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+
+          showStatus("Settings saved successfully!", "success");
+          settingsDrawer.classList.remove("open");
+        } catch (error) {
+          console.error("Error saving settings:", error);
+          showStatus("Error: " + error.message, "error");
+        } finally {
+          saveSettings.disabled = false;
+          saveSettings.textContent = "Save";
+        }
+      });
+
+      // Load logo when opening settings
+      openSettings.addEventListener("click", async () => {
+        await loadLogoFromCollection();
+        settingsDrawer.classList.add("open");
+      });
+
+      // Initialize the logo subcollection (run once during user setup)
+      async function initializeLogoCollection() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        const batch = db.batch();
+
+        const logoInitRef = db
+          .collection("users")
+          .doc(user.uid)
+          .collection("logo")
+          .doc("_init");
+
+        batch.set(logoInitRef, {
+          _placeholder: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        await batch.commit();
+        console.log("Logo collection initialized");
+      }
+      function loadUserProfile(user) {
+  db.collection("users").doc(user.uid).get()
+    .then((doc) => {
+      if (doc.exists) {
+        const userData = doc.data();
+        // Update profile display if you have these elements
+        const profileName = document.querySelector('.flex div:last-child div:first-child');
+        const profileRole = document.querySelector('.flex div:last-child div:last-child');
+        
+        if (profileName) {
+          profileName.textContent = userData.name || 'User';
+        }
+        if (profileRole) {
+          profileRole.textContent = (userData.role || 'user').charAt(0).toUpperCase() + (userData.role || 'user').slice(1);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error loading profile:", error);
+    });
+}
+      async function displayUserLogo() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        try {
+          // First try to get from logo subcollection
+          const logoDocRef = db
+            .collection("users")
+            .doc(user.uid)
+            .collection("logo")
+            .doc("current");
+
+          const logoDoc = await logoDocRef.get();
+          let logoUrl = null;
+
+          if (logoDoc.exists && logoDoc.data().logoUrl) {
+            logoUrl = logoDoc.data().logoUrl;
+          } else {
+            // Fallback: try to get from main user document
+            const userDocRef = db.collection("users").doc(user.uid);
+            const userDoc = await userDocRef.get();
+
+            if (userDoc.exists() && userDoc.data().logoUrl) {
+              logoUrl = userDoc.data().logoUrl;
+            }
+          }
+
+          // Update logo in the page
+          if (logoUrl) {
+            const logoImg = document.querySelector(".logo img");
+            if (logoImg) {
+              logoImg.src = logoUrl;
+              logoImg.style.height = "60px";
+              logoImg.onerror = function () {
+                // If uploaded logo fails to load, revert to default
+                this.src = "/assets/img/solidflo-logo.png";
+              };
+            }
+          }
+        } catch (error) {
+          console.error("Error displaying logo:", error);
+        }
+      }
+
+      // Call this when user logs in or page loads
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user && user.emailVerified) {
+          displayUserLogo();
+        }
+      });
       /* -------------------------
    Polling / live updates
    ------------------------- */
@@ -1068,16 +1599,18 @@
       /* -------------------------
    Sidebar mobile toggle and click-out
    ------------------------- */
-     const sidebarEl = document.getElementById("sidebar");
+      const sidebarEl = document.getElementById("sidebar");
       const hambtn = document.getElementById("hambtn");
-         const closeBtn = document.getElementById("closeSidebar");
-      hambtn.addEventListener("click", () =>
-        sidebarEl.classList.toggle("open")
-      );
-      closeBtn.addEventListener("click", () => {
-        sidebar.classList.remove("open");
-        sidebar.setAttribute("aria-hidden", "true");
-      });
+      const closeBtn = document.getElementById("closeSidebar");
+      hambtn.addEventListener("click", () =>{
+  sidebarEl.classList.toggle("open");
+  document.querySelector(".mobile-overlay").classList.toggle("active");
+});
+    closeBtn.addEventListener("click", () => {
+      sidebarEl.classList.remove("open");
+      sidebarEl.setAttribute("aria-hidden", "true");
+      document.querySelector(".mobile-overlay").classList.remove("active");
+    });
       document.addEventListener("click", (e) => {
         if (window.innerWidth <= 820) {
           const inside =
@@ -1107,81 +1640,450 @@
    ------------------------- */
       document
         .getElementById("newInvoiceBtn")
-        .addEventListener("click", async () => {window.location.href = "invoice.html";
+        .addEventListener("click", async () => {
+          window.location.href = "invoice.html";
         });
       document
         .getElementById("newQuoteBtn")
-        .addEventListener("click", async () => {window.location.href = "quote.html";
+        .addEventListener("click", async () => {
+          window.location.href = "quote.html";
         });
     </script>
-   
-    
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
-  authDomain: "solidflow-1f753.firebaseapp.com",
-  projectId: "solidflow-1f753",
-  storageBucket: "solidflow-1f753.firebasestorage.app",
-  messagingSenderId: "68885400864",
-  appId: "1:68885400864:web:7788e19a073d9a8e79db45",
-  measurementId: "G-RTL0CM1B44"
-};
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const invoicesCollection = db.collection('invoices');
-const clientsCollection = db.collection('clients');
-let editId = null;
-
-// Populate client dropdown
-function populateClients() {
-    const clientSelect = document.getElementById('invoice-client');
-    clientSelect.innerHTML = '';
-    clientsCollection.get().then(snapshot => {
-        snapshot.forEach(doc => {
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.text = doc.data().name;
-            clientSelect.add(option);
-        });
-    });
-}
-invoicesCollection.onSnapshot(snapshot => {
-    const tbody = document.getElementById('invoices-table');
-    tbody.innerHTML = '';
-    snapshot.forEach(doc => {
-        const invoice = doc.data();
-        clientsCollection.doc(invoice.clientId).get().then(clientDoc => {
-            const clientName = clientDoc.exists ? clientDoc.data().name : 'Unknown';
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${invoice.number}</td>
-                <td>${clientName}</td>
-                <td>${invoice.date}</td>
-                <td>$${invoice.amount.toFixed(2)}</td>
-                <td><span class="status ${invoice.status.toLowerCase()}">${invoice.status}</span></td>
-                
-            `;
-            tbody.appendChild(row);
-        });
-    });
-});
-    </script>
- 
     <script>
-      const auth = firebase.auth();
+      function toggleMobileMenu() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.querySelector(".mobile-overlay");
 
-      // Redirect if not logged in
-      auth.onAuthStateChanged((user) => {
+        sidebar.classList.toggle("mobile-visible");
+        sidebar.classList.toggle("mobile-hidden");
+        overlay.classList.toggle("active");
+      }
+      import {
+        getStorage,
+        ref,
+        uploadBytes,
+        getDownloadURL,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+      // Initialize Firebase
+      let firebaseReady = false;
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+        authDomain: "solidflow-1f753.firebaseapp.com",
+        projectId: "solidflow-1f753",
+        storageBucket: "solidflow-1f753.firebasestorage.app",
+        messagingSenderId: "68885400864",
+        appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+        measurementId: "G-RTL0CM1B44",
+      };
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      firebaseReady = true;
+      function getCurrentUserId() {
+        const user = firebase.auth().currentUser;
         if (!user) {
-          window.location.href = "login.html";
-        } else {
-          console.log("Logged in user:", user.email);
+          throw new Error("No user logged in");
+        }
+        return user.uid;
+      }
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      const storage = getStorage(app);
+
+      // Replace with actual user ID (from auth or session)
+      const userId = "user_123";
+
+      const elements = {
+        name: document.getElementById("settingName"),
+        email: document.getElementById("settingEmail"),
+        logo: document.getElementById("settingLogo"),
+        logoPreview: document.getElementById("logoPreview"),
+        logoImg: document.getElementById("logoImg"),
+        currency: document.getElementById("settingCurrency"),
+        theme: document.getElementById("settingTheme"),
+        refresh: document.getElementById("settingRefresh"),
+        saveBtn: document.getElementById("saveSettings"),
+        cancelBtn: document.getElementById("cancelSettings"),
+        status: document.getElementById("statusMsg"),
+      };
+
+      // Show status message
+      function showStatus(message, type) {
+        elements.status.textContent = message;
+        elements.status.className = `status ${type}`;
+        elements.status.style.display = "block";
+        setTimeout(() => {
+          elements.status.style.display = "none";
+        }, 3000);
+      }
+
+      // Preview logo
+      elements.logo.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            elements.logoImg.src = e.target.result;
+            elements.logoPreview.style.display = "block";
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Load settings
+      async function loadSettings() {
+        try {
+          const docRef = doc(db, "users", userId);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            elements.name.value = data.name || "";
+            elements.email.value = data.email || "";
+            elements.currency.value = data.currency || "USD";
+            elements.refresh.value = data.autoRefresh || "8";
+
+            if (data.logoUrl) {
+              elements.logoImg.src = data.logoUrl;
+              elements.logoPreview.style.display = "block";
+            }
+          }
+
+          // Load theme from localStorage
+          const theme = localStorage.getItem("theme") || "modern";
+          elements.theme.value = theme;
+        } catch (error) {
+          console.error("Error loading settings:", error);
+          showStatus("Error loading settings", "error");
+        }
+      }
+
+      // Save settings
+      elements.saveBtn.addEventListener("click", async () => {
+        elements.saveBtn.disabled = true;
+        elements.saveBtn.textContent = "Saving...";
+
+        try {
+          const settingsData = {
+            name: elements.name.value,
+            email: elements.email.value,
+            currency: elements.currency.value,
+            autoRefresh: elements.refresh.value,
+            updatedAt: new Date().toISOString(),
+          };
+
+          // Upload logo if selected
+          const logoFile = elements.logo.files[0];
+          if (logoFile) {
+            const logoRef = ref(storage, `users/${userId}/logo_${Date.now()}`);
+            await uploadBytes(logoRef, logoFile);
+            const logoUrl = await getDownloadURL(logoRef);
+            settingsData.logoUrl = logoUrl;
+          }
+
+          // Save to Firestore
+          await setDoc(doc(db, "users", userId), settingsData, { merge: true });
+
+          // Save theme to localStorage only
+          localStorage.setItem("theme", elements.theme.value);
+
+          showStatus("Settings saved successfully!", "success");
+        } catch (error) {
+          console.error("Error saving settings:", error);
+          showStatus("Error saving settings: " + error.message, "error");
+        } finally {
+          elements.saveBtn.disabled = false;
+          elements.saveBtn.textContent = "Save";
+        }
+      });
+
+      // Cancel
+      elements.cancelBtn.addEventListener("click", () => {
+        loadSettings();
+        showStatus("Changes discarded", "error");
+      });
+
+      // Load settings on page load
+      loadSettings();
+      // Fetch all invoices
+      async function fetchAllInvoices() {
+        if (!firebaseReady) return [];
+
+        try {
+          // Get current user
+          const user = firebase.auth().currentUser;
+
+          if (!user) {
+            console.error("No user logged in");
+            return [];
+          }
+
+          const db = firebase.firestore();
+
+          // Fetch from user's invoices subcollection
+          const snapshot = await db
+            .collection("users")
+            .doc(user.uid)
+            .collection("invoices")
+            .orderBy("createdAt", "desc")
+            .get();
+
+          const invoices = [];
+          snapshot.forEach((doc) => {
+            invoices.push({
+              id: doc.id,
+              ...doc.data(),
+            });
+          });
+
+          return invoices;
+        } catch (error) {
+          console.error("Error fetching invoices:", error);
+          return [];
+        }
+      }
+      async function displayUserInfo() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        try {
+          const userDocRef = db.collection("users").doc(user.uid);
+          const userDoc = await userDocRef.get();
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+
+            // Display company name (or fallback to user name or email)
+            const displayName =
+              userData.name || userData.companyName || user.email.split("@")[0];
+            document.getElementById("profileName").textContent = displayName;
+
+            // Display role
+            const role = userData.role || "Admin";
+            document.getElementById("profileRole").textContent = role;
+          } else {
+            // Fallback if no user document exists
+            document.getElementById("profileName").textContent =
+              user.email.split("@")[0];
+            document.getElementById("profileRole").textContent = "Admin";
+          }
+        } catch (error) {
+          console.error("Error loading user info:", error);
+          document.getElementById("profileName").textContent = "User";
+          document.getElementById("profileRole").textContent = "Admin";
+        }
+      }
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user && user.emailVerified) {
+          displayUserInfo();
+          displayUserLogo();
+        }
+      });
+      // Display invoices in table
+      async function displayInvoicesTable() {
+        const invoices = await fetchAllInvoices();
+        const tableBody = document.getElementById("invoicesTableBody");
+
+        if (invoices.length === 0) {
+          tableBody.innerHTML =
+            '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No invoices found</td></tr>';
+          return;
+        }
+
+        tableBody.innerHTML = invoices
+          .map(
+            (invoice) => `
+        <tr style="cursor: pointer;" onclick="openInvoice('${
+          invoice.invoiceNumber
+        }')">
+          <td>${invoice.invoiceNumber}</td>
+          <td>${invoice.clientName || "N/A"}</td>
+          <td>${invoice.issueDate || "N/A"}</td>
+          <td>${invoice.total || "R 0.00"}</td>
+          <td><span class="status-badge status-saved">Saved</span></td>
+          <td style="text-align: center;">
+            <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${
+              invoice.invoiceNumber
+            }')">
+              View
+            </button>
+          </td>
+        </tr>
+      `
+          )
+          .join("");
+      }
+
+      // Open invoice in invoice page
+      function openInvoice(invoiceNumber) {
+        // Store invoice number in sessionStorage
+        sessionStorage.setItem("loadInvoiceNumber", invoiceNumber);
+
+        // Redirect to invoice page
+        window.location.href = "/dashboard/invoice.html";
+      }
+
+      // Search functionality
+      let allInvoices = [];
+      async function handleSearch() {
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+
+        if (!allInvoices.length) {
+          allInvoices = await fetchAllInvoices();
+        }
+
+        const filtered = allInvoices.filter(
+          (invoice) =>
+            invoice.invoiceNumber.toLowerCase().includes(searchTerm) ||
+            (invoice.clientName &&
+              invoice.clientName.toLowerCase().includes(searchTerm))
+        );
+
+        const tableBody = document.getElementById("invoicesTableBody");
+
+        if (filtered.length === 0) {
+          tableBody.innerHTML =
+            '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No matching invoices found</td></tr>';
+          return;
+        }
+
+        tableBody.innerHTML = filtered
+          .map(
+            (invoice) => `
+        <tr style="cursor: pointer;" onclick="openInvoice('${
+          invoice.invoiceNumber
+        }')">
+          <td>${invoice.invoiceNumber}</td>
+          <td>${invoice.clientName || "N/A"}</td>
+          <td>${invoice.issueDate || "N/A"}</td>
+          <td>${invoice.total || "R 0.00"}</td>
+          <td><span class="status-badge status-saved">Saved</span></td>
+          <td style="text-align: center;">
+            <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${
+              invoice.invoiceNumber
+            }')">
+              View
+            </button>
+          </td>
+        </tr>
+      `
+          )
+          .join("");
+      }
+
+      // Load invoices on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        displayInvoicesTable();
+      });
+      document.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        return false;
+      });
+
+      // Disable keyboard shortcuts (optional - prevents Ctrl+S, Ctrl+U, etc.)
+      document.addEventListener("keydown", (e) => {
+        // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+        if (
+          e.keyCode === 123 || // F12
+          (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+          (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+          (e.ctrlKey && e.keyCode === 85)
+        ) {
+          // Ctrl+U
+          e.preventDefault();
+          return false;
         }
       });
     </script>
+    <script>
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      // Check authentication and get user data
+   auth.onAuthStateChanged((user) => {
+  if (user && user.emailVerified) {
+    currentUserId = user.uid;
+    firebaseReady = true;
+    
+    // Load user profile
+    loadUserProfile(user);
+    
+    // Load invoices
+    displayInvoicesTable();
+  } else {
+    // Redirect to login if not authenticated
+    window.location.href = "/login.html";
+  }
+});
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          try {
+            // Disable button during logout
+            logoutBtn.disabled = true;
+            logoutBtn.textContent = "Logging out...";
+
+            // Sign out from Firebase
+            await firebase.auth().signOut();
+
+            // Clear any localStorage data (optional)
+            // localStorage.clear(); // Uncomment if you want to clear all local data
+
+            // Redirect to login page
+            window.location.href = "/login.html";
+          } catch (error) {
+            console.error("Error logging out:", error);
+            alert("Error logging out. Please try again.");
+
+            // Re-enable button if error
+            logoutBtn.disabled = false;
+            logoutBtn.textContent = "Logout";
+          }
+        });
+      }
+    </script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      async function loadClientLogo(userId, clientId) {
+        try {
+          const clientDocRef = doc(db, "users", userId, "clients", clientId);
+          const clientDoc = await getDoc(clientDocRef);
+
+          if (clientDoc.exists() && clientDoc.data().logoURL) {
+            document.getElementById("brandLogo").src = clientDoc.data().logoURL;
+          }
+        } catch (error) {
+          console.error("Error loading logo:", error);
+        }
+      }
+
+      // Example: Load logo for current user's own client record
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          loadClientLogo(user.uid, user.uid);
+
+          // OR if you have a specific client ID from quote/invoice data:
+          // const clientId = 'client123'; // from your quote/invoice data
+          // loadClientLogo(user.uid, clientId);
+        }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   </body>
 </html>

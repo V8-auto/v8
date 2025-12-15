@@ -1,95 +1,160 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forgot Password - SolidFlow</title>
-<style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif;}
-    body { display:flex; justify-content:center; align-items:center; min-height:100vh; background:#f5f7fa;}
-    .auth-container { background:#fff; padding:40px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); width:100%; max-width:400px;}
-    h2 { text-align:center; margin-bottom:20px; color:#007bff;}
-    form { display:flex; flex-direction:column; gap:15px;}
-    input { padding:12px; border-radius:8px; border:1px solid #ccc; font-size:14px;}
-    button { padding:12px; border:none; border-radius:8px; background:#007bff; color:#fff; font-size:16px; cursor:pointer; transition:0.2s;}
-    button:hover { background:#005fcc;}
-    .links { display:flex; justify-content:center; font-size:14px; margin-top:10px;}
-    .links a { color:#007bff; text-decoration:none;}
-    .links a:hover { text-decoration:underline;}
-    .toast { position:fixed; bottom:20px; right:20px; background:#333; color:#fff; padding:12px 20px; border-radius:8px; display:none; }
-</style>
-</head>
-<body>
-
-<div class="auth-container">
-    <h2>Forgot Password</h2>
-    <form id="forgotForm">
-        <input type="email" name="email" placeholder="Enter your registered email" required>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forgot Password - SolidFlow</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: #f5f7fa;
+      }
+      .auth-container {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+      }
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #007bff;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      input {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+      button {
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #007bff;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      button:hover {
+        background: #005fcc;
+      }
+      .links {
+        display: flex;
+        justify-content: center;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+      .links a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      .links a:hover {
+        text-decoration: underline;
+      }
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #333;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 8px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <h2>Forgot Password</h2>
+      <form id="forgotForm">
+        <input
+          type="email"
+          name="email"
+          placeholder="Enter your registered email"
+          required
+        />
         <button type="submit">Send Reset Link</button>
-    </form>
-    <div class="links">
+      </form>
+      <div class="links">
         <a href="login.html">Back to Login</a>
+      </div>
     </div>
-</div>
 
-<div class="toast" id="toast">Email sent successfully!</div>
+    <div class="toast" id="toast">Email sent successfully!</div>
 
-<script>
-const form = document.getElementById("forgotForm");
-const toast = document.getElementById("toast");
+    <script>
+      const form = document.getElementById("forgotForm");
+      const toast = document.getElementById("toast");
 
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
 
-    try {
-        // Mocked API call, replace with real endpoint
-        const res = await fetch("https://api.example.com/forgot-password", {
+        try {
+          // Mocked API call, replace with real endpoint
+          const res = await fetch("https://api.example.com/forgot-password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({email: data.email})
-        });
+            body: JSON.stringify({ email: data.email }),
+          });
 
-        if(res.ok){
+          if (res.ok) {
             toast.innerText = "Reset link sent!";
             toast.style.display = "block";
-            setTimeout(()=> toast.style.display="none", 3000);
+            setTimeout(() => (toast.style.display = "none"), 3000);
             form.reset();
-        } else {
+          } else {
             toast.innerText = "Failed to send reset link!";
             toast.style.display = "block";
-            setTimeout(()=> toast.style.display="none", 3000);
+            setTimeout(() => (toast.style.display = "none"), 3000);
+          }
+        } catch (err) {
+          toast.innerText = "Error connecting to server!";
+          toast.style.display = "block";
+          setTimeout(() => (toast.style.display = "none"), 3000);
         }
-    } catch(err){
-        toast.innerText = "Error connecting to server!";
-        toast.style.display = "block";
-        setTimeout(()=> toast.style.display="none", 3000);
-    }
-});
-</script>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+      });
+    </script>
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
-    authDomain: "solidflow-1f753.firebaseapp.com",
-    projectId: "solidflow-1f753",
-    storageBucket: "solidflow-1f753.firebasestorage.app",
-    messagingSenderId: "68885400864",
-    appId: "1:68885400864:web:7788e19a073d9a8e79db45",
-    measurementId: "G-RTL0CM1B44"
-  };
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+        authDomain: "solidflow-1f753.firebaseapp.com",
+        projectId: "solidflow-1f753",
+        storageBucket: "solidflow-1f753.firebasestorage.app",
+        messagingSenderId: "68885400864",
+        appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+        measurementId: "G-RTL0CM1B44",
+      };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
-</body>
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
+  </body>
 </html>
