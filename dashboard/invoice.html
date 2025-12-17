@@ -146,7 +146,8 @@
       }
 
       /* Header */
-      .header {
+      .header .header-info{
+        display: flex;
         border-bottom: 3px solid #333;
         padding-bottom: 20px;
         margin-bottom: 30px;
@@ -247,7 +248,7 @@
       .info-title {
         font-size: 12px;
         font-weight: bold;
-        background: #333;
+        background: #727272;
         color: white;
         padding: 8px;
         margin-bottom: 10px;
@@ -449,7 +450,11 @@
           print-color-adjust: exact !important;
         }
       }
+      .signatures {
+          display:none;
+        }
       .footer {
+        display: none;
         margin-top: 40px;
         padding-top: 20px;
         border-top: 2px solid #eee;
@@ -458,6 +463,7 @@
         background: #f9f9f9;
         padding: 15px;
       }
+      
       .bank-title {
         font-weight: bold;
         margin-bottom: 10px;
@@ -475,6 +481,12 @@
       .bank-info strong {
         color: #666;
       }
+
+       .bank-details2 {
+        background: #f9f9f9;
+        padding: 15px;
+      }
+      
       .addresses {
         margin-top: 20px;
         font-size: 12px;
@@ -512,6 +524,10 @@
         #sidebar {
           display: none !important;
         }
+        .header {
+          display: block; /* Visible when printing */
+        }
+        
         /* Main invoice container */
         .invoice-container {
           height: auto; /* Not 100vh or fixed height */
@@ -733,9 +749,12 @@
         .grand-total {
           font-size: 12px;
         }
-
+        .signatures {
+          display: block;
+        }
         /* Footer */
         .footer {
+          display: block;
           font-size: 9px;
           margin-top: 15px;
           page-break-inside: avoid;
@@ -983,6 +1002,7 @@
       <div class="invoice-container" id="invoice" style="flex: block">
         <!-- Header -->
         <div class="header">
+
           <div class="header-info">
             <!-- LEFT SIDE: Logo and Contact Info -->
             <div class="contact-info">
@@ -1016,17 +1036,20 @@
 
               <div class="meta-box">
                 <div class="meta-label">Invoice No.</div>
-                <input type="text" id="invoiceNumber" value="INV-2024-001" />
+                <input type="text" id="invoiceNumber" value="INV-2025-001" />
               </div>
 
               <div class="meta-box">
                 <div class="meta-label">Date</div>
-                <input type="date" id="issueDate" value="2024-12-08" />
+                <input type="date" id="invoiceDate" value="2025-12-08" />
               </div>
 
               <div class="meta-box">
                 <div class="meta-label">Merchant Code</div>
-                <input type="text" id="merchantCode" value="V8PA-12345" />
+                <select id="merchantCode" style="width: 100%; padding: 8px; border: none; background-color: transparent; align-items: end;" onchange="updateBankDetails()">
+                  <option value="811371">811371</option>
+                  <option value="807411">807411</option>
+                </select>
               </div>
 
               <div class="meta-box">
@@ -1040,7 +1063,7 @@
 
         <!-- Client & Vehicle Info -->
         <div class="info-section">
-          <div class="info-box" style="border: 1px solid">
+          <div class="info-box" style="border: 1px solid #b9b7b7;border-radius: 5px; box-shadow: #cfe9f7; ">
             <div class="info-title">INVOICE TO</div>
             <div class="info-content">
               <div class="info-row">
@@ -1071,7 +1094,7 @@
               </div>
             </div>
           </div>
-          <div class="info-box" style="border: 1px solid;">
+          <div class="info-box" style="border: 1px solid #b9b7b7;border-radius: 5px; box-shadow: #cfe9f7;">
             <div class="info-title">BILL TO</div>
             <div class="info-content">
               <div class="info-row">
@@ -1102,7 +1125,7 @@
               </div>
             </div>
           </div>
-          <div class="info-box" style="border: 1px solid">
+          <div class="info-box" style="border: 1px solid #b9b7b7;border-radius: 5px; box-shadow: #cfe9f7;">
             <div class="info-title">VEHICLE DETAILS</div>
             <div class="info-content">
               <div class="info-row">
@@ -1209,18 +1232,36 @@
             <span id="total">R 977.50</span>
           </div>
         </div>
-
+         <div>
+          <div class="signatures" style="margin-top: 40px; font-size: 10px;">
+            <div>
+              WORKSHOP SIGNATURE __________________CLIENT  SIGNATURE  ___________________CONTACT NUMBER:  _________________________<br/>
+            </div> 
+            
+          </div>
+         </div>
         <!-- Footer -->
         <div class="footer">
-          <div class="bank-details">
-            <div class="bank-title">BANKING DETAILS</div>
-            <div class="bank-info">
-              <div><strong>Bank Name:</strong> FNB</div>
-              <div><strong>Account Holder:</strong> V8 POWERED AUTO</div>
-              <div><strong>Branch Name:</strong> LIFESTYLE CENTURION</div>
-              <div><strong>Account Number:</strong> 63149991431</div>
-            </div>
-          </div>
+          <div id="bank-811371" class="bank-details">
+  <div class="bank-title">BANKING DETAILS</div>
+  <div class="bank-info">
+    <div><strong>Bank Name:</strong> FNB</div>
+    <div><strong>Account Holder:</strong> V8 POWERED AUTO</div>
+    <div><strong>Branch Name:</strong> LIFESTYLE CENTURION</div>
+    <div><strong>Account Number:</strong> 63149991431</div>
+  </div>
+</div>
+
+<div id="bank-807411" class="bank-details2" style="display: none;">
+  <div class="bank-title">BANKING DETAILS</div>
+  <div class="bank-info">
+    <div><strong>Bank Name:</strong>FNB</div>
+    <div><strong>Account Holder:</strong> V8 POWERED AUTO</div>
+    <div><strong>Branch Name:</strong> LIFESTYLE CENTURION</div>
+    <div><strong>Account Number:</strong> 63149991431</div>
+  </div>
+</div>
+          
 
           <div style="text-align: center" padding-top: 30px>
             <p style="font-size: 16px; color: #b71c1c">
@@ -1335,18 +1376,18 @@
 
       // Initialize invoice system
       document.addEventListener("DOMContentLoaded", function () {
-        const quoteNoInput = document.getElementById("quoteNo");
+        const invoiceNumberInput = document.getElementById("invoiceNumber");
 
         // Set initial invoice number
-        quoteNoInput.value = invoiceCounter.getCurrent();
+        invoiceNumberInput.value = invoiceCounter.getCurrent();
 
-        // Hook into "New Invoice" button
+        
         const newInvoiceBtn = document.getElementById("newInvoiceBtn");
         if (newInvoiceBtn) {
           newInvoiceBtn.addEventListener("click", function () {
             // Clear form and set new invoice number
             const newInvoiceNo = invoiceCounter.getNext();
-            quoteNoInput.value = newInvoiceNo;
+            invoiceNumberInput.value = newInvoiceNo;
             console.log("New invoice:", newInvoiceNo);
           });
         }
@@ -1355,19 +1396,19 @@
         const saveBtn = document.getElementById("saveInvoice");
         if (saveBtn) {
           saveBtn.addEventListener("click", function () {
-            console.log("Saved invoice:", quoteNoInput.value);
+            console.log("Saved invoice:", invoiceNumberInput.value);
 
             // After saving, prepare next invoice number
             setTimeout(() => {
               const nextInvoiceNo = invoiceCounter.getNext();
-              quoteNoInput.value = nextInvoiceNo;
+              invoiceNumberInput.value = nextInvoiceNo;
               console.log("Ready for next invoice:", nextInvoiceNo);
             }, 1000);
           });
         }
 
         // Optional: Allow manual editing and sync counter
-        quoteNoInput.addEventListener("blur", function () {
+        invoiceNumberInput.addEventListener("blur", function () {
           invoiceCounter.parseAndUpdate(this.value);
         });
       });
@@ -1395,11 +1436,11 @@
         // Load last invoice number and increment
         const lastInvoiceNo = localStorage.getItem("lastInvoiceNo");
         if (lastInvoiceNo) {
-          document.getElementById("quoteNo").value = lastInvoiceNo;
+          document.getElementById("invoiceNumber").value = lastInvoiceNo;
         } else {
           // First time, set initial value
           const year = new Date().getFullYear();
-          document.getElementById("quoteNo").value = `INV-${year}-001`;
+          document.getElementById("invoiceNumber").value = `INV-${year}-001`;
         }
 
         // Set today's date
@@ -1571,7 +1612,7 @@ async function loadInvoiceFromFirestore() {
 
     // Populate the form fields
     document.getElementById("invoiceNumber").value = invoiceData.invoiceNumber || "";
-    document.getElementById("issueDate").value = invoiceData.issueDate || "";
+    document.getElementById("invoiceDate").value = invoiceData.invoiceDate || "";
     document.getElementById("merchantCode").value = invoiceData.merchantCode || "";
     document.getElementById("serviceType").value = invoiceData.serviceType || "";
     
@@ -1665,7 +1706,7 @@ function loadUserProfile(user) {
 }
 // Call this function when the invoice page loads
 firebase.auth().onAuthStateChanged((user) => {
-  if (user && user.emailVerified) {
+  if (user) {
    currentUserId = user.uid;
     firebaseReady = true;
     
@@ -1705,53 +1746,75 @@ firebase.auth().onAuthStateChanged((user) => {
       }
 
      
-      async function saveInvoiceToFirebase() {
-    console.log("💾 Attempting to save invoice...");
-    
-    if (!firebaseReady) {
+        async function saveInvoiceToFirebase() {
+      console.log("💾 Attempting to save invoice...");
+
+      // Helper to wait for firebaseReady flag
+      function waitForFirebaseReady(timeoutMs = 5000) {
+        return new Promise((resolve, reject) => {
+        const start = Date.now();
+        (function check() {
+          if (firebaseReady) return resolve();
+          if (Date.now() - start > timeoutMs) return reject(new Error('timeout'));
+          setTimeout(check, 100);
+        })();
+        });
+      }
+
+      if (!firebaseReady) {
+        console.log('Firebase not ready yet — attempting to initialize now');
+        try {
+          initializeFirebaseApp();
+          await waitForFirebaseReady(5000);
+        } catch (err) {
+          console.error('Firebase failed to initialize in time', err);
+        }
+      }
+
+      if (!firebaseReady) {
         alert("Firebase is not initialized yet. Please wait a moment and try again.");
         return;
-    }
+      }
 
-    const user = firebase.auth().currentUser;
-    if (!user) {
+      const user = firebase.auth().currentUser;
+      if (!user) {
         alert("You must be logged in to save an invoice.");
         return;
-    }
+      }
 
-    const userId = user.uid;
-    const invoiceNumber = document.getElementById("invoiceNumber").value;
+      const userId = user.uid;
+      const invoiceNumber = document.getElementById("invoiceNumber").value;
 
-    if (!invoiceNumber || invoiceNumber === "Loading..." || invoiceNumber === "Error loading") {
+      if (!invoiceNumber || invoiceNumber === "Loading..." || invoiceNumber === "Error loading") {
         alert("Please wait for invoice number to load");
         return;
-    }
+      }
 
-    // Check if invoice already exists
-    try {
+      // Check if invoice already exists
+      try {
         const db = firebase.firestore();
         const docRef = db
-            .collection("users")
-            .doc(userId)
-            .collection("invoices")
-            .doc(invoiceNumber);
+          .collection("users")
+          .doc(userId)
+          .collection("invoices")
+          .doc(invoiceNumber);
 
         const docSnapshot = await docRef.get();
 
         if (docSnapshot.exists) {
-            alert(`Invoice ${invoiceNumber} has already been saved. Please create a new invoice using the "New Invoice" button.`);
-            return;
+          alert(`Invoice ${invoiceNumber} has already been saved. Please create a new invoice using the "New Invoice" button.`);
+          return;
         }
-    } catch (error) {
+      } catch (error) {
         console.error("Error checking if invoice exists:", error);
         alert("Error checking invoice: " + error.message);
         return;
-    }
+      }
 
-    // Collect invoice data
-    const invoiceData = {
+      // Collect invoice data
+      const invoiceData = {
         invoiceNumber: invoiceNumber,
-        issueDate: document.getElementById("issueDate").value,
+        invoiceDate: document.getElementById("invoiceDate").value,
         merchantCode: document.getElementById("merchantCode").value,
         serviceType: document.getElementById("serviceType").value,
         clientName: document.getElementById("clientName").value,
@@ -1766,26 +1829,26 @@ firebase.auth().onAuthStateChanged((user) => {
         preAuth: document.getElementById("preAuth").value,
         authCode: document.getElementById("authCode").value,
         items: Array.from(document.querySelectorAll("#itemsBody tr.item-row")).map((row) => ({
-            description: row.querySelector(".item-desc").value,
-            quantity: parseFloat(row.querySelector(".item-qty").value),
-            unitPrice: parseFloat(row.querySelector(".item-price").value),
-            netPrice: parseFloat(row.querySelector(".net-price").textContent.replace(/[^\d\.]/g, ""))
+          description: row.querySelector(".item-desc").value,
+          quantity: parseFloat(row.querySelector(".item-qty").value),
+          unitPrice: parseFloat(row.querySelector(".item-price").value),
+          netPrice: parseFloat(row.querySelector(".net-price").textContent.replace(/[^\d\.]/g, ""))
         })),
         subtotal: document.getElementById("subtotal").textContent,
         vat: document.getElementById("vat").textContent,
         total: document.getElementById("total").textContent,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
+      };
 
-    // Save to Firebase - THIS IS THE ACTUAL SAVE
-    try {
+      // Save to Firebase - THIS IS THE ACTUAL SAVE
+      try {
         const db = firebase.firestore();
         await db
-            .collection("users")
-            .doc(userId)
-            .collection("invoices")
-            .doc(invoiceData.invoiceNumber)
-            .set(invoiceData);
+          .collection("users")
+          .doc(userId)
+          .collection("invoices")
+          .doc(invoiceData.invoiceNumber)
+          .set(invoiceData);
 
         // SUCCESS - Now we can celebrate
         console.log("✅ Invoice saved successfully:", invoiceData.invoiceNumber);
@@ -1797,11 +1860,11 @@ firebase.auth().onAuthStateChanged((user) => {
         // Clear form fields
         clearInvoiceFormFields();
 
-    } catch (error) {
+      } catch (error) {
         console.error("❌ Error saving invoice:", error);
         alert("Failed to save invoice: " + error.message);
+      }
     }
-}
 function addItemRow() {
   const tbody = document.getElementById("itemsTableBody");
   const newRow = document.createElement("tr");
@@ -1875,7 +1938,7 @@ function clearInvoiceFormFields() {
 
           // Reset date to today
           const today = new Date().toISOString().split("T")[0];
-          document.getElementById("issueDate").value = today;
+          document.getElementById("invoiceDate").value = today;
 
           calculateTotals();
         }
@@ -1893,9 +1956,9 @@ function clearInvoiceFormFields() {
 
         // Set today's date
         const today = new Date().toISOString().split("T")[0];
-        const issueDateInput = document.getElementById("issueDate");
-        if (issueDateInput && !issueDateInput.value) {
-          issueDateInput.value = today;
+        const invoiceDateInput = document.getElementById("invoiceDate");
+        if (invoiceDateInput && !invoiceDateInput.value) {
+          invoiceDateInput.value = today;
         }
 
         calculateTotals();
@@ -1945,6 +2008,14 @@ function clearInvoiceFormFields() {
           return false;
         }
       });
+    </script>
+    <script>
+    function updateBankDetails() {
+      const selectedValue = document.getElementById('merchantCode').value;
+      document.getElementById('bank-811371').style.display = 'none';
+      document.getElementById('bank-807411').style.display = 'none';
+      document.getElementById('bank-' + selectedValue).style.display = 'block';
+    }
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   </body>

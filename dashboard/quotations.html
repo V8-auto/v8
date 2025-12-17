@@ -172,7 +172,7 @@
       }
 
       /* Left side - Invoice list */
-      .invoices-section {
+      .quote-section {
         flex: 1;
         background: white;
         border-radius: 8px;
@@ -378,7 +378,7 @@
           padding: 80px 15px 15px 15px;
         }
 
-        .invoices-section {
+        .quote-section {
           padding: 20px 15px;
         }
 
@@ -543,7 +543,7 @@
     <!-- Main Content -->
     <div class="main-content">
       <!-- Left side - Quotations list -->
-      <div class="invoices-section">
+      <div class="quote-section">
         <div class="header">
           <div>
             <h1>Quotations</h1>
@@ -561,7 +561,7 @@
           <input
             type="text"
             id="searchInput"
-            placeholder="Search by quotation number or client name..."
+            placeholder="Search by quotations number or client name..."
             onkeyup="handleSearch()"
           />
           <button class="btn btn-primary" onclick="displayInvoicesTable()">
@@ -620,10 +620,9 @@
       </div>
     </div>
 
-    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script>
       // Mobile menu toggle
       function toggleMobileMenu() {
@@ -635,11 +634,10 @@
         overlay.classList.toggle("active");
       }
 
-     // Initialize Firebase
-let firebaseReady = false;
+ let firebaseReady = false;
 let monthlyChartInstance = null;
 let currentUserId = null;
-let allQuotations = [];
+let allInvoices = [];
 
 const firebaseConfig = {
   apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
@@ -659,7 +657,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 auth.onAuthStateChanged((user) => {
-  if (user && user.emailVerified) {
+  if (user) {
     currentUserId = user.uid;
     firebaseReady = true;
     
@@ -768,16 +766,16 @@ async function updateStats() {
   let totalRevenue = 0;
   const monthlyData = {};
 
-  quotations.forEach((quotation) => {
+  quotations.forEach((quote) => {
     // Calculate total revenue
-    if (quotation.total) {
+    if (quote.total) {
       const amount =
-        parseFloat(quotation.total.replace(/[^\d.-]/g, "")) || 0;
+        parseFloat(quote.total.replace(/[^\d.-]/g, "")) || 0;
       totalRevenue += amount;
 
       // Group by month for chart
-      if (quotation.issueDate) {
-        const date = new Date(quotation.issueDate);
+      if (quote.issueDate) {
+        const date = new Date(quote.issueDate);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
         monthlyData[monthKey] = (monthlyData[monthKey] || 0) + amount;
       }
@@ -927,7 +925,7 @@ async function displayInvoicesTable() {
 
   if (quotations.length === 0) {
     tableBody.innerHTML =
-      '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No quotations found. Create your first quotation!</td></tr>';
+      '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No quotations found. Create your first quotations!</td></tr>';
     
     // Still update stats even if no quotations
     await updateStats();
@@ -936,15 +934,15 @@ async function displayInvoicesTable() {
 
   tableBody.innerHTML = quotations
     .map(
-      (quotation) => `
-    <tr onclick="openInvoice('${quotation.quoteNumber}')">
-      <td>${quotation.quoteNumber || 'N/A'}</td>
-      <td>${quotation.clientName || "N/A"}</td>
-      <td>${quotation.issueDate || "N/A"}</td>
-      <td>${quotation.total || "R 0.00"}</td>
-      <td><span class="status-badge">${quotation.status || 'Saved'}</span></td>
+      (quote) => `
+    <tr onclick="openInvoice('${quote.quoteNumber}')">
+      <td>${quote.quoteNumber || 'N/A'}</td>
+      <td>${quote.clientName || "N/A"}</td>
+      <td>${quote.issueDate || "N/A"}</td>
+      <td>${quote.total || "R 0.00"}</td>
+      <td><span class="status-badge">${quote.status || 'Saved'}</span></td>
       <td style="text-align: center;">
-        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${quotation.quoteNumber}')">
+        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${quote.quoteNumber}')">
           View
         </button>
       </td>
@@ -957,7 +955,7 @@ async function displayInvoicesTable() {
   await updateStats();
 }
 
-// Open quotation
+// Open quotations
 function openInvoice(quoteNumber) {
   sessionStorage.setItem("loadQuoteNumber", quoteNumber);
   window.location.href = "/dashboard/quote.html";
@@ -974,10 +972,10 @@ async function handleSearch() {
   }
 
   const filtered = allQuotations.filter(
-    (quotation) =>
-      (quotation.quoteNumber && quotation.quoteNumber.toLowerCase().includes(searchTerm)) ||
-      (quotation.clientName &&
-        quotation.clientName.toLowerCase().includes(searchTerm)),
+    (quote) =>
+      (quote.quoteNumber && quote.quoteNumber.toLowerCase().includes(searchTerm)) ||
+      (quote.clientName &&
+        quote.clientName.toLowerCase().includes(searchTerm)),
   );
 
   const tableBody = document.getElementById("invoicesTableBody");
@@ -992,15 +990,15 @@ async function handleSearch() {
 
   tableBody.innerHTML = filtered
     .map(
-      (quotation) => `
-    <tr onclick="openInvoice('${quotation.quoteNumber}')">
-      <td>${quotation.quoteNumber || 'N/A'}</td>
-      <td>${quotation.clientName || "N/A"}</td>
-      <td>${quotation.issueDate || "N/A"}</td>
-      <td>${quotation.total || "R 0.00"}</td>
-      <td><span class="status-badge">${quotation.status || 'Saved'}</span></td>
+      (quote) => `
+    <tr onclick="openInvoice('${quote.quoteNumber}')">
+      <td>${quote.quoteNumber || 'N/A'}</td>
+      <td>${quote.clientName || "N/A"}</td>
+      <td>${quote.issueDate || "N/A"}</td>
+      <td>${quote.total || "R 0.00"}</td>
+      <td><span class="status-badge">${quote.status || 'Saved'}</span></td>
       <td style="text-align: center;">
-        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${quotation.quoteNumber}')">
+        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${quote.quoteNumber}')">
           View
         </button>
       </td>
@@ -1009,27 +1007,7 @@ async function handleSearch() {
     )
     .join("");
 }
-function loadUserProfile(user) {
-  db.collection("users").doc(user.uid).get()
-    .then((doc) => {
-      if (doc.exists) {
-        const userData = doc.data();
-        // Update profile display if you have these elements
-        const profileName = document.querySelector('.flex div:last-child div:first-child');
-        const profileRole = document.querySelector('.flex div:last-child div:last-child');
-        
-        if (profileName) {
-          profileName.textContent = userData.name || 'User';
-        }
-        if (profileRole) {
-          profileRole.textContent = (userData.role || 'user').charAt(0).toUpperCase() + (userData.role || 'user').slice(1);
-        }
-      }
-    })
-    .catch((error) => {
-      console.error("Error loading profile:", error);
-    });
-}
+
 // Load on page load
 document.addEventListener("DOMContentLoaded", () => {
   // Wait for auth to complete before loading

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -28,12 +28,120 @@
         box-sizing: border-box;
       }
       body {
-        font-family: Arial, sans-serif;
-        background: #f5f5f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        padding: 20px;
+      }
+      .cards-container {
         display: flex;
-        min-height: 100vh;
+        flex-direction: column;
+        gap: 16px;
+        width: 100%;
       }
 
+      .invoice-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.2s;
+        width: 100%; /* Full width */
+        cursor: pointer;
+      }
+
+      .invoice-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+        .invoice-card:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Optional: Add alternating background colors for better readability */
+        .invoice-card:nth-child(even) {
+          background: #fafafa;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+          .invoices-section {
+            width: 100%;
+            max-height: none;
+          }
+        }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .invoice-number {
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 14px;
+      }
+
+      .invoice-date {
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .client-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        color: #4b5563;
+        font-size: 14px;
+      }
+
+      .client-icon {
+        width: 16px;
+        height: 16px;
+        color: #9ca3af;
+      }
+
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .invoice-total {
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 15px;
+      }
+
+      .status-badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: lowercase;
+      }
+
+      .status-sent {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .status-paid {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-pending {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6b7280;
+      }
       /* Sidebar styles */
       .sidebar {
         width: 260px;
@@ -199,11 +307,14 @@
 
       /* Left side - Invoice list */
       .invoices-section {
-        flex: 1;
-        background: white;
-        border-radius: 8px;
-        padding: 30px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 380px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        overflow-y: auto; /* Add scroll if cards exceed container height */
+        max-height: calc(100vh - 40px); /* Adjust based on your needs */
+        scrollbar-width: none; /* Firefox */
+       -ms-overflow-style: none; 
       }
 
       /* Right side - Stats */
@@ -494,6 +605,176 @@
         }
       }
     </style>
+    <style>
+      .invoice-preview-section {
+        width: 100%;
+        max-width: 210mm; /* A4 width: 210mm or 794px */
+        min-height: 297mm; /* A4 height: 297mm or 1123px */
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        margin: 0 auto;
+      }
+
+      .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .preview-header h2 {
+        font-size: 18px;
+        color: #333;
+        margin: 0;
+      }
+
+      .preview-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .preview-controls button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .btn-download {
+        background: #2196f3;
+        color: white;
+      }
+
+      .btn-download:hover {
+        background: #1976d2;
+      }
+
+      .btn-print {
+        background: #4caf50;
+        color: white;
+      }
+
+      .btn-print:hover {
+        background: #388e3c;
+      }
+
+      .canvas-container {
+        flex: 1;
+        overflow-y: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .canvas-wrapper {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin: 20px;
+      }
+
+      #pdfCanvas {
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+
+      .no-preview {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+      }
+
+      .no-preview svg {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 20px;
+        color: #ccc;
+      }
+
+      .page-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+      }
+
+      .page-controls button {
+        padding: 6px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .page-controls button:hover:not(:disabled) {
+        background: #f0f0f0;
+      }
+
+      .page-controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .page-info {
+        font-size: 13px;
+        color: #666;
+      }
+
+      .loading-spinner {
+        text-align: center;
+        padding: 40px;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #2196f3;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 1400px) {
+        .invoice-preview-section {
+          width: 400px;
+        }
+      }
+
+      @media (max-width: 1200px) {
+        .invoice-preview-section {
+          display: none;
+        }
+      }
+    </style>
   </head>
   <body>
     <!-- Mobile Menu Toggle -->
@@ -564,8 +845,9 @@
 
     <!-- Main Content -->
     <div class="main-content">
-      <!-- Left side - Invoices list -->
-      <div class="invoices-section">
+       
+      
+       <div class="invoices-section">
         <div class="header">
           <div>
             <h1>Invoices</h1>
@@ -590,29 +872,50 @@
             Refresh
           </button>
         </div>
-
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Invoice #</th>
-                <th>Client</th>
-                <th>Date</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th style="text-align: center">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="invoicesTableBody">
-              <tr>
-                <td colspan="6" class="loading">Loading invoices...</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="cards-container" id="invoicesTableBody">
+          <div class="loading">Loading invoices...</div>
         </div>
       </div>
+      <div class="invoice-preview-section">
+        <div class="preview-header">
+          <h2>Invoice Preview</h2>
+          <div
+            class="preview-controls"
+            id="previewControls"
+            style="display: none"
+          >
+            <button class="btn-download" onclick="downloadCurrentPDF()">
+              <span>⬇</span> Download
+            </button>
+            <button class="btn-print" onclick="printCurrentPDF()">
+              <span>🖨</span> Print
+            </button>
+          </div>
+        </div>
 
-      <!-- Right side - Stats -->
+        <div class="canvas-container" id="canvasContainer">
+          <div class="no-preview">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            <p>Select an invoice to preview</p>
+          </div>
+        </div>
+
+        <div class="page-controls" id="pageControls" style="display: none">
+          <button onclick="previousPage()" id="prevBtn">← Previous</button>
+          <span class="page-info">
+            Page <span id="currentPage">1</span> of
+            <span id="totalPages">1</span>
+          </span>
+          <button onclick="nextPage()" id="nextBtn">Next →</button>
+        </div>
+      </div>
       <div class="stats-section">
         <!-- Total Revenue Card -->
         <div class="stats-card">
@@ -640,13 +943,196 @@
           </div>
         </div>
       </div>
+      <!-- Right side - Stats -->
+     
     </div>
 
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
+    <script>
+      // PDF Preview Variables
+      let currentPdfDoc = null;
+      let currentPageNum = 1;
+      let totalPagesNum = 0;
+      let currentInvoiceData = null;
+      const pdfScale = 1.5;
+
+      // Initialize PDF.js worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+      // Function to load and display PDF from Firebase
+      async function loadInvoicePDF(invoiceNumber) {
+        if (!firebaseReady || !currentUserId) {
+          console.error("Firebase not ready");
+          return;
+        }
+
+        const canvasContainer = document.getElementById("canvasContainer");
+        const previewControls = document.getElementById("previewControls");
+        const pageControls = document.getElementById("pageControls");
+
+        // Show loading
+        canvasContainer.innerHTML = `
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; color: #666;">Loading invoice...</p>
+      </div>
+    `;
+
+        try {
+          // Fetch invoice data from Firebase
+          const docRef = db
+            .collection("users")
+            .doc(currentUserId)
+            .collection("invoices")
+            .doc(invoiceNumber);
+          const docSnapshot = await docRef.get();
+
+          if (!docSnapshot.exists) {
+            throw new Error("Invoice not found");
+          }
+
+          const invoiceData = docSnapshot.data();
+          currentInvoiceData = invoiceData;
+
+          // Check if PDF URL exists
+          if (!invoiceData.pdfUrl) {
+            canvasContainer.innerHTML = `
+          <div class="no-preview">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p>No PDF available for this invoice</p>
+          </div>
+        `;
+            previewControls.style.display = "none";
+            pageControls.style.display = "none";
+            return;
+          }
+
+          // Load PDF
+          const loadingTask = pdfjsLib.getDocument(invoiceData.pdfUrl);
+          currentPdfDoc = await loadingTask.promise;
+          totalPagesNum = currentPdfDoc.numPages;
+          currentPageNum = 1;
+
+          // Update UI
+          document.getElementById("totalPages").textContent = totalPagesNum;
+          previewControls.style.display = "flex";
+          if (totalPagesNum > 1) {
+            pageControls.style.display = "flex";
+          }
+
+          // Render first page
+          await renderPage(currentPageNum);
+        } catch (error) {
+          console.error("Error loading PDF:", error);
+          canvasContainer.innerHTML = `
+        <div class="no-preview">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p>Error loading invoice preview</p>
+          <p style="font-size: 12px; color: #999;">${error.message}</p>
+        </div>
+      `;
+          previewControls.style.display = "none";
+          pageControls.style.display = "none";
+        }
+      }
+
+      // Render specific page
+      async function renderPage(pageNum) {
+        if (!currentPdfDoc) return;
+
+        const page = await currentPdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: pdfScale });
+
+        // Create canvas
+        const canvas = document.createElement("canvas");
+        canvas.id = "pdfCanvas";
+        const context = canvas.getContext("2d");
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        // Render PDF page
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        };
+
+        const canvasContainer = document.getElementById("canvasContainer");
+        canvasContainer.innerHTML = "";
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "canvas-wrapper";
+        wrapper.appendChild(canvas);
+        canvasContainer.appendChild(wrapper);
+
+        await page.render(renderContext).promise;
+
+        // Update page info
+        document.getElementById("currentPage").textContent = pageNum;
+
+        // Update button states
+        document.getElementById("prevBtn").disabled = pageNum <= 1;
+        document.getElementById("nextBtn").disabled = pageNum >= totalPagesNum;
+      }
+
+      // Page navigation
+      function previousPage() {
+        if (currentPageNum <= 1) return;
+        currentPageNum--;
+        renderPage(currentPageNum);
+      }
+
+      function nextPage() {
+        if (currentPageNum >= totalPagesNum) return;
+        currentPageNum++;
+        renderPage(currentPageNum);
+      }
+
+      // Download PDF
+      function downloadCurrentPDF() {
+        if (!currentInvoiceData || !currentInvoiceData.pdfUrl) return;
+
+        const link = document.createElement("a");
+        link.href = currentInvoiceData.pdfUrl;
+        link.download = `${currentInvoiceData.invoiceNumber || "invoice"}.pdf`;
+        link.click();
+      }
+
+      // Print PDF
+      function printCurrentPDF() {
+        if (!currentInvoiceData || !currentInvoiceData.pdfUrl) return;
+
+        const printWindow = window.open(currentInvoiceData.pdfUrl);
+        if (printWindow) {
+          printWindow.addEventListener("load", () => {
+            printWindow.print();
+          });
+        }
+      }
+
+      // Update the openInvoice function to load PDF preview
+      function openInvoice(invoiceNumber) {
+        // Load the invoice in the form (existing functionality)
+        sessionStorage.setItem("loadInvoiceNumber", invoiceNumber);
+
+        // Load PDF preview
+        loadInvoicePDF(invoiceNumber);
+      }
+
+      // Also update card click to show preview
+      function handleCardClick(invoiceNumber) {
+        loadInvoicePDF(invoiceNumber);
+      }
+    </script>
     <script>
       // Mobile menu toggle
       function toggleMobileMenu() {
@@ -658,414 +1144,689 @@
         overlay.classList.toggle("active");
       }
 
-    // Initialize Firebase
-let firebaseReady = false;
-let monthlyChartInstance = null;
-let currentUserId = null;
-let allInvoices = [];
+      // Initialize Firebase
+      let firebaseReady = false;
+      let monthlyChartInstance = null;
+      let currentUserId = null;
+      let allInvoices = [];
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
-  authDomain: "solidflow-1f753.firebaseapp.com",
-  projectId: "solidflow-1f753",
-  storageBucket: "solidflow-1f753.firebasestorage.app",
-  messagingSenderId: "68885400864",
-  appId: "1:68885400864:web:7788e19a073d9a8e79db45",
-  measurementId: "G-RTL0CM1B44",
-};
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+        authDomain: "solidflow-1f753.firebaseapp.com",
+        projectId: "solidflow-1f753",
+        storageBucket: "solidflow-1f753.firebasestorage.app",
+        messagingSenderId: "68885400864",
+        appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+        measurementId: "G-RTL0CM1B44",
+      };
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-// Wait for authentication
-auth.onAuthStateChanged((user) => {
-  if (user && user.emailVerified) {
-    currentUserId = user.uid;
-    firebaseReady = true;
-    
-    // Load user profile
-    loadUserProfile(user);
-    
-    // Load invoices
-    displayInvoicesTable();
-  } else {
-    // Redirect to login if not authenticated
-    window.location.href = "/login.html";
-  }
-});
-
-// Load user profile info
-function loadUserProfile(user) {
-  db.collection("users").doc(user.uid).get()
-    .then((doc) => {
-      if (doc.exists) {
-        const userData = doc.data();
-        // Update profile display if you have these elements
-        const profileName = document.querySelector('.flex div:last-child div:first-child');
-        const profileRole = document.querySelector('.flex div:last-child div:last-child');
-        
-        if (profileName) {
-          profileName.textContent = userData.name || 'User';
-        }
-        if (profileRole) {
-          profileRole.textContent = (userData.role || 'user').charAt(0).toUpperCase() + (userData.role || 'user').slice(1);
-        }
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
       }
-    })
-    .catch((error) => {
-      console.error("Error loading profile:", error);
-    });
-}
 
-// Fetch all invoices for current user
-async function fetchAllInvoices() {
-  if (!firebaseReady || !currentUserId) {
-    console.log("Waiting for authentication...");
-    return [];
-  }
+      const auth = firebase.auth();
+      const db = firebase.firestore();
 
-  try {
-    const snapshot = await db
-      .collection("users")
-      .doc(currentUserId)
-      .collection("invoices")
-      .orderBy("createdAt", "desc")
-      .get();
+      // Wait for authentication
+      auth.onAuthStateChanged((user) => {
+        if (user && user.emailVerified) {
+          currentUserId = user.uid;
+          firebaseReady = true;
 
-    const invoices = [];
-    snapshot.forEach((doc) => {
-      invoices.push({
-        id: doc.id,
-        ...doc.data(),
+          // Load user profile
+          loadUserProfile(user);
+
+          // Load invoices
+          displayInvoicesTable();
+        } else {
+          // Redirect to login if not authenticated
+          window.location.href = "/login.html";
+        }
       });
-    });
 
-    return invoices;
-  } catch (error) {
-    console.error("Error fetching invoices:", error);
-    
-    // If the error is because orderBy field doesn't exist, try without orderBy
-    if (error.code === 'failed-precondition' || error.message.includes('index')) {
-      console.log("Fetching without orderBy...");
-      try {
-        const snapshot = await db
-          .collection("users")
-          .doc(currentUserId)
-          .collection("invoices")
-          .get();
-
-        const invoices = [];
-        snapshot.forEach((doc) => {
-          invoices.push({
-            id: doc.id,
-            ...doc.data(),
-          });
-        });
-
-        // Sort manually by createdAt if it exists
-        invoices.sort((a, b) => {
-          if (a.createdAt && b.createdAt) {
-            return b.createdAt.toDate() - a.createdAt.toDate();
-          }
-          return 0;
-        });
-
-        return invoices;
-      } catch (innerError) {
-        console.error("Error fetching invoices (fallback):", innerError);
-        return [];
-      }
-    }
-    
-    return [];
-  }
-}
-
-// Calculate and display stats
-async function updateStats() {
-  const invoices = await fetchAllInvoices();
-
-  let totalRevenue = 0;
-  const monthlyData = {};
-
-  invoices.forEach((invoice) => {
-    // Calculate total revenue
-    if (invoice.total) {
-      const amount =
-        parseFloat(invoice.total.replace(/[^\d.-]/g, "")) || 0;
-      totalRevenue += amount;
-
-      // Group by month for chart
-      if (invoice.issueDate) {
-        const date = new Date(invoice.issueDate);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + amount;
-      }
-    }
-  });
-
-  const avgInvoice =
-    invoices.length > 0 ? totalRevenue / invoices.length : 0;
-
-  // Update stats display
-  const totalRevenueEl = document.getElementById("totalRevenue");
-  const totalInvoicesEl = document.getElementById("totalInvoices");
-  const avgInvoiceEl = document.getElementById("avgInvoice");
-
-  if (totalRevenueEl) {
-    totalRevenueEl.textContent =
-      "R " + totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
-
-  if (totalInvoicesEl) {
-    totalInvoicesEl.textContent = invoices.length;
-  }
-
-  if (avgInvoiceEl) {
-    avgInvoiceEl.textContent =
-      "R " + avgInvoice.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
-
-  // Update chart
-  updateMonthlyChart(monthlyData);
-}
-
-// Create monthly revenue chart
-function updateMonthlyChart(monthlyData) {
-  const canvas = document.getElementById("monthlyChart");
-
-  if (!canvas) return;
-
-  // Get last 6 months
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const now = new Date();
-  const last6Months = [];
-
-  for (let i = 5; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const monthLabel = monthNames[date.getMonth()];
-
-    last6Months.push({
-      label: monthLabel,
-      value: monthlyData[monthKey] || 0,
-    });
-  }
-
-  const labels = last6Months.map((m) => m.label);
-  const data = last6Months.map((m) => m.value);
-
-  // Destroy existing chart
-  if (monthlyChartInstance) {
-    monthlyChartInstance.destroy();
-  }
-
-  const ctx = canvas.getContext("2d");
-
-  monthlyChartInstance = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "Revenue (R)",
-          data: data,
-          backgroundColor: "rgba(33, 150, 243, 0.7)",
-          borderColor: "#2196f3",
-          borderWidth: 2,
-          borderRadius: 6,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          callbacks: {
-            label: function (context) {
-              return (
-                "R " +
-                context.parsed.y
-                  .toFixed(2)
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+      // Load user profile info
+      function loadUserProfile(user) {
+        db.collection("users")
+          .doc(user.uid)
+          .get()
+          .then((doc) => {
+            if (doc.exists) {
+              const userData = doc.data();
+              const profileName = document.querySelector(
+                ".flex div:last-child div:first-child"
               );
+              const profileRole = document.querySelector(
+                ".flex div:last-child div:last-child"
+              );
+
+              profileName.textContent = userData.name || "User";
+
+              profileRole.textContent =
+                (userData.role || "user").charAt(0).toUpperCase() +
+                (userData.role || "user").slice(1);
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading profile:", error);
+          });
+      }
+
+      // Fetch all invoices for current user
+      async function fetchAllInvoices() {
+        if (!firebaseReady || !currentUserId) {
+          console.log("Waiting for authentication...");
+          return [];
+        }
+
+        try {
+          const snapshot = await db
+            .collection("users")
+            .doc(currentUserId)
+            .collection("invoices")
+            .orderBy("createdAt", "desc")
+            .get();
+
+          const invoices = [];
+          snapshot.forEach((doc) => {
+            invoices.push({
+              id: doc.id,
+              ...doc.data(),
+            });
+          });
+
+          return invoices;
+        } catch (error) {
+          console.error("Error fetching invoices:", error);
+
+          // If the error is because orderBy field doesn't exist, try without orderBy
+          if (
+            error.code === "failed-precondition" ||
+            error.message.includes("index")
+          ) {
+            console.log("Fetching without orderBy...");
+            try {
+              const snapshot = await db
+                .collection("users")
+                .doc(currentUserId)
+                .collection("invoices")
+                .get();
+
+              const invoices = [];
+              snapshot.forEach((doc) => {
+                invoices.push({
+                  id: doc.id,
+                  ...doc.data(),
+                });
+              });
+
+              // Sort manually by createdAt if it exists
+              invoices.sort((a, b) => {
+                if (a.createdAt && b.createdAt) {
+                  return b.createdAt.toDate() - a.createdAt.toDate();
+                }
+                return 0;
+              });
+
+              return invoices;
+            } catch (innerError) {
+              console.error("Error fetching invoices (fallback):", innerError);
+              return [];
+            }
+          }
+
+          return [];
+        }
+      }
+
+      // Calculate and display stats
+      async function updateStats() {
+        const invoices = await fetchAllInvoices();
+
+        let totalRevenue = 0;
+        const monthlyData = {};
+
+        invoices.forEach((invoice) => {
+          // Calculate total revenue
+          if (invoice.total) {
+            const amount =
+              parseFloat(invoice.total.replace(/[^\d.-]/g, "")) || 0;
+            totalRevenue += amount;
+
+            // Group by month for chart
+            if (invoice.issueDate) {
+              const date = new Date(invoice.issueDate);
+              const monthKey = `${date.getFullYear()}-${String(
+                date.getMonth() + 1
+              ).padStart(2, "0")}`;
+              monthlyData[monthKey] = (monthlyData[monthKey] || 0) + amount;
+            }
+          }
+        });
+
+        const avgInvoice =
+          invoices.length > 0 ? totalRevenue / invoices.length : 0;
+
+        // Update stats display
+        const totalRevenueEl = document.getElementById("totalRevenue");
+        const totalInvoicesEl = document.getElementById("totalInvoices");
+        const avgInvoiceEl = document.getElementById("avgInvoice");
+
+        if (totalRevenueEl) {
+          totalRevenueEl.textContent =
+            "R " +
+            totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        if (totalInvoicesEl) {
+          totalInvoicesEl.textContent = invoices.length;
+        }
+
+        if (avgInvoiceEl) {
+          avgInvoiceEl.textContent =
+            "R " + avgInvoice.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Update chart
+        updateMonthlyChart(monthlyData);
+      }
+
+      async function loadInvoiceFromFirebase(invoiceNumber) {
+        console.log("📥 Attempting to load invoice:", invoiceNumber);
+
+        // Helper to wait for firebaseReady flag
+        function waitForFirebaseReady(timeoutMs = 5000) {
+          return new Promise((resolve, reject) => {
+            const start = Date.now();
+            (function check() {
+              if (firebaseReady) return resolve();
+              if (Date.now() - start > timeoutMs)
+                return reject(new Error("timeout"));
+              setTimeout(check, 100);
+            })();
+          });
+        }
+
+        if (!firebaseReady) {
+          console.log("Firebase not ready yet — attempting to initialize now");
+          try {
+            initializeFirebaseApp();
+            await waitForFirebaseReady(5000);
+          } catch (err) {
+            console.error("Firebase failed to initialize in time", err);
+          }
+        }
+
+        if (!firebaseReady) {
+          alert(
+            "Firebase is not initialized yet. Please wait a moment and try again."
+          );
+          return;
+        }
+
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          alert("You must be logged in to load an invoice.");
+          return;
+        }
+
+        const userId = user.uid;
+
+        if (!invoiceNumber) {
+          alert("Please provide an invoice number to load.");
+          return;
+        }
+
+        try {
+          const db = firebase.firestore();
+          const docRef = db
+            .collection("users")
+            .doc(userId)
+            .collection("invoices")
+            .doc(invoiceNumber);
+
+          const docSnapshot = await docRef.get();
+
+          if (!docSnapshot.exists) {
+            alert(`Invoice ${invoiceNumber} not found.`);
+            return;
+          }
+
+          const invoiceData = docSnapshot.data();
+          console.log("✅ Invoice loaded successfully:", invoiceData);
+
+          // Populate the form fields
+          document.getElementById("invoiceNumber").value =
+            invoiceData.invoiceNumber || "";
+          document.getElementById("invoiceDate").value =
+            invoiceData.invoiceDate || "";
+          document.getElementById("merchantCode").value =
+            invoiceData.merchantCode || "";
+          document.getElementById("serviceType").value =
+            invoiceData.serviceType || "";
+          document.getElementById("clientName").value =
+            invoiceData.clientName || "";
+          document.getElementById("emailAddress").value =
+            invoiceData.emailAddress || "";
+          document.getElementById("clientInfo").value =
+            invoiceData.clientInfo || "";
+          document.getElementById("regNumber").value =
+            invoiceData.regNumber || "";
+          document.getElementById("make").value = invoiceData.make || "";
+          document.getElementById("model").value = invoiceData.model || "";
+          document.getElementById("engine").value = invoiceData.engine || "";
+          document.getElementById("vinNumber").value =
+            invoiceData.vinNumber || "";
+          document.getElementById("odometer").value =
+            invoiceData.odometer || "";
+          document.getElementById("preAuth").value = invoiceData.preAuth || "";
+          document.getElementById("authCode").value =
+            invoiceData.authCode || "";
+
+          // Clear existing items in the table
+          const itemsBody = document.getElementById("itemsBody");
+          const existingRows = itemsBody.querySelectorAll("tr.item-row");
+          existingRows.forEach((row) => row.remove());
+
+          // Populate items
+          if (invoiceData.items && invoiceData.items.length > 0) {
+            invoiceData.items.forEach((item) => {
+              // Call your existing addItem() function or create row manually
+              addItemRow(
+                item.description,
+                item.quantity,
+                item.unitPrice,
+                item.netPrice
+              );
+            });
+          }
+
+          // Update totals
+          document.getElementById("subtotal").textContent =
+            invoiceData.subtotal || "£0.00";
+          document.getElementById("vat").textContent =
+            invoiceData.vat || "£0.00";
+          document.getElementById("total").textContent =
+            invoiceData.total || "£0.00";
+
+          alert("Invoice loaded successfully!");
+        } catch (error) {
+          console.error("❌ Error loading invoice:", error);
+          alert("Failed to load invoice: " + error.message);
+        }
+      }
+
+      // Helper function to add an item row (if you don't have one already)
+      function addItemRow(
+        description = "",
+        quantity = 1,
+        unitPrice = 0,
+        netPrice = 0
+      ) {
+        const itemsBody = document.getElementById("itemsBody");
+        const row = document.createElement("tr");
+        row.className = "item-row";
+
+        row.innerHTML = `
+    <td><input type="text" class="item-desc" value="${description}" /></td>
+    <td><input type="number" class="item-qty" value="${quantity}" min="1" /></td>
+    <td><input type="number" class="item-price" value="${unitPrice}" min="0" step="0.01" /></td>
+    <td class="net-price">£${netPrice.toFixed(2)}</td>
+    <td><button onclick="removeItem(this)">Remove</button></td>
+  `;
+
+        itemsBody.appendChild(row);
+
+        // Add event listeners to recalculate when quantity or price changes
+        row
+          .querySelector(".item-qty")
+          .addEventListener("input", calculateTotals);
+        row
+          .querySelector(".item-price")
+          .addEventListener("input", calculateTotals);
+      }
+
+      // Function to get all invoices for the current user (useful for dropdown/search)
+      async function getAllUserInvoices() {
+        if (!firebaseReady) {
+          alert("Firebase is not initialized yet.");
+          return [];
+        }
+
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          alert("You must be logged in.");
+          return [];
+        }
+
+        try {
+          const db = firebase.firestore();
+          const querySnapshot = await db
+            .collection("users")
+            .doc(user.uid)
+            .collection("invoices")
+            .orderBy("createdAt", "desc")
+            .get();
+
+          const invoices = [];
+          querySnapshot.forEach((doc) => {
+            invoices.push({
+              id: doc.id,
+              ...doc.data(),
+            });
+          });
+
+          console.log("📋 Found", invoices.length, "invoices");
+          return invoices;
+        } catch (error) {
+          console.error("Error fetching invoices:", error);
+          alert("Failed to fetch invoices: " + error.message);
+          return [];
+        }
+      }
+
+      // Example usage with a search/select UI
+      async function showInvoiceSelector() {
+        const invoices = await getAllUserInvoices();
+
+        if (invoices.length === 0) {
+          alert("No saved invoices found.");
+          return;
+        }
+
+        // Create a simple selection prompt
+        let message = "Select an invoice to load:\n\n";
+        invoices.forEach((inv, index) => {
+          message += `${index + 1}. Invoice #${inv.invoiceNumber} - ${
+            inv.clientName
+          } (${inv.invoiceDate})\n`;
+        });
+
+        const selection = prompt(message + "\nEnter the invoice number:");
+
+        if (selection) {
+          await loadInvoiceFromFirebase(selection);
+        }
+      }
+      // Create monthly revenue chart
+      function updateMonthlyChart(monthlyData) {
+        const canvas = document.getElementById("monthlyChart");
+
+        if (!canvas) return;
+
+        // Get last 6 months
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        const now = new Date();
+        const last6Months = [];
+
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const monthKey = `${date.getFullYear()}-${String(
+            date.getMonth() + 1
+          ).padStart(2, "0")}`;
+          const monthLabel = monthNames[date.getMonth()];
+
+          last6Months.push({
+            label: monthLabel,
+            value: monthlyData[monthKey] || 0,
+          });
+        }
+
+        const labels = last6Months.map((m) => m.label);
+        const data = last6Months.map((m) => m.value);
+
+        // Destroy existing chart
+        if (monthlyChartInstance) {
+          monthlyChartInstance.destroy();
+        }
+
+        const ctx = canvas.getContext("2d");
+
+        monthlyChartInstance = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Revenue (R)",
+                data: data,
+                backgroundColor: "rgba(33, 150, 243, 0.7)",
+                borderColor: "#2196f3",
+                borderWidth: 2,
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+              tooltip: {
+                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                callbacks: {
+                  label: function (context) {
+                    return (
+                      "R " +
+                      context.parsed.y
+                        .toFixed(2)
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                    );
+                  },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function (value) {
+                    return "R " + (value / 1000).toFixed(0) + "k";
+                  },
+                },
+                grid: {
+                  color: "rgba(0, 0, 0, 0.05)",
+                },
+              },
+              x: {
+                grid: {
+                  display: false,
+                },
+              },
             },
           },
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return "R " + (value / 1000).toFixed(0) + "k";
-            },
-          },
-          grid: {
-            color: "rgba(0, 0, 0, 0.05)",
-          },
-        },
-        x: {
-          grid: {
-            display: false,
-          },
-        },
-      },
-    },
-  });
-}
+        });
+      }
 
-// Display invoices in table
-async function displayInvoicesTable() {
-  // Add this check at the start
-  if (!firebaseReady || !currentUserId) {
-    console.log("Waiting for Firebase authentication...");
-    setTimeout(displayInvoicesTable, 500); // Retry after 500ms
-    return;
-  }
+      // Display invoices in table
+      async function displayInvoicesTable() {
+        // Check if Firebase is ready
+        if (!firebaseReady || !currentUserId) {
+          console.log("Waiting for Firebase authentication...");
+          setTimeout(displayInvoicesTable, 500);
+          return;
+        }
 
-  const invoices = await fetchAllInvoices();
-  allInvoices = invoices; // Store for search
-  
-  const tableBody = document.getElementById("invoicesTableBody");
+        const invoices = await fetchAllInvoices();
+        allInvoices = invoices; // Store for search
 
-  if (!tableBody) {
-    console.error("Table body element not found");
-    return;
-  }
+        const cardsContainer = document.getElementById("invoicesTableBody");
 
-  console.log("Invoices fetched:", invoices.length); // Debug log
+        if (!cardsContainer) {
+          console.error("Cards container element not found");
+          return;
+        }
 
-  if (invoices.length === 0) {
-    tableBody.innerHTML =
-      '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No invoices found. Create your first invoice!</td></tr>';
-    
-    await updateStats();
-    return;
-  }
+        console.log("Invoices fetched:", invoices.length);
 
-  tableBody.innerHTML = invoices
-    .map(
-      (invoice) => `
-    <tr onclick="openInvoice('${invoice.invoiceNumber}')">
-      <td>${invoice.invoiceNumber || 'N/A'}</td>
-      <td>${invoice.clientName || "N/A"}</td>
-      <td>${invoice.issueDate || "N/A"}</td>
-      <td>${invoice.total || "R 0.00"}</td>
-      <td><span class="status-badge">${invoice.status || 'Saved'}</span></td>
-      <td style="text-align: center;">
-        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${invoice.invoiceNumber}')">
-          View
-        </button>
-      </td>
-    </tr>
+        if (invoices.length === 0) {
+          cardsContainer.innerHTML =
+            '<div class="loading">No invoices found. Create your first invoice!</div>';
+          await updateStats();
+          return;
+        }
+
+        // Render as cards
+        cardsContainer.innerHTML = invoices
+          .map(
+            (invoice) => `
+    <div class="invoice-card" onclick="openInvoice('${invoice.invoiceNumber}')">
+      <div class="card-header">
+        <span class="invoice-number">${invoice.invoiceNumber || "N/A"}</span>
+        <span class="invoice-date">${invoice.issueDate || "N/A"}</span>
+      </div>
+      <div class="client-info">
+        <svg class="client-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <span>${invoice.clientName || "N/A"}</span>
+      </div>
+      <div class="card-footer">
+        <span class="invoice-total">${invoice.total || "R 0.00"}</span>
+        <span class="status-badge status-${(
+          invoice.status || "sent"
+        ).toLowerCase()}">${invoice.status || "Saved"}</span>
+      </div>
+    </div>
   `
-    )
-    .join("");
+          )
+          .join("");
 
-  console.log("Table updated with", invoices.length, "invoices"); // Debug log
+        console.log("Cards updated with", invoices.length, "invoices");
+        await updateStats();
+      }
+      function openInvoice(invoiceNumber) {
+        sessionStorage.setItem("loadInvoiceNumber", invoiceNumber);
+        window.location.href = "/dashboard/invoice.html";
+      }
 
-  await updateStats();
-}
+      // Search functionality
+      async function handleSearch() {
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
 
-// Open invoice
-function openInvoice(invoiceNumber) {
-  sessionStorage.setItem("loadInvoiceNumber", invoiceNumber);
-  window.location.href = "/dashboard/invoice.html";
-}
+        if (!allInvoices.length) {
+          allInvoices = await fetchAllInvoices();
+        }
 
-// Search functionality
-async function handleSearch() {
-  const searchTerm = document
-    .getElementById("searchInput")
-    .value.toLowerCase();
+        const filtered = allInvoices.filter(
+          (invoice) =>
+            (invoice.invoiceNumber &&
+              invoice.invoiceNumber.toLowerCase().includes(searchTerm)) ||
+            (invoice.clientName &&
+              invoice.clientName.toLowerCase().includes(searchTerm))
+        );
 
-  if (!allInvoices.length) {
-    allInvoices = await fetchAllInvoices();
-  }
+        const cardsContainer = document.getElementById("invoicesTableBody");
 
-  const filtered = allInvoices.filter(
-    (invoice) =>
-      (invoice.invoiceNumber && invoice.invoiceNumber.toLowerCase().includes(searchTerm)) ||
-      (invoice.clientName &&
-        invoice.clientName.toLowerCase().includes(searchTerm)),
-  );
+        if (!cardsContainer) return;
 
-  const tableBody = document.getElementById("invoicesTableBody");
+        if (filtered.length === 0) {
+          cardsContainer.innerHTML =
+            '<div class="loading">No matching invoices found</div>';
+          return;
+        }
 
-  if (!tableBody) return;
+        cardsContainer.innerHTML = filtered
+          .map(
+            (invoice) => `
+    <div class="invoice-card" onclick="openInvoice('${invoice.invoiceNumber}')">
+      <div class="card-header">
+        <span class="invoice-number">${invoice.invoiceNumber || "N/A"}</span>
+        <span class="invoice-date">${invoice.issueDate || "N/A"}</span>
+      </div>
+      <div class="client-info">
+        <svg class="client-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <span>${invoice.clientName || "N/A"}</span>
+      </div>
+      <div class="card-footer">
+        <span class="invoice-total">${invoice.total || "R 0.00"}</span>
+        <span class="status-badge status-${(
+          invoice.status || "sent"
+        ).toLowerCase()}">${invoice.status || "Saved"}</span>
+      </div>
+    </div>
+  `
+          )
+          .join("");
+      }
+      document.addEventListener("DOMContentLoaded", () => {
+        // Wait for auth to complete before loading
+        // displayInvoicesTable will be called in onAuthStateChanged
+      });
 
-  if (filtered.length === 0) {
-    tableBody.innerHTML =
-      '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No matching invoices found</td></tr>';
-    return;
-  }
+      // Security - Disable right-click and dev tools
+      document.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        return false;
+      });
 
-  tableBody.innerHTML = filtered
-    .map(
-      (invoice) => `
-    <tr onclick="openInvoice('${invoice.invoiceNumber}')">
-      <td>${invoice.invoiceNumber || 'N/A'}</td>
-      <td>${invoice.clientName || "N/A"}</td>
-      <td>${invoice.issueDate || "N/A"}</td>
-      <td>${invoice.total || "R 0.00"}</td>
-      <td><span class="status-badge">${invoice.status || 'Saved'}</span></td>
-      <td style="text-align: center;">
-        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${invoice.invoiceNumber}')">
-          View
-        </button>
-      </td>
-    </tr>
-  `,
-    )
-    .join("");
-}
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.keyCode === 123 || // F12
+          (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+          (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+          (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+        ) {
+          e.preventDefault();
+          return false;
+        }
+      });
+      function renderInvoiceCards(data) {
+        const container = document.getElementById("invoicesCardsContainer");
 
-// Load on page load
-document.addEventListener("DOMContentLoaded", () => {
-  // Wait for auth to complete before loading
-  // displayInvoicesTable will be called in onAuthStateChanged
-});
+        if (data.length === 0) {
+          container.innerHTML = '<div class="loading">No invoices found</div>';
+          return;
+        }
 
-// Security - Disable right-click and dev tools
-document.addEventListener("contextmenu", (e) => {
-  e.preventDefault();
-  return false;
-});
+        container.innerHTML = data
+          .map(
+            (invoice) => `
+        <div class="invoice-card">
+          <div class="card-header">
+            <span class="invoice-number">${invoice.id}</span>
+            <span class="invoice-date">${invoice.date}</span>
+          </div>
+          <div class="client-info">
+            <svg class="client-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            <span>${invoice.client}</span>
+          </div>
+          <div class="card-footer">
+            <span class="invoice-total">$${invoice.total.toFixed(2)}</span>
+            <span class="status-badge status-${invoice.status}">${
+              invoice.status
+            }</span>
+          </div>
+        </div>
+      `
+          )
+          .join("");
+      }
 
-document.addEventListener("keydown", (e) => {
-  if (
-    e.keyCode === 123 || // F12
-    (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
-    (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
-    (e.ctrlKey && e.keyCode === 85) // Ctrl+U
-  ) {
-    e.preventDefault();
-    return false;
-  }
-});
+      // Simulate loading
+      setTimeout(() => {
+        renderInvoiceCards(invoices);
+      }, 500);
     </script>
   </body>
 </html>

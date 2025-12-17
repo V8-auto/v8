@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SolidFlow — Modern SaaS Dashboard (Mocked API + Settings)</title>
+    <title>SolidFlo — Modern Invoicing SaaS</title>
     <link
       rel="icon"
       type="image/png"
@@ -770,7 +770,13 @@
     <!-- Add Chart.js Library -->
   </head>
   <body>
-    <button class="mobile-toggle mobile-only" style="background-color: transparent; color: white;" onclick="document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.mobile-overlay').classList.toggle('active');">☰</button>
+    <button
+      class="mobile-toggle mobile-only"
+      style="background-color: transparent; color: white"
+      onclick="document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.mobile-overlay').classList.toggle('active');"
+    >
+      ☰
+    </button>
     <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
     <aside id="sidebar" class="sidebar mobile-hidden" aria-hidden="true">
       <button id="closeSidebar" class="close-btn" aria-label="Close menu">
@@ -828,6 +834,7 @@
           color: white;
         "
         id="openSettings"
+        onclick="window.location.href='/dashboard/settings.html'"
       >
         Settings
       </button>
@@ -851,7 +858,7 @@
       >
         Logout
       </button>
-     <div class="flex">
+      <div class="flex">
         <div
           style="
             width: 44px;
@@ -1360,68 +1367,7 @@
 
       const invoicesTableBody = document.getElementById("invoicesTableBody");
 
-      async function loadInvoices() {
-        const auth = getAuth();
-        const user = auth.currentUser;
 
-        if (!user) {
-          invoicesTableBody.innerHTML = `
-      <tr>
-        <td colspan="6">Please log in to view invoices.</td>
-      </tr>
-    `;
-          return;
-        }
-
-        try {
-          const invoicesRef = collection(db, "users", user.uid, "invoices");
-          const q = query(invoicesRef, orderBy("date", "desc"));
-          const snapshot = await getDocs(q);
-
-          if (snapshot.empty) {
-            invoicesTableBody.innerHTML = `
-        <tr>
-          <td colspan="6">No invoices found.</td>
-        </tr>
-      `;
-            return;
-          }
-
-          invoicesTableBody.innerHTML = "";
-
-          snapshot.forEach((docSnap) => {
-            const invoice = docSnap.data();
-
-            invoicesTableBody.insertAdjacentHTML(
-              "beforeend",
-              `
-        <tr>
-          <td>${invoice.invoiceNumber}</td>
-          <td>${invoice.clientName}</td>
-          <td>${formatDate(invoice.date)}</td>
-          <td>${formatCurrency(invoice.total)}</td>
-          <td>
-            <span class="status ${invoice.status}">
-              ${invoice.status}
-            </span>
-          </td>
-          <td style="text-align:center">
-            <button onclick="viewInvoice('${docSnap.id}')">View</button>
-            <button onclick="editInvoice('${docSnap.id}')">Edit</button>
-          </td>
-        </tr>
-        `
-            );
-          });
-        } catch (error) {
-          console.error(error);
-          invoicesTableBody.innerHTML = `
-      <tr>
-        <td colspan="6">Failed to load invoices.</td>
-      </tr>
-    `;
-        }
-      }
       function viewInvoice(id) {
         console.log("View invoice:", id);
       }
@@ -1508,16 +1454,13 @@
     .then((doc) => {
       if (doc.exists) {
         const userData = doc.data();
-        // Update profile display if you have these elements
         const profileName = document.querySelector('.flex div:last-child div:first-child');
-        const profileRole = document.querySelector('.flex div:last-child div:last-child');
-        
-        if (profileName) {
+        const profileRole = document.querySelector('.flex div:last-child div:last-child');      
+       
           profileName.textContent = userData.name || 'User';
-        }
-        if (profileRole) {
+      
           profileRole.textContent = (userData.role || 'user').charAt(0).toUpperCase() + (userData.role || 'user').slice(1);
-        }
+        
       }
     })
     .catch((error) => {
@@ -1602,15 +1545,15 @@
       const sidebarEl = document.getElementById("sidebar");
       const hambtn = document.getElementById("hambtn");
       const closeBtn = document.getElementById("closeSidebar");
-      hambtn.addEventListener("click", () =>{
-  sidebarEl.classList.toggle("open");
-  document.querySelector(".mobile-overlay").classList.toggle("active");
-});
-    closeBtn.addEventListener("click", () => {
-      sidebarEl.classList.remove("open");
-      sidebarEl.setAttribute("aria-hidden", "true");
-      document.querySelector(".mobile-overlay").classList.remove("active");
-    });
+      hambtn.addEventListener("click", () => {
+        sidebarEl.classList.toggle("open");
+        document.querySelector(".mobile-overlay").classList.toggle("active");
+      });
+      closeBtn.addEventListener("click", () => {
+        sidebarEl.classList.remove("open");
+        sidebarEl.setAttribute("aria-hidden", "true");
+        document.querySelector(".mobile-overlay").classList.remove("active");
+      });
       document.addEventListener("click", (e) => {
         if (window.innerWidth <= 820) {
           const inside =
@@ -1641,12 +1584,12 @@
       document
         .getElementById("newInvoiceBtn")
         .addEventListener("click", async () => {
-          window.location.href = "invoice.html";
+          window.location.href = "/invoice.html";
         });
       document
         .getElementById("newQuoteBtn")
         .addEventListener("click", async () => {
-          window.location.href = "quote.html";
+          window.location.href = "/quote.html";
         });
     </script>
 
@@ -1886,46 +1829,60 @@
         }
       });
       // Display invoices in table
-      async function displayInvoicesTable() {
-        const invoices = await fetchAllInvoices();
-        const tableBody = document.getElementById("invoicesTableBody");
+     async function displayInvoicesTable() {
+  // Add this check at the start
+  if (!firebaseReady || !currentUserId) {
+    console.log("Waiting for Firebase authentication...");
+    setTimeout(displayInvoicesTable, 500); // Retry after 500ms
+    return;
+  }
 
-        if (invoices.length === 0) {
-          tableBody.innerHTML =
-            '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No invoices found</td></tr>';
-          return;
-        }
+  const invoices = await fetchAllInvoices();
+  allInvoices = invoices; // Store for search
+  
+  const tableBody = document.getElementById("invoicesTableBody");
 
-        tableBody.innerHTML = invoices
-          .map(
-            (invoice) => `
-        <tr style="cursor: pointer;" onclick="openInvoice('${
-          invoice.invoiceNumber
-        }')">
-          <td>${invoice.invoiceNumber}</td>
-          <td>${invoice.clientName || "N/A"}</td>
-          <td>${invoice.issueDate || "N/A"}</td>
-          <td>${invoice.total || "R 0.00"}</td>
-          <td><span class="status-badge status-saved">Saved</span></td>
-          <td style="text-align: center;">
-            <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${
-              invoice.invoiceNumber
-            }')">
-              View
-            </button>
-          </td>
-        </tr>
-      `
-          )
-          .join("");
-      }
+  if (!tableBody) {
+    console.error("Table body element not found");
+    return;
+  }
 
+  console.log("Invoices fetched:", invoices.length); // Debug log
+
+  if (invoices.length === 0) {
+    tableBody.innerHTML =
+      '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No invoices found. Create your first invoice!</td></tr>';
+    
+    await updateStats();
+    return;
+  }
+
+  tableBody.innerHTML = invoices
+    .map(
+      (invoice) => `
+    <tr onclick="openInvoice('${invoice.invoiceNumber}')">
+      <td>${invoice.invoiceNumber || 'N/A'}</td>
+      <td>${invoice.clientName || "N/A"}</td>
+      <td>${invoice.issueDate || "N/A"}</td>
+      <td>${invoice.total || "R 0.00"}</td>
+      <td><span class="status-badge">${invoice.status || 'Saved'}</span></td>
+      <td style="text-align: center;">
+        <button class="btn btn-primary" onclick="event.stopPropagation(); openInvoice('${invoice.invoiceNumber}')">
+          View
+        </button>
+      </td>
+    </tr>
+  `
+    )
+    .join("");
+
+  console.log("Table updated with", invoices.length, "invoices"); // Debug log
+
+  await updateStats();
+}
       // Open invoice in invoice page
       function openInvoice(invoiceNumber) {
-        // Store invoice number in sessionStorage
         sessionStorage.setItem("loadInvoiceNumber", invoiceNumber);
-
-        // Redirect to invoice page
         window.location.href = "/dashboard/invoice.html";
       }
 
@@ -2008,21 +1965,21 @@
       const db = firebase.firestore();
 
       // Check authentication and get user data
-   auth.onAuthStateChanged((user) => {
-  if (user && user.emailVerified) {
-    currentUserId = user.uid;
-    firebaseReady = true;
-    
-    // Load user profile
-    loadUserProfile(user);
-    
-    // Load invoices
-    displayInvoicesTable();
-  } else {
-    // Redirect to login if not authenticated
-    window.location.href = "/login.html";
-  }
-});
+      auth.onAuthStateChanged((user) => {
+        if (user && user.emailVerified) {
+          currentUserId = user.uid;
+          firebaseReady = true;
+
+          // Load user profile
+          loadUserProfile(user);
+
+          // Load invoices
+          displayInvoicesTable();
+        } else {
+          // Redirect to login if not authenticated
+          window.location.href = "/login.html";
+        }
+      });
       const logoutBtn = document.getElementById("logoutBtn");
 
       if (logoutBtn) {

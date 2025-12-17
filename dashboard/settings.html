@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice & Quote Template Manager</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React and ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+
+     :root {
+        --bg: #ffffff;
+        --muted: #9aa7b2;
+        --accent1: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+        --glass: rgba(255, 255, 255, 0.04);
+        --success: #22c55e;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --transition: 300ms cubic-bezier(0.2, 0.9, 0.25, 1);
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial;
+          
+      }
+    
+      body {
+        margin: 0;
+        background: radial-gradient(
+            1200px 400px at 10% 10%,
+            rgba(124, 58, 237, 0.08),
+            transparent 8%
+          ),
+          radial-gradient(
+            1000px 300px at 90% 90%,
+            rgba(6, 182, 212, 0.06),
+            transparent 8%
+          ),
+          var(--bg);
+        color: #e6eef6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        display: flex;
+        overflow: hidden;
+      }
+
+     .sidebar {
+        width: 260px;
+        background: #0f1724;
+        border-right: 1px solid rgba(255, 255, 255, 0.03);
+        padding: 28px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        transform: translateX(0);
+        transition: var(--transition);
+        z-index: 40;
+        backdrop-filter: blur(6px) saturate(120%);
+      }
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: white; /* match sidebar text color */
+        display: none; /* hidden by default */
+      }
+      @media (max-width: 768px) {
+        .sidebar.open .close-btn {
+          display: block; /* Show only on mobile when sidebar is open */
+        }
+      }
+      .brand {
+        display: block;
+        gap: 20px;
+        align-items: center;
+      }
+      .menu-toggle {
+        display: none;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 6px 8px;
+      }
+      .logo {
+        height: 80px;
+        width: 80px;
+        border-radius: 10px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        font-size: 18px;
+      }
+      .brand h1 {
+        font-size: 16px;
+        margin: 0;
+      }
+      .brand p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .nav {
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        color: #cfe9f7;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: var(--transition);
+        font-size: 14px;
+      }
+      .nav a .ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+      }
+      .nav a:hover {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        transform: translateX(4px);
+      }
+      .nav a.active {
+        background: linear-gradient(
+          90deg,
+          rgba(124, 58, 237, 0.15),
+          rgba(6, 182, 212, 0.06)
+        );
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+      }
+      .spacer {
+        flex: 1;
+      }
+      .flex {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+  </style>
+  <!-- Babel Standalone for JSX transformation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  
+  
+  
+    <div style="display: flex;">
+      <div>
+      
+    <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
+    <aside id="sidebar" class="sidebar mobile-hidden" aria-hidden="true">
+      <button id="closeSidebar" class="close-btn" aria-label="Close menu">
+        ✕
+      </button>
+      <div class="brand">
+        <div class="logo">
+          <img
+            src="/assets/img/solidflo-logo.png"
+            style="height: 60px"
+            alt=""
+          />
+        </div>
+        <div>
+          <p class="mini muted">Invoices & Billing</p>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <a class="active" href="#"
+          ><span class="ico">🏠</span><span class="label">Dashboard</span></a
+        >
+        <a href="/dashboard/invoices.html"
+          ><span class="ico">📄</span><span class="label">Invoices</span></a
+        >
+        <a class="active" href="/dashboard/quotations.html">
+          <span class="ico">📄</span><span>Quotations</span>
+        </a>
+        <a href="/dashboard/clients.html"
+          ><span class="ico">👥</span><span class="label">Clients</span></a
+        >
+        <a href="/dashboard/payments.html"
+          ><span class="ico">💳</span><span class="label">Payments</span></a
+        >
+        <a href="#"
+          ><span class="ico">📊</span><span class="label">Reports</span></a
+        >
+      </nav>
+
+      <div class="spacer"></div>
+      <button
+        class="btn ghost"
+        style="
+          background-color: radial-gradient(
+              1200px 400px at 10% 10%,
+              rgba(124, 58, 237, 0.08),
+              transparent 8%
+            ),
+            radial-gradient(
+              1000px 300px at 90% 90%,
+              rgba(6, 182, 212, 0.06),
+              transparent 8%
+            ),
+            var(--bg);
+          color: white;
+        "
+        id="openSettings"
+        onclick="window.location.href='/dashboard/settings.html'"
+      >
+        Settings
+      </button>
+      <button
+        class="btn ghost"
+        style="
+          background-color: radial-gradient(
+              1200px 400px at 10% 10%,
+              rgba(124, 58, 237, 0.08),
+              transparent 8%
+            ),
+            radial-gradient(
+              1000px 300px at 90% 90%,
+              rgba(6, 182, 212, 0.06),
+              transparent 8%
+            ),
+            var(--bg);
+          color: white;
+        "
+        id="logoutBtn"
+      >
+        Logout
+      </button>
+      <div class="flex">
+        <div
+          style="
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          👤
+        </div>
+        <div>
+          <div style="font-weight: 700; color: white">User</div>
+          <div style="font-size: 12px; color: #9aa7b2">Admin</div>
+        </div>
+      </div>
+    </aside>
+      </div>
+     <div id="root"></div>
+    </div>
+  
+
+  <script type="text/babel">
+    const { useState } = React;
+    const { createRoot } = ReactDOM;
+    
+    // Lucide React icons as inline SVG components
+    const FileText = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    );
+
+    const Settings = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    );
+
+    const Plus = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+    );
+
+    const Check = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      </svg>
+    );
+
+    const Upload = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+      </svg>
+    );
+
+    const Palette = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+      </svg>
+    );
+
+    const Image = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    );
+
+    const InvoiceTemplateSystem = () => {
+      const [activeTab, setActiveTab] = useState('settings');
+      const [selectedInvoiceTemplate, setSelectedInvoiceTemplate] = useState('modern');
+      const [selectedQuoteTemplate, setSelectedQuoteTemplate] = useState('professional');
+      
+      // Branding settings
+      const [branding, setBranding] = useState({
+        logo: null,
+        primaryColor: '#3B82F6',
+        secondaryColor: '#10B981',
+        accentColor: '#8B5CF6',
+        companyName: 'Your Company Inc.',
+        tagline: 'Professional Services',
+        font: 'sans'
+      });
+
+      const templates = {
+        invoice: [
+          { id: 'modern', name: 'Modern', description: 'Clean, minimalist design', image: '📄' },
+          { id: 'classic', name: 'Classic', description: 'Traditional business style', image: '📋' },
+          { id: 'creative', name: 'Creative', description: 'Bold and colorful', image: '🎨' },
+          { id: 'corporate', name: 'Corporate', description: 'Professional enterprise look', image: '🏢' },
+          { id: 'minimal', name: 'Minimal', description: 'Ultra-clean, simple layout', image: '⚪' },
+          { id: 'elegant', name: 'Elegant', description: 'Sophisticated serif design', image: '✨' }
+        ],
+        quote: [
+          { id: 'professional', name: 'Professional', description: 'Corporate and formal', image: '💼' },
+          { id: 'simple', name: 'Simple', description: 'Straightforward layout', image: '📝' },
+          { id: 'detailed', name: 'Detailed', description: 'Comprehensive breakdown', image: '📊' },
+          { id: 'modern', name: 'Modern', description: 'Contemporary design', image: '🔷' },
+          { id: 'bold', name: 'Bold', description: 'Strong visual impact', image: '⚡' },
+          { id: 'timeline', name: 'Timeline', description: 'Project-focused layout', image: '📅' }
+        ]
+      };
+
+      const sampleData = {
+        number: 'INV-2024-001',
+        date: '2024-12-16',
+        dueDate: '2025-01-15',
+        from: {
+          name: branding.companyName,
+          address: '123 Business St',
+          city: 'New York, NY 10001',
+          email: 'hello@yourcompany.com',
+          phone: '+1 (555) 123-4567'
+        },
+        to: {
+          name: 'Client Name',
+          address: '456 Client Ave',
+          city: 'Los Angeles, CA 90001',
+          email: 'client@example.com'
+        },
+        items: [
+          { description: 'Web Design Services', quantity: 1, rate: 2500, amount: 2500 },
+          { description: 'SEO Optimization', quantity: 3, rate: 500, amount: 1500 }
+        ],
+        subtotal: 4000,
+        tax: 400,
+        total: 4400
+      };
+
+      const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setBranding({ ...branding, logo: reader.result });
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const renderModernTemplate = (data, type) => (
+        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200" 
+        style={{ fontFamily: branding.font === 'serif' ? 'Georgia, serif' : 'system-ui, sans-serif' }}>
+          <div className="flex justify-between items-start mb-8">
+            <div className="flex items-center gap-4">
+              {branding.logo && (
+                <img src={branding.logo} alt="Logo" className="h-16 w-16 object-contain" />
+              )}
+              <div>
+                <h1 className="text-4xl font-bold mb-1" style={{ color: branding.primaryColor }}>{type}</h1>
+                <p className="text-gray-600 text-sm">{branding.tagline}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">#{data.number}</p>
+              <p className="text-sm text-gray-600">Date: {data.date}</p>
+              <p className="text-sm text-gray-600">Due: {data.dueDate}</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-8 mb-8">
+            <div>
+              <h3 className="text-sm font-semibold mb-2" style={{ color: branding.primaryColor }}>FROM</h3>
+              <p className="font-semibold">{data.from.name}</p>
+              <p className="text-sm text-gray-600">{data.from.address}</p>
+              <p className="text-sm text-gray-600">{data.from.city}</p>
+              <p className="text-sm text-gray-600">{data.from.email}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold mb-2" style={{ color: branding.primaryColor }}>TO</h3>
+              <p className="font-semibold">{data.to.name}</p>
+              <p className="text-sm text-gray-600">{data.to.address}</p>
+              <p className="text-sm text-gray-600">{data.to.city}</p>
+            </div>
+          </div>
+
+          <table className="w-full mb-8">
+            <thead>
+              <tr style={{ borderBottom: `2px solid ${branding.primaryColor}` }}>
+                <th className="text-left py-3 text-sm font-semibold">Description</th>
+                <th className="text-right py-3 text-sm font-semibold">Qty</th>
+                <th className="text-right py-3 text-sm font-semibold">Rate</th>
+                <th className="text-right py-3 text-sm font-semibold">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.map((item, i) => (
+                <tr key={i} className="border-b border-gray-200">
+                  <td className="py-3 text-sm">{item.description}</td>
+                  <td className="text-right py-3 text-sm">{item.quantity}</td>
+                  <td className="text-right py-3 text-sm">${item.rate}</td>
+                  <td className="text-right py-3 text-sm">${item.amount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="flex justify-end">
+            <div className="w-64">
+              <div className="flex justify-between py-2">
+                <span className="text-sm">Subtotal:</span>
+                <span className="text-sm">${data.subtotal}</span>
+              </div>
+              <div className="flex justify-between py-2">
+                <span className="text-sm">Tax (10%):</span>
+                <span className="text-sm">${data.tax}</span>
+              </div>
+              <div className="flex justify-between py-3 font-bold" style={{ borderTop: `2px solid ${branding.primaryColor}` }}>
+                <span>Total:</span>
+                <span style={{ color: branding.primaryColor }}>${data.total}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderClassicTemplate = (data, type) => (
+        <div className="bg-white p-8 rounded-lg shadow-sm border-2" style={{ borderColor: branding.primaryColor, fontFamily: 'Georgia, serif' }}>
+          <div className="text-center pb-6 mb-6" style={{ borderBottom: `4px solid ${branding.primaryColor}` }}>
+            {branding.logo && (
+              <img src={branding.logo} alt="Logo" className="h-20 w-20 mx-auto mb-3 object-contain" />
+            )}
+            <h1 className="text-3xl font-bold mb-2">{type}</h1>
+            <p className="text-sm text-gray-600">{branding.tagline}</p>
+            <p className="text-gray-700 mt-2">#{data.number}</p>
+          </div>
+
+          <div className="mb-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border p-4" style={{ borderColor: branding.primaryColor }}>
+                <h3 className="font-bold mb-2 pb-1" style={{ borderBottom: `1px solid ${branding.primaryColor}` }}>Bill From:</h3>
+                <p className="font-semibold">{data.from.name}</p>
+                <p className="text-sm">{data.from.address}</p>
+                <p className="text-sm">{data.from.city}</p>
+              </div>
+              <div className="border p-4" style={{ borderColor: branding.primaryColor }}>
+                <h3 className="font-bold mb-2 pb-1" style={{ borderBottom: `1px solid ${branding.primaryColor}` }}>Bill To:</h3>
+                <p className="font-semibold">{data.to.name}</p>
+                <p className="text-sm">{data.to.address}</p>
+                <p className="text-sm">{data.to.city}</p>
+              </div>
+            </div>
+          </div>
+
+          <table className="w-full mb-6 border-2" style={{ borderColor: branding.primaryColor }}>
+            <thead>
+              <tr className="text-white" style={{ backgroundColor: branding.primaryColor }}>
+                <th className="text-left py-3 px-4">Description</th>
+                <th className="text-right py-3 px-4">Qty</th>
+                <th className="text-right py-3 px-4">Rate</th>
+                <th className="text-right py-3 px-4">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.map((item, i) => (
+                <tr key={i} className="border-b border-gray-300">
+                  <td className="py-3 px-4 text-sm">{item.description}</td>
+                  <td className="text-right py-3 px-4 text-sm">{item.quantity}</td>
+                  <td className="text-right py-3 px-4 text-sm">${item.rate}</td>
+                  <td className="text-right py-3 px-4 text-sm">${item.amount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="flex justify-end">
+            <div className="w-64 border-2 p-4" style={{ borderColor: branding.primaryColor }}>
+              <div className="flex justify-between py-1 text-sm">
+                <span>Subtotal:</span>
+                <span>${data.subtotal}</span>
+              </div>
+              <div className="flex justify-between py-1 text-sm">
+                <span>Tax:</span>
+                <span>${data.tax}</span>
+              </div>
+              <div className="flex justify-between py-2 mt-2 font-bold text-lg" style={{ borderTop: `2px solid ${branding.primaryColor}` }}>
+                <span>TOTAL:</span>
+                <span style={{ color: branding.primaryColor }}>${data.total}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderCreativeTemplate = (data, type) => (
+        <div className="p-8 rounded-lg shadow-lg" style={{ background: `linear-gradient(135deg, ${branding.primaryColor}10, ${branding.accentColor}10)` }}>
+          <div className="bg-white rounded-lg p-8">
+            <div className="flex justify-between items-center mb-8 pb-6 border-b-4" style={{ borderImage: `linear-gradient(to right, ${branding.primaryColor}, ${branding.accentColor}) 1` }}>
+              <div className="flex items-center gap-4">
+                {branding.logo && (
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: `${branding.primaryColor}20` }}>
+                    <img src={branding.logo} alt="Logo" className="h-12 w-12 object-contain" />
+                  </div>
+                )}
+                <div>
+                  <h1 className="text-4xl font-bold mb-1" style={{ background: `linear-gradient(to right, ${branding.primaryColor}, ${branding.accentColor})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{type}</h1>
+                  <p className="text-sm text-gray-600">{branding.tagline}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="rounded-lg p-3" style={{ backgroundColor: `${branding.primaryColor}15` }}>
+                  <p className="text-xs font-semibold" style={{ color: branding.primaryColor }}>#{data.number}</p>
+                  <p className="text-xs text-gray-600 mt-1">{data.date}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              <div className="rounded-lg p-4" style={{ background: `linear-gradient(135deg, ${branding.primaryColor}15, ${branding.secondaryColor}15)` }}>
+                <h3 className="text-xs font-bold mb-3" style={{ color: branding.primaryColor }}>FROM</h3>
+                <p className="font-bold text-gray-800">{data.from.name}</p>
+                <p className="text-sm text-gray-600">{data.from.address}</p>
+                <p className="text-sm text-gray-600">{data.from.city}</p>
+              </div>
+              <div className="rounded-lg p-4" style={{ background: `linear-gradient(135deg, ${branding.accentColor}15, ${branding.primaryColor}15)` }}>
+                <h3 className="text-xs font-bold mb-3" style={{ color: branding.accentColor }}>TO</h3>
+                <p className="font-bold text-gray-800">{data.to.name}</p>
+                <p className="text-sm text-gray-600">{data.to.address}</p>
+                <p className="text-sm text-gray-600">{data.to.city}</p>
+              </div>
+            </div>
+
+            <table className="w-full mb-6">
+              <thead>
+                <tr className="border-b-2" style={{ borderColor: branding.primaryColor }}>
+                  <th className="text-left py-3 text-sm font-bold" style={{ color: branding.primaryColor }}>Description</th>
+                  <th className="text-right py-3 text-sm font-bold" style={{ color: branding.primaryColor }}>Qty</th>
+                  <th className="text-right py-3 text-sm font-bold" style={{ color: branding.primaryColor }}>Rate</th>
+                  <th className="text-right py-3 text-sm font-bold" style={{ color: branding.primaryColor }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map((item, i) => (
+                  <tr key={i} className="border-b border-gray-200">
+                    <td className="py-3 text-sm">{item.description}</td>
+                    <td className="text-right py-3 text-sm">{item.quantity}</td>
+                    <td className="text-right py-3 text-sm">${item.rate}</td>
+                    <td className="text-right py-3 text-sm font-semibold">${item.amount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="flex justify-end">
+              <div className="w-72 rounded-lg p-6 text-white" style={{ background: `linear-gradient(135deg, ${branding.primaryColor}, ${branding.accentColor})` }}>
+                <div className="flex justify-between py-2 text-sm opacity-90">
+                  <span>Subtotal:</span>
+                  <span>${data.subtotal}</span>
+                </div>
+                <div className="flex justify-between py-2 text-sm opacity-90">
+                  <span>Tax (10%):</span>
+                  <span>${data.tax}</span>
+                </div>
+                <div className="flex justify-between py-3 border-t-2 border-white/30 mt-2 font-bold text-xl">
+                  <span>Total:</span>
+                  <span>${data.total}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderCorporateTemplate = (data, type) => (
+        <div className="bg-white p-8 rounded-lg shadow-sm border-l-8" style={{ borderColor: branding.primaryColor }}>
+          <div className="mb-8 pb-6 border-b-2 border-gray-200">
+            <div className="flex justify-between items-start">
+              <div>
+                {branding.logo && (
+                  <img src={branding.logo} alt="Logo" className="h-16 w-auto mb-3 object-contain" />
+                )}
+                <h2 className="text-sm font-semibold text-gray-600">{data.from.name}</h2>
+                <p className="text-xs text-gray-500">{branding.tagline}</p>
+              </div>
+              <div className="text-right">
+                <h1 className="text-5xl font-bold mb-2" style={{ color: branding.primaryColor }}>{type}</h1>
+                <p className="text-sm text-gray-600">#{data.number}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-6 mb-8 text-sm">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: branding.primaryColor }}>Invoice Date</p>
+              <p className="font-medium">{data.date}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: branding.primaryColor }}>Due Date</p>
+              <p className="font-medium">{data.dueDate}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: branding.primaryColor }}>Bill To</p>
+              <p className="font-medium">{data.to.name}</p>
+              <p className="text-xs text-gray-600">{data.to.city}</p>
+            </div>
+          </div>
+
+          <table className="w-full mb-8">
+            <thead>
+              <tr className="text-white text-sm" style={{ backgroundColor: branding.primaryColor }}>
+                <th className="text-left py-3 px-4 font-semibold">Item Description</th>
+                <th className="text-center py-3 px-4 font-semibold">Qty</th>
+                <th className="text-right py-3 px-4 font-semibold">Unit Price</th>
+                <th className="text-right py-3 px-4 font-semibold">Total</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm">
+              {data.items.map((item, i) => (
+                <tr key={i} className="border-b border-gray-200">
+                  <td className="py-4 px-4">{item.description}</td>
+                  <td className="text-center py-4 px-4">{item.quantity}</td>
+                  <td className="text-right py-4 px-4">${item.rate.toLocaleString()}</td>
+                  <td className="text-right py-4 px-4 font-semibold">${item.amount.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="flex justify-end">
+            <div className="w-80">
+              <div className="flex justify-between py-2 text-sm border-b border-gray-200">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="font-medium">${data.subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between py-2 text-sm border-b border-gray-200">
+                <span className="text-gray-600">Tax (10%)</span>
+                <span className="font-medium">${data.tax.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between py-4 text-lg font-bold" style={{ color: branding.primaryColor }}>
+                <span>Amount Due</span>
+                <span>${data.total.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderMinimalTemplate = (data, type) => (
+        <div className="bg-white p-12 rounded-lg">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex justify-between items-start mb-12">
+              {branding.logo ? (
+                <img src={branding.logo} alt="Logo" className="h-12 w-auto object-contain" />
+              ) : (
+                <div className="h-12 w-12 rounded-full" style={{ backgroundColor: branding.primaryColor }}></div>
+              )}
+              <div className="text-right">
+                <h1 className="text-2xl font-light tracking-wide mb-1">{type}</h1>
+                <p className="text-sm text-gray-500">#{data.number}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-12 mb-12 text-sm">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-400 mb-2">From</p>
+                <p className="font-medium">{data.from.name}</p>
+                <p className="text-gray-600">{data.from.email}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-400 mb-2">To</p>
+                <p className="font-medium">{data.to.name}</p>
+                <p className="text-gray-600">{data.to.email}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-12">
+              {data.items.map((item, i) => (
+                <div key={i} className="flex justify-between items-start py-4 border-b border-gray-100">
+                  <div className="flex-1">
+                    <p className="font-medium mb-1">{item.description}</p>
+                    <p className="text-sm text-gray-500">{item.quantity} × ${item.rate}</p>
+                  </div>
+                  <p className="font-medium">${item.amount}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end">
+              <div className="w-64 space-y-2 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span>${data.subtotal}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Tax</span>
+                  <span>${data.tax}</span>
+                </div>
+                <div className="flex justify-between pt-4 border-t-2 text-lg font-medium" style={{ borderColor: branding.primaryColor, color: branding.primaryColor }}>
+                  <span>Total</span>
+                  <span>${data.total}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderElegantTemplate = (data, type) => (
+    <div className="bg-white p-10 rounded-lg border-4 border-double" style={{ borderColor: branding.primaryColor, fontFamily: 'Georgia, serif' }}>
+      <div className="text-center mb-8 pb-6" style={{ borderBottom: `2px double ${branding.primaryColor}` }}>
+        {branding.logo && (
+          <img src={branding.logo} alt="Logo" className="h-20 w-auto mx-auto mb-4 object-contain" />
+        )}
+        <h1 className="text-4xl font-light italic mb-2" style={{ color: branding.primaryColor }}>{type}</h1>
+        <p className="text-sm text-gray-600 italic">{branding.tagline}</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-8 mb-8">
+        <div className="text-sm">
+          <h3 className="font-semibold mb-3 uppercase tracking-wide text-xs" style={{ color: branding.primaryColor }}>Issued By</h3>
+          <p className="font-medium italic">{data.from.name}</p>
+          <p className="text-gray-600">{data.from.address}</p>
+          <p className="text-gray-600">{data.from.city}</p>
+        </div>
+        <div className="text-sm">
+          <h3 className="font-semibold mb-3 uppercase tracking-wide text-xs" style={{ color: branding.primaryColor }}>Prepared For</h3>
+          <p className="font-medium italic">{data.to.name}</p>
+          <p className="text-gray-600">{data.to.address}</p>
+          <p className="text-gray-600">{data.to.city}</p>
+        </div>
+      </div>
+
+      <div className="mb-6 text-sm">
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <span className="text-gray-500 italic">Invoice No:</span>
+            <span className="ml-2 font-medium">{data.number}</span>
+          </div>
+          <div>
+            <span className="text-gray-500 italic">Date:</span>
+            <span className="ml-2 font-medium">{data.date}</span>
+          </div>
+          <div>
+            <span className="text-gray-500 italic">Due:</span>
+            <span className="ml-2 font-medium">{data.dueDate}</span>
+          </div>
+        </div>
+      </div>
+
+      <table className="w-full mb-8">
+        <thead>
+          <tr className="border-b-2" style={{ borderColor: branding.primaryColor }}>
+            <th className="text-left py-3 text-sm font-semibold">Description</th>
+            <th className="text-center py-3 text-sm font-semibold">Quantity</th>
+            <th className="text-right py-3 text-sm font-semibold">Rate</th>
+            <th className="text-right py-3 text-sm font-semibold">Amount</th>
+          </tr>
+        </thead>
+        <tbody className="text-sm">
+          {data.items.map((item, i) => (
+            <tr key={i} className="border-b border-gray-200">
+              <td className="py-4 italic">{item.description}</td>
+              <td className="text-center py-4">{item.quantity}</td>
+              <td className="text-right py-4">${item.rate}</td>
+              <td className="text-right py-4 font-medium">${item.amount}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="flex justify-end">
+        <div className="w-72 border-2 border-double p-6" style={{ borderColor: branding.primaryColor }}>
+          <div className="flex justify-between py-2 text-sm">
+            <span className="italic">Subtotal</span>
+            <span>${data.subtotal}</span>
+          </div>
+          <div className="flex justify-between py-2 text-sm">
+            <span className="italic">Tax</span>
+            <span>${data.tax}</span>
+          </div>
+          <div className="flex justify-between py-3 mt-2 font-bold text-xl border-t-2" style={{ borderColor: branding.primaryColor, color: branding.primaryColor }}>
+            <span className="italic">Total Due</span>
+            <span>${data.total}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTemplate = (templateId, type) => {
+    const typeLabel = type === 'invoice' ? 'INVOICE' : 'QUOTATION';
+    
+    switch (templateId) {
+      case 'modern':
+      case 'professional':
+        return renderModernTemplate(sampleData, typeLabel);
+      case 'classic':
+      case 'simple':
+        return renderClassicTemplate(sampleData, typeLabel);
+      case 'creative':
+      case 'bold':
+        return renderCreativeTemplate(sampleData, typeLabel);
+      case 'corporate':
+      case 'detailed':
+        return renderCorporateTemplate(sampleData, typeLabel);
+      case 'minimal':
+      case 'timeline':
+        return renderMinimalTemplate(sampleData, typeLabel);
+      case 'elegant':
+        return renderElegantTemplate(sampleData, typeLabel);
+      default:
+        return renderModernTemplate(sampleData, typeLabel);
+    }
+  };
+
+  const BrandingSettings = () => (
+    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+      <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+        <Palette className="w-5 h-5" />
+        Brand Customization
+      </h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
+          <div className="flex items-center gap-4">
+            {branding.logo ? (
+              <img src={branding.logo} alt="Logo" className="h-20 w-20 object-contain border border-gray-200 rounded p-2" />
+            ) : (
+              <div className="h-20 w-20 border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
+                <Image className="w-8 h-8 text-gray-400" />
+              </div>
+            )}
+            <label className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+              <Upload className="w-4 h-4 inline mr-2" />
+              Upload Logo
+              <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+          <input
+            type="text"
+            value={branding.companyName}
+            onChange={(e) => setBranding({ ...branding, companyName: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Tagline / Slogan</label>
+          <input
+            type="text"
+            value={branding.tagline}
+            onChange={(e) => setBranding({ ...branding, tagline: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Professional Services"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Font Style</label>
+          <select
+            value={branding.font}
+            onChange={(e) => setBranding({ ...branding, font: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="sans">Sans Serif (Modern)</option>
+            <option value="serif">Serif (Classic)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Primary Color</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={branding.primaryColor}
+              onChange={(e) => setBranding({ ...branding, primaryColor: e.target.value })}
+              className="h-10 w-20 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              value={branding.primaryColor}
+              onChange={(e) => setBranding({ ...branding, primaryColor: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Color</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={branding.secondaryColor}
+              onChange={(e) => setBranding({ ...branding, secondaryColor: e.target.value })}
+              className="h-10 w-20 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              value={branding.secondaryColor}
+              onChange={(e) => setBranding({ ...branding, secondaryColor: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={branding.accentColor}
+              onChange={(e) => setBranding({ ...branding, accentColor: e.target.value })}
+              className="h-10 w-20 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              value={branding.accentColor}
+              onChange={(e) => setBranding({ ...branding, accentColor: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm text-blue-800">
+          <strong>Preview:</strong> Your branding will be applied to all templates below. Changes are reflected in real-time.
+        </p>
+      </div>
+    </div>
+  );
+
+  const TemplateSelector = ({ type, templates, selected, onSelect }) => (
+    <div className="mb-8">
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <FileText className="w-5 h-5" />
+        {type === 'invoice' ? 'Invoice' : 'Quote'} Template
+      </h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        {templates.map((template) => (
+          <button
+            key={template.id}
+            onClick={() => onSelect(template.id)}
+            className={`p-4 rounded-lg border-2 transition-all text-center ${
+              selected === template.id
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="text-3xl mb-2">{template.image}</div>
+            <div className="flex flex-col items-center">
+              <h3 className="font-semibold text-sm mb-1">{template.name}</h3>
+              {selected === template.id && (
+                <Check className="w-4 h-4 text-blue-500" />
+              )}
+            </div>
+            <p className="text-xs text-gray-600 mt-1">{template.description}</p>
+          </button>
+        ))}
+      </div>
+      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <h3 className="text-sm font-semibold mb-3 text-gray-700">Live Preview:</h3>
+        <div className="bg-white rounded shadow-sm overflow-hidden">
+          <div className="scale-[0.35] origin-top-left w-[285%] h-[500px] overflow-hidden">
+            {renderTemplate(selected, type)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen overflow-y-auto">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Invoice & Quote Template Manager</h1>
+        <p className="text-gray-600">Customize your branding and choose templates for your documents</p>
+      </div>
+
+      <div className="flex gap-2 mb-6 border-b bg-white rounded-t-lg">
+        <button
+          onClick={() => setActiveTab('branding')}
+          className={`px-4 py-3 font-medium transition-colors ${
+            activeTab === 'branding'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <Palette className="w-4 h-4 inline mr-2" />
+          Branding
+        </button>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`px-4 py-3 font-medium transition-colors ${
+            activeTab === 'settings'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <Settings className="w-4 h-4 inline mr-2" />
+          Templates
+        </button>
+        <button
+          onClick={() => setActiveTab('create')}
+          className={`px-4 py-3 font-medium transition-colors ${
+            activeTab === 'create'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <Plus className="w-4 h-4 inline mr-2" />
+          Create New
+        </button>
+      </div>
+
+      <div className="bg-white rounded-b-lg rounded-tr-lg shadow-sm p-6">
+        {activeTab === 'branding' && (
+          <div>
+            <BrandingSettings />
+            <div className="flex justify-end gap-3 pt-6 border-t">
+              <button className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Reset to Default
+              </button>
+              <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Save Branding
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="space-y-8">
+            <TemplateSelector
+              type="invoice"
+              templates={templates.invoice}
+              selected={selectedInvoiceTemplate}
+              onSelect={setSelectedInvoiceTemplate}
+            />
+            
+            <div className="border-t pt-8">
+              <TemplateSelector
+                type="quote"
+                templates={templates.quote}
+                selected={selectedQuoteTemplate}
+                onSelect={setSelectedQuoteTemplate}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6 border-t">
+              <button className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Cancel
+              </button>
+              <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Save Template Settings
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'create' && (
+          <div className="py-8">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-300 p-12 text-center mb-8">
+              <FileText className="w-16 h-16 mx-auto mb-4 text-blue-600" />
+              <h3 className="text-2xl font-bold mb-2">Ready to Create?</h3>
+              <p className="text-gray-600 mb-6">Your selected templates and branding will be applied automatically</p>
+              <div className="flex gap-4 justify-center flex-wrap">
+                <button className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg hover:shadow-xl transition-all">
+                  <Plus className="w-5 h-5 inline mr-2" />
+                  Create Invoice
+                  <span className="block text-xs mt-1 opacity-90">
+                    Using {templates.invoice.find(t => t.id === selectedInvoiceTemplate)?.name}
+                  </span>
+                </button>
+                <button className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all">
+                  <Plus className="w-5 h-5 inline mr-2" />
+                  Create Quote
+                  <span className="block text-xs mt-1 opacity-90">
+                    Using {templates.quote.find(t => t.id === selectedQuoteTemplate)?.name}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h4 className="font-semibold mb-3">Current Invoice Template</h4>
+                <div className="bg-gray-50 rounded p-3 mb-3">
+                  <p className="text-sm"><strong>Template:</strong> {templates.invoice.find(t => t.id === selectedInvoiceTemplate)?.name}</p>
+                  <p className="text-sm text-gray-600">{templates.invoice.find(t => t.id === selectedInvoiceTemplate)?.description}</p>
+                </div>
+                <div className="scale-[0.2] origin-top-left w-[500%] h-[300px] overflow-hidden border rounded">
+                  {renderTemplate(selectedInvoiceTemplate, 'invoice')}
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h4 className="font-semibold mb-3">Current Quote Template</h4>
+                <div className="bg-gray-50 rounded p-3 mb-3">
+                  <p className="text-sm"><strong>Template:</strong> {templates.quote.find(t => t.id === selectedQuoteTemplate)?.name}</p>
+                  <p className="text-sm text-gray-600">{templates.quote.find(t => t.id === selectedQuoteTemplate)?.description}</p>
+                </div>
+                <div className="scale-[0.2] origin-top-left w-[500%] h-[300px] overflow-hidden border rounded">
+                  {renderTemplate(selectedQuoteTemplate, 'quote')}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+ const root = createRoot(document.getElementById("root"));
+            root.render(<InvoiceTemplateSystem />);
+          </script>
+        </body>
+      </html></parameter
+    ></invoke
+  ></function_calls
+>
