@@ -207,7 +207,7 @@
         .stat-number {
             font-size: 3rem;
             font-weight: 700;
-            color: #ff9d00;
+            color: #ffffff;
             margin-bottom: 0.5rem;
         }
 
@@ -281,8 +281,8 @@
         }
 
         .cta-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
+            background:#ffffff;
+            color: #23273b;
             text-align: center;
             padding: 5rem 2rem;
         }
@@ -299,7 +299,7 @@
         }
 
         footer {
-            background: #1a1a1a;
+            background: #23273b;
             color: #fff;
             padding: 4rem 2rem 2rem;
         }
@@ -381,6 +381,160 @@
                 font-size: 2rem;
             }
         }
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .quote-icon {
+            font-size: 4rem;
+            color: #ff9d00;
+            opacity: 0.2;
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-family: Georgia, serif;
+        }
+
+        .testimonial-text {
+            color: #666;
+            line-height: 1.8;
+            margin: 2rem 0 1.5rem;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .testimonial-author strong {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .testimonial-author span {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .integration-logo {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #666;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .integration-logo:hover {
+            transform: translateY(-5px);
+        }
+
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .faq-question {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .faq-answer {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #ff9d00;
+            color: #fff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #e68a00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 157, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #ff9d00;
+            border: 2px solid #ff9d00;
+        }
+
+        .btn-secondary:hover {
+            background: #ff9d00;
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .faq-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .integrations-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
     </style>
   </head>
 
@@ -388,13 +542,20 @@
     <input type="hidden" name="current_page" value="home" />
 
     <header>
-      <div class="mobile header">
+      <div class="mobile header" style="background-color: #2f3444;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+    <button style=" background-color: transparent; padding-left: 20px; border: none;">
+          <img src="/images/burgermenu.svg" alt="" style="width: 40px;
+    height: 30px;">  
+        </button>
         <a class="logo" href="/">
           <img
             alt="solidflo - Free, Unlimited Invoicing For Your Business"
             src="/images/solidflo_index_x2.png"
           />
         </a>
+        </div>
+        
       </div>
 
       <div>
@@ -459,7 +620,7 @@
                 </h1>
 <div class="column column-content">
       <h1>
-                    Billing,
+                    Billing Made:
                     <div class="bold-head highlight">
                         <div class="hdtitle">
                           <div class="word workforce">
@@ -514,9 +675,9 @@
     </div>
     <section class="section">
         <div class="container">
-            <h2 class="section-title">Why Choose solidflo?</h2>
+            <h2 class="section-title">Why Choose <img src="/images/assets/solidflo_btn.png" width="120px" height="auto"/>?</h2>
             <p style="text-align: center; max-width: 800px; margin: 0 auto; color: #666;">
-            solidflo is designed to simplify your invoicing process, helping you save time and get paid faster. With a user-friendly interface and powerful features, solidflo is the perfect solution for small businesses looking to streamline their billing operations.
+            Solidflo is designed to simplify your invoicing process, helping you save time and get paid faster. With a user-friendly interface and powerful features, solidflo is the perfect solution for small businesses looking to streamline their billing operations.
             </p>
         </div>
     </section>
@@ -530,19 +691,19 @@
 <section class="section">
         <div class="container">
             <div class="stats">
-                <div class="stat" style="background-color: #1e254d;">
+                <div class="stat" style="background-color: #23273b; border-radius: 10px;">
                     <div class="stat-number">50K+</div>
                     <div class="stat-label">Active Users</div>
                 </div>
-                <div class="stat" style="background-color: #06829b;">
+                <div class="stat" style="background-color: #23273b; border-radius: 10px;">
                     <div class="stat-number">2M+</div>
                     <div class="stat-label">Invoices Sent</div>
                 </div>
-                <div class="stat" style="background-color: #06829b;">
+                <div class="stat" style="background-color: #23273b; border-radius: 10px;">
                     <div class="stat-number">$500M+</div>
                     <div class="stat-label">Processed</div>
                 </div>
-                <div class="stat" style="background-color: #06829b;">
+                <div class="stat" style="background-color: #23273b; border-radius: 10px;">
                     <div class="stat-number">99.9%</div>
                     <div class="stat-label">Uptime</div>
                 </div>
@@ -632,13 +793,97 @@
         </div>
     </section>
 
+
+    <section class="section section-gray">
+        <div class="container">
+            <h2 class="section-title">Trusted by Leading Businesses</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="quote-icon">"</div>
+                    <p class="testimonial-text">"Solidflo has completely transformed how we handle invoicing. We've cut our billing time by 70% and get paid 2x faster."</p>
+                    <div class="testimonial-author">
+                        <strong>Malvin Chiwanga</strong>
+                        <span>CEO, Afromind Capital</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="quote-icon">"</div>
+                    <p class="testimonial-text">"The automated recurring billing feature has been a game-changer for our subscription business. Highly recommend!"</p>
+                    <div class="testimonial-author">
+                        <strong>Nandipha Nguse</strong>
+                        <span>Founder, Anantara Skincare</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="quote-icon">"</div>
+                    <p class="testimonial-text">"Best invoicing software we've used. Simple, powerful, and the support team is incredibly responsive."</p>
+                    <div class="testimonial-author">
+                        <strong>Gabriel Moyo</strong>
+                        <span>Owner, Gerbospeaks Ai</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Integrations That Work With Your Tools</h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 3rem; color: #666;">
+                Connect solidflo with the tools you already use to streamline your workflow.
+            </p>
+            <div class="integrations-grid">
+                <div class="integration-logo">Stripe</div>
+                <div class="integration-logo">PayPal</div>
+                <div class="integration-logo">QuickBooks</div>
+                <div class="integration-logo">Xero</div>
+                <div class="integration-logo">Zapier</div>
+                <div class="integration-logo">Slack</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section section-gray">
+        <div class="container">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h3 class="faq-question">Is solidflo really free?</h3>
+                    <p class="faq-answer">Yes! Our free plan includes unlimited invoices for up to 5 clients. No credit card required to get started.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question">Can I cancel anytime?</h3>
+                    <p class="faq-answer">Absolutely. There are no long-term contracts. You can upgrade, downgrade, or cancel your subscription at any time.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question">What payment methods do you accept?</h3>
+                    <p class="faq-answer">We support credit cards, debit cards, PayPal, and bank transfers through our integrated payment processors.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question">Is my data secure?</h3>
+                    <p class="faq-answer">Yes. We use bank-level 256-bit SSL encryption and are fully compliant with industry security standards.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question">Do you offer customer support?</h3>
+                    <p class="faq-answer">Yes! We provide email support for all users, with priority support and live chat available for Professional and Enterprise plans.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question">Can I import existing data?</h3>
+                    <p class="faq-answer">Yes, you can easily import your existing client and invoice data from Excel, CSV, or other invoicing platforms.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="cta-section">
         <div class="container">
             <h2>Ready to streamline your billing?</h2>
             <p>Join thousands of businesses already using solidflo</p>
             <a href="/register.html" class="btn btn-primary">Start Your Free Trial</a>
+            <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">No credit card required • Cancel anytime • Free forever plan available</p>
         </div>
     </section>
+
 
     <footer>
         <div class="footer-content">
@@ -651,6 +896,21 @@
                     <a href="#" aria-label="LinkedIn">in</a>
                     <a href="#" aria-label="Instagram">ig</a>
                 </div>
+                <p class="app-links">
+                    <a href="" target="_blank" rel="noopener">
+                        <img class="centered lozad"
+                         data-src="/images/download_ios_app.webp" 
+                         alt="Download iOS app" 
+                         data-hires-status="active" 
+                         src="/images/download_ios_app.webp" 
+                         data-loaded="true" style="width: 100px; height: auto;"></a> 
+                         <a href="" target="_blank" rel="noopener">
+                            <img class="google-btn lozad" alt="Get it on Google Play" 
+                            data-src="/images/en_badge_web_generic_2x.webp" 
+                            src="/images/en_badge_web_generic_2x.webp" 
+                            data-loaded="true" style="width: 100px; height: auto;">
+                        </a>
+                    </p>
             </div>
             <div class="footer-section">
                 <h3>Product</h3>
@@ -685,7 +945,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2025 solidflo. All rights reserved. | Made with ❤️ for small businesses</p>
+            <p>&copy; 2025 solidflo. All rights reserved.</p>
         </div>
     </footer>
     <script
