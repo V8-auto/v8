@@ -2041,6 +2041,122 @@
         }
       });
     </script>
+    <script>
+    let revenueChart = null;
+
+async function updateStats() {
+  const invoices = await fetchAllInvoices();
+
+  let totalRevenue = 0;
+  const monthlyData = {};
+
+  invoices.forEach((invoice) => {
+    // Calculate total revenue
+    if (invoice.total) {
+      const amount = parseFloat(invoice.total.replace(/[^\d.-]/g, "")) || 0;
+      totalRevenue += amount;
+
+      // Group by month for chart
+      if (invoice.issueDate) {
+        const date = new Date(invoice.issueDate);
+        const monthKey = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}`;
+        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + amount;
+      }
+    }
+  });
+
+  const avgInvoice = invoices.length > 0 ? totalRevenue / invoices.length : 0;
+
+  // Update stats display
+  const totalRevenueEl = document.getElementById("totalRevenue");
+  const totalInvoicesEl = document.getElementById("totalInvoices");
+  const avgInvoiceEl = document.getElementById("avgInvoice");
+
+  if (totalRevenueEl) {
+    totalRevenueEl.textContent =
+      "R " + totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  if (totalInvoicesEl) {
+    totalInvoicesEl.textContent = invoices.length;
+  }
+
+  if (avgInvoiceEl) {
+    avgInvoiceEl.textContent =
+      "R " + avgInvoice.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  // Update chart
+  updateMonthlyChart(monthlyData);
+}
+
+function updateMonthlyChart(monthlyData) {
+  const canvas = document.getElementById('revChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+
+  // Sort months chronologically
+  const sortedMonths = Object.keys(monthlyData).sort();
+  const labels = sortedMonths.map(month => {
+    const [year, monthNum] = month.split('-');
+    const date = new Date(year, monthNum - 1);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  });
+  const data = sortedMonths.map(month => monthlyData[month]);
+
+  // Destroy existing chart if it exists
+  if (revenueChart) {
+    revenueChart.destroy();
+  }
+
+  // Create new chart
+  revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Monthly Revenue (R)',
+        data: data,
+        backgroundColor: 'rgba(255, 157, 0, 0.2)',
+        borderColor: '#ff9d00',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'R ' + context.parsed.y.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return 'R ' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+}
+      </script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   </body>
 </html>
