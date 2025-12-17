@@ -536,27 +536,131 @@
             }
         }
     </style>
+    <style>
+        .mobile-header {
+  position: relative;
+  z-index: 10001;
+}
+@media (min-width: 769px) {
+  .mobile-header {
+    display: none;
+  }
+}
+
+#mobileNav {
+    position: fixed;
+    top: 0;
+    left: -300px; /* Start off-screen to the left */
+    width: 300px;
+    height: 100vh;
+    background-color: #2f3444;
+    transition: left 0.3s ease-in-out;
+    z-index: 9999;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+}
+
+#mobileNav.active {
+    left: 0; /* Slide into view */
+}
+
+#mobileNav ul {
+    list-style: none;
+    padding: 80px 0 20px 0;
+    margin: 0;
+}
+
+#mobileNav ul li {
+    padding: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#mobileNav ul li a {
+    display: block;
+    padding: 1rem 1.5rem;
+    color: #fff;
+    text-decoration: none;
+    transition: background-color 0.3s, padding-left 0.3s;
+    font-size: 1.1rem;
+}
+
+#mobileNav ul li a:hover {
+    background-color: rgba(255, 157, 0, 0.1);
+    padding-left: 2rem;
+}
+
+#mobileNav .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#mobileNav .close-btn:hover {
+    color: #ff9d00;
+}
+
+/* Overlay backdrop */
+#menuOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s;
+    z-index: 9998;
+}
+
+#menuOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+</style>
   </head>
 
   <body>
     <input type="hidden" name="current_page" value="home" />
+<div id="menuOverlay" onclick="toggleMobileMenu()"></div>
 
+<!-- Updated nav -->
+<nav id="mobileNav">
+    <button class="close-btn" onclick="toggleMobileMenu()">&times;</button>
+    <ul>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="/login.html">Login</a></li>
+        <li><a href="/register.html" style="color: #ff9d00; font-weight: 600;">Sign Up Free</a></li>
+    </ul>
+</nav>
     <header>
-      <div class="mobile header" style="background-color: #2f3444;">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-    <button style=" background-color: transparent; padding-left: 20px; border: none;">
-          <img src="/images/burgermenu.svg" alt="" style="width: 40px;
-    height: 30px;">  
+      <div class="mobile-header" style="background-color: #2f3444;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <button onclick="toggleMobileMenu()" style="background-color: transparent; padding-left: 20px; border: none; cursor: pointer;">
+            <img src="/images/burgermenu.svg" alt="Menu" style="width: 40px; height: 30px;">  
         </button>
-        <a class="logo" href="/">
-          <img
-            alt="solidflo - Free, Unlimited Invoicing For Your Business"
-            src="/images/solidflo_index_x2.png"
-          />
+        <a class="logo" href="/" style="padding-top: 10px;">
+            <img
+                alt="solidflo - Free, Unlimited Invoicing For Your Business"
+                src="/images/mobile.png"
+            />
         </a>
-        </div>
-        
-      </div>
+    </div>
+   
+</div>
 
       <div>
         <div class="row">
@@ -608,8 +712,9 @@
         </div>
       </div>
     </header>
-
+ 
     <div class="main">
+        
       <div class="hero" style="height: 100vh">
         <div class="wrapper">
           <div class="restrainer">
@@ -966,5 +1071,47 @@
       type="text/javascript"
       defer
     ></script>
+    <script>
+        // Mobile menu toggle functionality
+        (function() {
+            const mobileNav = document.getElementById('mobileNav');
+            const overlay = document.getElementById('menuOverlay');
+            const openBtn = document.getElementById('openMenuBtn');
+            const closeBtn = document.getElementById('closeMenuBtn');
+            
+            function openMenu() {
+                mobileNav.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeMenu() {
+                mobileNav.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            
+            // Open menu button
+            if (openBtn) {
+                openBtn.addEventListener('click', openMenu);
+            }
+            
+            // Close menu button
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeMenu);
+            }
+            
+            // Close when clicking overlay
+            if (overlay) {
+                overlay.addEventListener('click', closeMenu);
+            }
+            
+            // Close menu when clicking any nav link
+            const navLinks = mobileNav.querySelectorAll('a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', closeMenu);
+            });
+        })();
+    </script>
   </body>
 </html>

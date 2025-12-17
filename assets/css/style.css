@@ -10,7 +10,13 @@ body {
   color: #1a1a1a;
 }
 
-/* NAVBAR */
+@media (max-width: 768px) {
+  .header_links,
+  .header_logo {
+    display: none !important;
+  }
+}
+
 .navbar {
   background: white;
   padding: 15px 40px;

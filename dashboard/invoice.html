@@ -254,21 +254,22 @@
         margin-bottom: 10px;
       }
       .info-content {
-        padding: 10px;
+        padding: 2px;
         font-size: 13px;
         line-height: 1.8;
       }
       .info-row {
         display: flex;
         margin-bottom: 1px;
-        align-items: center;
+        gap: 2px;
       }
       .info-row strong {
-        min-width: 120px;
+        min-width: 70px;
         color: #666;
+        margin-right: 2px;
       }
       .info-row input {
-        flex: 1;
+        flex: auto;
       }
 
       /* Items Table Alignment Styles */
@@ -694,7 +695,7 @@
 
         .info-content {
           font-size: 9px;
-          padding: 5px;
+         
         }
 
         textarea {
@@ -1046,7 +1047,7 @@
 
               <div class="meta-box">
                 <div class="meta-label">Merchant Code</div>
-                <select id="merchantCode" style="width: 100%; padding: 8px; border: none; background-color: transparent; align-items: end;" onchange="updateBankDetails()">
+                <select id="merchantCode" style="width: 100%; padding: 8px; border: none; background-color: transparent; text-align: right;" onchange="updateBankDetails()">
                   <option value="811371">811371</option>
                   <option value="807411">807411</option>
                 </select>
