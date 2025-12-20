@@ -528,6 +528,102 @@
       }
     </style>
     <style>
+      .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 0px;
+      overflow: hidden;
+    }
+
+    .messages {
+      flex: 1;
+      background: white;
+      border-radius: 8px;
+      padding: 5px;
+      overflow-y: auto;
+      margin-bottom: px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .message {
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      max-width: 80%;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      background: #3498db;
+      color: white;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .message.bot {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+
+    .message.loading {
+      background: #ecf0f1;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+
+    .input-container {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      gap: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .input-container input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .input-container input:focus {
+      border-color: #3498db;
+    }
+
+    .send-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .send-btn:hover {
+      background: #2980b9;
+    }
+
+    .send-btn:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+    }
+    </style>
+    <style>
       .paid {
         color: #28a745;
         font-weight: bold;
@@ -770,15 +866,13 @@
     <!-- Add Chart.js Library -->
   </head>
   <body>
-    <button
-      class="mobile-toggle mobile-only"
-      style="background-color: transparent; color: white"
-      onclick="document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.mobile-overlay').classList.toggle('active');"
-    >
-      ☰
-    </button>
+    <button class="mobile-toggle" onclick="toggleMobileMenu()">☰</button>
+
+    <!-- Mobile Overlay -->
     <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
-    <aside id="sidebar" class="sidebar mobile-hidden" aria-hidden="true">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar mobile-hidden">
       <button id="closeSidebar" class="close-btn" aria-label="Close menu">
         ✕
       </button>
@@ -791,73 +885,34 @@
           />
         </div>
         <div>
-          <p class="mini muted">Invoices & Billing</p>
+          <p style="color: #9aa7b2; font-size: 12px">Invoices & Billing</p>
         </div>
       </div>
 
-      <nav class="nav" aria-label="Main navigation">
-        <a class="active" href="#"
-          ><span class="ico">🏠</span><span class="label">Dashboard</span></a
-        >
-        <a href="/dashboard/invoices.html"
-          ><span class="ico">📄</span><span class="label">Invoices</span></a
-        >
-        <a class="active" href="/dashboard/quotations.html">
+      <nav class="nav">
+        <a href="/dashboard/index.html">
+          <span class="ico">🏠</span><span>Dashboard</span>
+        </a>
+        <a class="active" href="/dashboard/invoices.html">
+          <span class="ico">📄</span><span>Invoices</span>
+        </a>
+        <a href="/dashboard/quotations.html">
           <span class="ico">📄</span><span>Quotations</span>
         </a>
-        <a href="/dashboard/clients.html"
-          ><span class="ico">👥</span><span class="label">Clients</span></a
-        >
-        <a href="/dashboard/payments.html"
-          ><span class="ico">💳</span><span class="label">Payments</span></a
-        >
-        <a href="#"
-          ><span class="ico">📊</span><span class="label">Reports</span></a
-        >
+        <a href="/dashboard/clients.html">
+          <span class="ico">👥</span><span>Clients</span>
+        </a>
+        <a href="/dashboard/payments.html">
+          <span class="ico">💳</span><span>Payments</span>
+        </a>
+         <a href="/dashboard/templates.html"
+            ><span class="ico">💳</span><span>Templates</span></a
+          >
+        <a href="#"> <span class="ico">📊</span><span>Reports</span> </a>
       </nav>
 
       <div class="spacer"></div>
-      <button
-        class="btn ghost"
-        style="
-          background-color: radial-gradient(
-              1200px 400px at 10% 10%,
-              rgba(124, 58, 237, 0.08),
-              transparent 8%
-            ),
-            radial-gradient(
-              1000px 300px at 90% 90%,
-              rgba(6, 182, 212, 0.06),
-              transparent 8%
-            ),
-            var(--bg);
-          color: white;
-        "
-        id="openSettings"
-        onclick="window.location.href='/dashboard/settings.html'"
-      >
-        Settings
-      </button>
-      <button
-        class="btn ghost"
-        style="
-          background-color: radial-gradient(
-              1200px 400px at 10% 10%,
-              rgba(124, 58, 237, 0.08),
-              transparent 8%
-            ),
-            radial-gradient(
-              1000px 300px at 90% 90%,
-              rgba(6, 182, 212, 0.06),
-              transparent 8%
-            ),
-            var(--bg);
-          color: white;
-        "
-        id="logoutBtn"
-      >
-        Logout
-      </button>
+
       <div class="flex">
         <div
           style="
@@ -878,8 +933,6 @@
         </div>
       </div>
     </aside>
-
-    <!-- APP -->
     <div class="app" id="app">
       <!-- mobile hamburger -->
 
@@ -916,9 +969,9 @@
         </div>
 
         <div class="actions">
-          <button class="btn primary" id="newInvoiceBtn">+ New Invoice</button>
-          <button class="btn primary" id="newQuoteBtn">+ New Quote</button>
-        </div>
+        <button onclick="newInvoice()" class="btn primary">+ New Invoice</button>
+        <button onclick="newQuote()" class="btn primary">+ New Quote</button>
+      </div>
       </header>
 
       <!-- KPI CARDS -->
@@ -1539,34 +1592,7 @@
         }, every);
       }
 
-      /* -------------------------
-   Sidebar mobile toggle and click-out
-   ------------------------- */
-      const sidebarEl = document.getElementById("sidebar");
-      const hambtn = document.getElementById("hambtn");
-      const closeBtn = document.getElementById("closeSidebar");
-      hambtn.addEventListener("click", () => {
-        sidebarEl.classList.toggle("open");
-        document.querySelector(".mobile-overlay").classList.toggle("active");
-      });
-      closeBtn.addEventListener("click", () => {
-        sidebarEl.classList.remove("open");
-        sidebarEl.setAttribute("aria-hidden", "true");
-        document.querySelector(".mobile-overlay").classList.remove("active");
-      });
-      document.addEventListener("click", (e) => {
-        if (window.innerWidth <= 820) {
-          const inside =
-            sidebarEl.contains(e.target) ||
-            hambtn.contains(e.target) ||
-            document.getElementById("settingsDrawer").contains(e.target);
-          if (!inside) sidebarEl.classList.remove("open");
-        }
-      });
-
-      /* -------------------------
-   Initialize
-   ------------------------- */
+ 
       (async function init() {
         await initCharts();
         // load profile into UI header
@@ -1581,18 +1607,17 @@
       /* -------------------------
    Utility: simple new invoice button
    ------------------------- */
-      document
-        .getElementById("newInvoiceBtn")
-        .addEventListener("click", async () => {
-          window.location.href = "/invoice.html";
-        });
-      document
-        .getElementById("newQuoteBtn")
-        .addEventListener("click", async () => {
-          window.location.href = "/quote.html";
-        });
+       
     </script>
+     <script>
+      function newInvoice() {
+          window.location.href = 'invoice.html';
+        }
 
+        function newQuote() {
+          window.location.href = 'quote.html';
+        }
+     </script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 

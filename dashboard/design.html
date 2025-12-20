@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Invoice Designer - Custom Layout Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --primary: #ff9d00;
+        --font: Inter, Arial, sans-serif;
+        --page-width: 210mm;
+        --page-height: 297mm;
+        --margin: 20mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #e5e7eb;
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        height: 100vh;
+        font-family: Inter, Arial, sans-serif;
+        overflow: hidden;
+      }
+
+      .editor {
+        background: #ffffff;
+        padding: 1.5rem;
+        border-right: 1px solid #d1d5db;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .editor h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #111827;
+      }
+
+      .editor h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.95rem;
+        color: #374151;
+      }
+
+      .editor label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .editor input,
+      .editor select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.85rem;
+      }
+
+      .control-group {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .available-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .draggable-component {
+        padding: 0.7rem;
+        background: #ffffff;
+        border: 2px dashed #d1d5db;
+        border-radius: 4px;
+        cursor: grab;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #374151;
+        transition: all 0.2s;
+      }
+
+      .draggable-component:hover {
+        border-color: var(--primary);
+        background: #fffbf5;
+      }
+
+      .draggable-component.dragging {
+        opacity: 0.5;
+      }
+
+      .btn {
+        padding: 0.6rem 1rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #e68a00;
+      }
+
+      .btn-secondary {
+        background: #6b7280;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #4b5563;
+      }
+
+      .preview {
+        padding: 2rem;
+        overflow: auto;
+        background: #f3f4f6;
+      }
+
+      .page {
+        width: var(--page-width);
+        min-height: var(--page-height);
+        margin: auto;
+        background: #fff;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        padding: var(--margin);
+        font-family: var(--font);
+        color: #111827;
+        position: relative;
+      }
+
+      .drop-zone {
+        min-height: 60px;
+        border: 2px dashed transparent;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+        transition: all 0.2s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .drop-zone.drag-over {
+        border-color: var(--primary);
+        background: #fffbf5;
+      }
+
+      .drop-zone-placeholder {
+        grid-column: 1 / -1;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin: 1rem 0;
+      }
+
+      .invoice-section {
+        position: relative;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border: 2px solid transparent;
+        cursor: move;
+        transition: all 0.2s;
+      }
+
+      .invoice-section:hover {
+        border-color: #d1d5db;
+        background: #f9fafb;
+      }
+
+      .invoice-section.selected {
+        border-color: var(--primary);
+        background: #fffbf5;
+      }
+
+      .section-controls {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        display: none;
+        gap: 0.3rem;
+      }
+
+      .invoice-section:hover .section-controls,
+      .invoice-section.selected .section-controls {
+        display: flex;
+      }
+
+      .control-btn {
+        width: 24px;
+        height: 24px;
+        border: none;
+        border-radius: 3px;
+        background: white;
+        cursor: pointer;
+        font-size: 0.7rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      .control-btn:hover {
+        background: #f3f4f6;
+      }
+
+      .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+      }
+
+      .logo {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin: 1.5rem 0;
+      }
+
+      .info-block {
+        font-size: 0.85rem;
+      }
+
+      .info-block strong {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #111827;
+      }
+
+      .info-block input {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 0.3rem 0;
+        font-size: 0.85rem;
+        background: transparent;
+      }
+
+      .info-block input:focus {
+        outline: none;
+        border-bottom-color: var(--primary);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+      }
+
+      th,
+      td {
+        padding: 0.7rem;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        font-size: 0.85rem;
+      }
+
+      th {
+        background: #f9fafb;
+        font-weight: 600;
+      }
+
+      .totals {
+        margin-top: 1.5rem;
+        text-align: right;
+      }
+
+      .grand-total {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-top: 0.5rem;
+      }
+
+      .footer-section {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 2px solid #e5e7eb;
+      }
+
+      .alignment-controls {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+
+      .align-btn {
+        padding: 0.4rem 0.8rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.75rem;
+      }
+
+      .align-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 400px;
+        width: 90%;
+      }
+
+      .modal-content h3 {
+        margin-top: 0;
+      }
+
+      .modal-content input {
+        width: 100%;
+        padding: 0.5rem;
+        margin: 0.5rem 0 1rem 0;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+      }
+
+      .modal-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+      }
+
+      .success-message {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: #10b981;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: none;
+        z-index: 1001;
+      }
+
+      .success-message.show {
+        display: block;
+        animation: slideIn 0.3s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Editor Sidebar -->
+    <div class="editor">
+      <h2>Invoice Designer</h2>
+
+      <!-- Brand Settings -->
+      <div class="control-group">
+        <h3>Brand Settings</h3>
+        <label>Brand Color</label>
+        <input type="color" id="primaryColor" value="#ff9d00" />
+
+        <label style="margin-top: 1rem">Font Family</label>
+        <select id="font">
+          <option value="Inter, Arial, sans-serif">Inter</option>
+          <option value="Poppins, Arial, sans-serif">Poppins</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+        </select>
+
+        <label style="margin-top: 1rem">Business Name</label>
+        <input id="businessName" value="Your Business Ltd" />
+      </div>
+
+      <!-- Available Components -->
+      <div class="control-group">
+        <h3>Add Components</h3>
+        <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem 0">
+          Drag components to the invoice
+        </p>
+        <div class="available-sections">
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="invoice-to"
+          >
+            📋 Invoice To
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="billed-to"
+          >
+            💰 Billed To
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="vehicle-details"
+          >
+            🚗 Vehicle Details
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="bank-details"
+          >
+            🏦 Bank Details
+          </div>
+          <div class="draggable-component" draggable="true" data-type="notes">
+            📝 Notes
+          </div>
+          <div class="draggable-component" draggable="true" data-type="terms">
+            📄 Terms & Conditions
+          </div>
+        </div>
+        <script>
+          const [sections, setSections] = useState([
+          { id: "header", name: "Header", visible: true },
+          { id: "client", name: "Client Info", visible: true },
+          { id: "vehicle", name: "Vehicle Details", visible: true },
+          { id: "items", name: "Line Items", visible: true },
+          { id: "totals", name: "Totals", visible: true },
+          { id: "notes", name: "Notes", visible: true },
+        ]);
+        </script>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; flex-direction: column; gap: 0.5rem">
+        <button class="btn btn-primary" onclick="saveTemplate()">
+          💾 Save Template
+        </button>
+        <button class="btn btn-secondary" onclick="exportPDF()">
+          📄 Export PDF
+        </button>
+        <button class="btn btn-secondary" onclick="resetTemplate()">
+          🔄 Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Preview Area -->
+    <div class="preview">
+      <div class="page" id="invoicePage">
+        <!-- Header (Fixed) -->
+        <div class="header-section">
+          <div class="logo" id="logoText">Your Business Ltd</div>
+          <div style="text-align: right">
+            <strong style="font-size: 1.2rem">INVOICE</strong><br />
+            <div style="margin-top: 0.5rem; font-size: 0.85rem">
+              <div style="margin: 0.3rem 0">
+                <strong>Invoice #:</strong>
+                <input
+                  type="text"
+                  value="INV-2025-001"
+                  style="
+                    width: 120px;
+                    border: none;
+                    border-bottom: 1px solid #e5e7eb;
+                    padding: 0.2rem;
+                    font-size: 0.85rem;
+                  "
+                />
+              </div>
+              <div style="margin: 0.3rem 0">
+                <strong>Date:</strong>
+                <input
+                  type="date"
+                  value="2025-12-18"
+                  style="
+                    width: 130px;
+                    border: none;
+                    border-bottom: 1px solid #e5e7eb;
+                    padding: 0.2rem;
+                    font-size: 0.85rem;
+                  "
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drop Zone for Components -->
+        <div class="drop-zone" id="mainDropZone">
+          <p class="drop-zone-placeholder">
+            Drag components here (2 columns max)
+          </p>
+        </div>
+
+        <!-- Line Items (Fixed) -->
+        <div style="margin: 2rem 0">
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th style="width: 80px">Qty</th>
+                <th style="width: 100px">Price</th>
+                <th style="width: 100px">Total</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTable">
+              <tr>
+                <td>
+                  <input
+                    type="text"
+                    value="Service Item 1"
+                    style="width: 100%; border: none; background: transparent"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    value="1"
+                    style="width: 60px; border: none; background: transparent"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value="$250.00"
+                    style="width: 80px; border: none; background: transparent"
+                  />
+                </td>
+                <td>$250.00</td>
+              </tr>
+              <tr>
+                <td>
+                  <input
+                    type="text"
+                    value="Service Item 2"
+                    style="width: 100%; border: none; background: transparent"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    value="2"
+                    style="border: none; background: transparent; width: 60px"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value="$150.00"
+                    style="width: 80px; border: none; background: transparent"
+                  />
+                </td>
+                <td>$300.00</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="totals">
+            <div style="font-size: 0.9rem; margin-bottom: 0.3rem">
+              <strong>Subtotal:</strong> $550.00
+            </div>
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem">
+              <strong>Tax (15%):</strong> $82.50
+            </div>
+            <div class="grand-total">Total: $632.50</div>
+          </div>
+        </div>
+
+        <!-- Footer Drop Zone -->
+        <div class="drop-zone" id="footerDropZone">
+          <p class="drop-zone-placeholder">
+            Drag footer components here (2 columns max)
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Template Modal -->
+    <div class="modal" id="saveModal">
+      <div class="modal-content">
+        <h3>Save Template</h3>
+        <label>Template Name</label>
+        <input
+          type="text"
+          id="templateName"
+          placeholder="My Invoice Template"
+        />
+        <div class="modal-buttons">
+          <button class="btn btn-secondary" onclick="closeSaveModal()">
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="confirmSave()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+      ✓ Template saved successfully!
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      const mainDropZone = document.getElementById("mainDropZone");
+      const footerDropZone = document.getElementById("footerDropZone");
+      let draggedElement = null;
+      let componentCounter = 0;
+
+      // Brand settings
+      document.getElementById("primaryColor").oninput = (e) => {
+        root.style.setProperty("--primary", e.target.value);
+      };
+
+      document.getElementById("font").onchange = (e) => {
+        root.style.setProperty("--font", e.target.value);
+      };
+
+      document.getElementById("businessName").oninput = (e) => {
+        document.getElementById("logoText").textContent = e.target.value;
+      };
+
+      // Component templates
+      const componentTemplates = {
+        "invoice-to": () => `
+        <div class="info-block">
+          <strong>Invoice To:</strong>
+          <input type="text" placeholder="Company Name" value="Client Company" />
+          <input type="text" placeholder="Address" value="123 Client Street" />
+          <input type="text" placeholder="City, State ZIP" value="City, State 12345" />
+          <input type="text" placeholder="Email" value="client@email.com" />
+          <input type="text" placeholder="Phone" value="+1 234 567 8900" />
+        </div>
+      `,
+        "billed-to": () => `
+        <div class="info-block">
+          <strong>Billed To:</strong>
+          <input type="text" placeholder="Company Name" value="Billing Company" />
+          <input type="text" placeholder="Address" value="456 Billing Ave" />
+          <input type="text" placeholder="City, State ZIP" value="City, State 54321" />
+          <input type="text" placeholder="Email" value="billing@email.com" />
+          <input type="text" placeholder="Phone" value="+1 234 567 8901" />
+        </div>
+      `,
+        "vehicle-details": () => `
+        <div class="info-block">
+          <strong>Vehicle Details:</strong>
+          <input type="text" placeholder="Registration" value="ABC 123 GP" />
+          <input type="text" placeholder="Make" value="Toyota" />
+          <input type="text" placeholder="Model" value="Hilux 2.8 GD-6" />
+          <input type="text" placeholder="Engine #" value="H78627282" />
+          <input type="text" placeholder="VIN" value="AHTFS26L5G0000000" />
+          <input type="text" placeholder="Odometer" value="45,230 km" />
+        </div>
+      `,
+        "bank-details": () => `
+        <div class="info-block">
+          <strong>Bank Details:</strong>
+          <input type="text" placeholder="Bank Name" value="First National Bank" />
+          <input type="text" placeholder="Account Name" value="Your Business Ltd" />
+          <input type="text" placeholder="Account Number" value="1234567890" />
+          <input type="text" placeholder="Branch Code" value="250655" />
+          <input type="text" placeholder="Swift Code" value="FIRNZAJJ" />
+        </div>
+      `,
+        notes: () => `
+        <div class="info-block">
+          <strong>Notes:</strong>
+          <textarea style="width: 100%; min-height: 80px; border: 1px solid #e5e7eb; padding: 0.5rem; border-radius: 4px; font-family: inherit; font-size: 0.85rem;" placeholder="Additional notes...">Thank you for your business. Payment is due within 30 days.</textarea>
+        </div>
+      `,
+        terms: () => `
+        <div class="info-block">
+          <strong>Terms & Conditions:</strong>
+          <textarea style="width: 100%; min-height: 80px; border: 1px solid #e5e7eb; padding: 0.5rem; border-radius: 4px; font-family: inherit; font-size: 0.85rem;" placeholder="Terms and conditions...">Payment terms: Net 30 days. Late payments subject to 1.5% monthly interest.</textarea>
+        </div>
+      `,
+      };
+
+      // Drag and drop for available components
+      document.querySelectorAll(".draggable-component").forEach((comp) => {
+        comp.addEventListener("dragstart", (e) => {
+          draggedElement = {
+            type: "new",
+            componentType: e.target.dataset.type,
+          };
+          e.target.classList.add("dragging");
+        });
+
+        comp.addEventListener("dragend", (e) => {
+          e.target.classList.remove("dragging");
+        });
+      });
+
+      // Drop zone handlers
+      [mainDropZone, footerDropZone].forEach((zone) => {
+        zone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          zone.classList.add("drag-over");
+        });
+
+        zone.addEventListener("dragleave", () => {
+          zone.classList.remove("drag-over");
+        });
+
+        zone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          zone.classList.remove("drag-over");
+
+          const existingComponents =
+            zone.querySelectorAll(".invoice-section").length;
+
+          if (draggedElement && draggedElement.type === "new") {
+            if (existingComponents >= 2) {
+              alert(
+                "Maximum 2 components per row. Please remove a component first."
+              );
+              return;
+            }
+            addComponent(draggedElement.componentType, zone);
+          } else if (draggedElement && draggedElement.type === "existing") {
+            // Allow moving existing components between zones
+            const sourceZone = draggedElement.element.closest(".drop-zone");
+            if (sourceZone !== zone && existingComponents >= 2) {
+              alert(
+                "Maximum 2 components per row. Please remove a component first."
+              );
+              return;
+            }
+            zone.appendChild(draggedElement.element);
+
+            // Update placeholder visibility for both zones
+            [sourceZone, zone].forEach((z) => {
+              const placeholder = z.querySelector(".drop-zone-placeholder");
+              const components = z.querySelectorAll(".invoice-section").length;
+              if (placeholder) {
+                placeholder.style.display = components === 0 ? "block" : "none";
+              }
+            });
+          }
+        });
+      });
+
+      function addComponent(type, targetZone) {
+        // Check if zone already has 2 components
+        const existingComponents =
+          targetZone.querySelectorAll(".invoice-section").length;
+        if (existingComponents >= 2) {
+          alert(
+            "Maximum 2 components per row. Please remove a component first."
+          );
+          return;
+        }
+
+        // Hide placeholder if it exists
+        const placeholder = targetZone.querySelector(".drop-zone-placeholder");
+        if (placeholder) {
+          placeholder.style.display = "none";
+        }
+
+        const section = document.createElement("div");
+        section.className = "invoice-section";
+        section.draggable = true;
+        section.dataset.componentId = `comp-${componentCounter++}`;
+        section.dataset.componentType = type;
+
+        const content = document.createElement("div");
+        content.className = "info-grid";
+        content.style.gridTemplateColumns = "1fr"; // Single column within the component
+        content.innerHTML = componentTemplates[type]();
+
+        const controls = document.createElement("div");
+        controls.className = "section-controls";
+        controls.innerHTML = `
+        <button class="control-btn" onclick="removeSection(this)" title="Remove">✕</button>
+      `;
+
+        // Add alignment controls for footer zone
+        if (targetZone === footerDropZone) {
+          const alignControls = document.createElement("div");
+          alignControls.className = "alignment-controls";
+          alignControls.innerHTML = `
+          <button class="align-btn active" onclick="setAlignment(this, 'left')">Left</button>
+          <button class="align-btn" onclick="setAlignment(this, 'center')">Center</button>
+          <button class="align-btn" onclick="setAlignment(this, 'right')">Right</button>
+        `;
+          content.appendChild(alignControls);
+          section.style.textAlign = "left";
+        }
+
+        section.appendChild(controls);
+        section.appendChild(content);
+
+        // Make section draggable
+        section.addEventListener("dragstart", (e) => {
+          draggedElement = { type: "existing", element: section };
+          section.style.opacity = "0.5";
+        });
+
+        section.addEventListener("dragend", () => {
+          section.style.opacity = "1";
+        });
+
+        targetZone.appendChild(section);
+      }
+
+      function setAlignment(btn, alignment) {
+        const section = btn.closest(".invoice-section");
+        section.style.textAlign = alignment;
+
+        btn.parentElement
+          .querySelectorAll(".align-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      }
+
+      function moveUp(btn) {
+        const section = btn.closest(".invoice-section");
+        const prev = section.previousElementSibling;
+        if (prev && prev.classList.contains("invoice-section")) {
+          section.parentElement.insertBefore(section, prev);
+        }
+      }
+
+      function moveDown(btn) {
+        const section = btn.closest(".invoice-section");
+        const next = section.nextElementSibling;
+        if (next && next.classList.contains("invoice-section")) {
+          section.parentElement.insertBefore(next, section);
+        }
+      }
+
+      function removeSection(btn) {
+        const section = btn.closest(".invoice-section");
+        const zone = section.closest(".drop-zone");
+        section.remove();
+
+        // Show placeholder if no components left
+        const remainingComponents =
+          zone.querySelectorAll(".invoice-section").length;
+        if (remainingComponents === 0) {
+          const placeholder = zone.querySelector(".drop-zone-placeholder");
+          if (placeholder) {
+            placeholder.style.display = "block";
+          }
+        }
+      }
+
+      function getTemplateConfig() {
+        const sections = [];
+
+        [mainDropZone, footerDropZone].forEach((zone) => {
+          const zoneSections = Array.from(
+            zone.querySelectorAll(".invoice-section")
+          ).map((section) => {
+            const inputs = {};
+            section.querySelectorAll("input, textarea").forEach((input) => {
+              inputs[input.placeholder || input.type] = input.value;
+            });
+
+            return {
+              id: section.dataset.componentId,
+              type: section.dataset.componentType,
+              zone: zone.id,
+              alignment: section.style.textAlign || "left",
+              data: inputs,
+            };
+          });
+          sections.push(...zoneSections);
+        });
+
+        return {
+          version: 1,
+          brand: {
+            primaryColor: getComputedStyle(root)
+              .getPropertyValue("--primary")
+              .trim(),
+            font: getComputedStyle(root).getPropertyValue("--font").trim(),
+            businessName: document.getElementById("businessName").value,
+          },
+          sections: sections,
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      function saveTemplate() {
+        document.getElementById("saveModal").classList.add("active");
+      }
+
+      function closeSaveModal() {
+        document.getElementById("saveModal").classList.remove("active");
+      }
+
+      function confirmSave() {
+        const templateName =
+          document.getElementById("templateName").value || "Untitled Template";
+        const config = getTemplateConfig();
+
+        // Store in localStorage (replace with Firebase in production)
+        const templates = JSON.parse(
+          localStorage.getItem("invoiceTemplates") || "[]"
+        );
+        templates.push({
+          id: `template-${Date.now()}`,
+          name: templateName,
+          config: config,
+        });
+        localStorage.setItem("invoiceTemplates", JSON.stringify(templates));
+
+        closeSaveModal();
+
+        // Show success message
+        const successMsg = document.getElementById("successMessage");
+        successMsg.classList.add("show");
+        setTimeout(() => successMsg.classList.remove("show"), 3000);
+
+        console.log("Template saved:", { name: templateName, config });
+      }
+
+      function exportPDF() {
+        window.print();
+      }
+
+      function resetTemplate() {
+        if (
+          confirm(
+            "Reset template to default? This will remove all custom sections."
+          )
+        ) {
+          mainDropZone.innerHTML =
+            '<p class="drop-zone-placeholder">Drag components here (2 columns max)</p>';
+          footerDropZone.innerHTML =
+            '<p class="drop-zone-placeholder">Drag footer components here (2 columns max)</p>';
+        }
+      }
+
+      // Print styles
+      const style = document.createElement("style");
+      style.textContent = `
+      @media print {
+        body { grid-template-columns: 1fr; background: white; }
+        .editor { display: none; }
+        .preview { padding: 0; }
+        .page { box-shadow: none; margin: 0; }
+        .section-controls { display: none !important; }
+        .drop-zone { display: none; }
+        .invoice-section { border: none !important; background: transparent !important; }
+      }
+    `;
+      document.head.appendChild(style);
+    </script>
+
+    <!-- Firebase Integration Example (Uncomment and configure) -->
+    <script type="module">
+      // import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+      // import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+      // import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+      // const firebaseConfig = {
+      //   apiKey: "YOUR_API_KEY",
+      //   authDomain: "YOUR_AUTH_DOMAIN",
+      //   projectId: "YOUR_PROJECT_ID"
+      // };
+
+      // const app = initializeApp(firebaseConfig);
+      // const db = getFirestore(app);
+      // const auth = getAuth(app);
+
+      // window.saveToFirebase = async function(templateName, config) {
+      //   const user = auth.currentUser;
+      //   if (!user) {
+      //     alert('Please sign in to save templates');
+      //     return;
+      //   }
+
+      //   try {
+      //     await addDoc(collection(db, 'users', user.uid, 'invoiceTemplates'), {
+      //       name: templateName,
+      //       config: config,
+      //       isDefault: false,
+      //       createdAt: serverTimestamp(),
+      //       updatedAt: serverTimestamp()
+      //     });
+      //     console.log('Template saved to Firebase');
+      //   } catch (error) {
+      //     console.error('Error saving template:', error);
+      //   }
+      // };
+    </script>
+  </body>
+</html>

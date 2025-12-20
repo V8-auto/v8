@@ -1,0 +1,2109 @@
+<!DOCTYPE html>nvoice
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Professional Invoice Templates - Solidflo Saas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #0f1724;
+      }
+      .main-container {
+        display: flex;
+        height: 100vh;
+        overflow: visible;
+      }
+      .sidebar {
+        width: 260px;
+        background: black;
+        border-right: 1px solid rgba(255, 255, 255, 0.03);
+        padding: 28px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        transform: translateX(0);
+        transition: var(--transition);
+        z-index: 10000;
+        backdrop-filter: blur(6px) saturate(120%);
+      }
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: white; /* match sidebar text color */
+        display: none; /* hidden by default */
+      }
+      @media (max-width: 768px) {
+        .sidebar.open .close-btn {
+          display: block; /* Show only on mobile when sidebar is open */
+        }
+      }
+      .brand {
+        display: block;
+        gap: 20px;
+        align-items: center;
+      }
+      .menu-toggle {
+        display: none;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 6px 8px;
+      }
+      .logo {
+        height: 80px;
+        width: 80px;
+        border-radius: 10px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        font-size: 18px;
+      }
+      .brand h1 {
+        font-size: 16px;
+        margin: 0;
+      }
+      .brand p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .nav {
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        color: #cfe9f7;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: var(--transition);
+        font-size: 14px;
+      }
+      .nav a .ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+      }
+      .nav a:hover {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        transform: translateX(4px);
+      }
+      .nav a.active {
+        background: linear-gradient(
+          90deg,
+          rgba(124, 58, 237, 0.15),
+          rgba(6, 182, 212, 0.06)
+        );
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+      }
+      .spacer {
+        flex: 1;
+      }
+      .flex {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      @media (max-width: 768px) {
+        .sidebar.mobile-hidden {
+          transform: translateX(-100%);
+        }
+      }
+      /* top-left mobile control */
+      .top-left {
+        position: fixed;
+        left: 16px;
+        top: 14px;
+        z-index: 60;
+      }
+      .hambtn {
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        background: var(--glass);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+      }
+      @media (min-width: 1024px) {
+        .hambtn {
+          display: none;
+        }
+        .close-btn {
+          display: none;
+        }
+      }
+      /* SETTINGS drawer & profile modal */
+      .settings-drawer {
+        position: fixed;
+        right: -420px;
+        top: 0;
+        width: 380px;
+        height: 100%;
+        background: radial-gradient(
+            1200px 400px at 10% 10%,
+            rgba(124, 58, 237, 0.08),
+            transparent 8%
+          ),
+          radial-gradient(
+            1000px 300px at 90% 90%,
+            rgba(6, 182, 212, 0.06),
+            transparent 8%
+          ),
+          var(--bg);
+        border-left: 1px solid rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        transition: var(--transition);
+        z-index: 60;
+        overflow: auto;
+      }
+      .settings-drawer.open {
+        right: 0;
+      }
+      .profile-modal {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: 360px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.03),
+          rgba(255, 255, 255, 0.01)
+        );
+        padding: 20px;
+        border-radius: 12px;
+        transition: var(--transition);
+        box-shadow: 0 30px 80px rgba(2, 6, 23, 0.6);
+        z-index: 80;
+        display: none;
+      }
+      .profile-modal.open {
+        display: block;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      /* responsive */
+      @media (max-width: 1100px) {
+        .kpis {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .row {
+          grid-template-columns: 1fr 360px;
+        }
+        .searchbar {
+          width: 380px;
+        }
+      }
+      @media (max-width: 820px) {
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          height: 100vh;
+          transform: translateX(-320px);
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        .app {
+          padding: 18px;
+        }
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .row {
+          grid-template-columns: 1fr;
+        }
+        .content-shift {
+          transform: translateX(0);
+        }
+        .kpis {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 420px) {
+        .kpis {
+          grid-template-columns: 1fr;
+        }
+        .searchbar {
+          width: 100%;
+        }
+
+        .panel {
+          padding: 12px;
+        }
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* small helpers */
+      .muted {
+        color: var(--muted);
+      }
+      input[type="text"],
+      input[type="email"],
+      select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        background: transparent;
+        color: inherit;
+        margin-top: 6px;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .save-row {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <aside class="sidebar">
+        <div style="padding: 20px">
+          <div
+            style="
+              width: 60px;
+              height: 60px;
+              background: transparent;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <img
+              src="/assets/img/solidflo-logo.png"
+              style="height: 60px"
+              alt=""
+            />
+          </div>
+          <p style="color: #9aa7b2; font-size: 12px; margin-top: 10px">
+            Quotations & Billing
+          </p>
+        </div>
+
+        <nav class="nav" style="padding: 20px">
+          <a href="/dashboard/index.html"
+            ><span>🏠</span><span>Dashboard</span></a
+          >
+          <a href="/dashboard/invoices.html"
+            ><span>📄</span><span>Invoices</span></a
+          >
+          <a href="/dashboard/quotations.html"
+            ><span>📄</span><span>Quotations</span></a
+          >
+          <a href="/dashboard/clients.html"
+            ><span>👥</span><span>Clients</span></a
+          >
+          <a href="/dashboard/payments.html"
+            ><span>💳</span><span>Payments</span></a
+          >
+          <a href="/dashboard/templates.html"
+            ><span>💳</span><span>Templates</span></a
+          >
+          <button class="btn btn-primary" onclick="window.print()">
+            🖨️ Print / Save PDF
+          </button>
+          <button class="btn btn-secondary" onclick="window.history.back()">
+            ← Back
+          </button>
+        </nav>
+
+        <div class="spacer"></div>
+
+        <div style="display: flex; gap: 10px; padding: 20px" id="userDisplay">
+          <div
+            style="
+              width: 44px;
+              height: 44px;
+              border-radius: 10px;
+              background: rgba(255, 255, 255, 0.04);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            👤
+          </div>
+          <div>
+            <div style="font-weight: 700; color: white" id="userName">User</div>
+            <div style="font-size: 12px; color: #9aa7b2">Admin</div>
+          </div>
+        </div>
+      </aside>
+      <div id="root"></div>
+
+      <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // ============================================
+        // FIREBASE CONFIGURATION
+        // ============================================
+        const firebaseConfig = {
+          apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+          authDomain: "solidflow-1f753.firebaseapp.com",
+          projectId: "solidflow-1f753",
+          storageBucket: "solidflow-1f753.firebasestorage.app",
+          messagingSenderId: "68885400864",
+          appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+          measurementId: "G-RTL0CM1B44",
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const InvoiceTemplateManager = () => {
+          const [activeTab, setActiveTab] = useState("editor");
+          const [selectedTemplate, setSelectedTemplate] = useState("null");
+          const [selectedInvoiceTemplate, setSelectedInvoiceTemplate] =
+            useState("null");
+          const [user, setUser] = useState(null);
+          const [showAuthModal, setShowAuthModal] = useState(false);
+          const [showPaymentModal, setShowPaymentModal] = useState(false);
+          const [showSaveModal, setShowSaveModal] = useState(false);
+          const [savedTemplates, setSavedTemplates] = useState([]);
+          const [loading, setLoading] = useState(false);
+          const [templateName, setTemplateName] = useState("");
+          const currentTemplateStyles = null;
+          const [invoiceTemplates, setTemplates] = useState([]);
+          const [showTemplates, setShowTemplates] = useState(false);
+          const [templateMode, setTemplateMode] = useState("modern");
+          const [branding, setBranding] = useState({
+            logo: null,
+            primaryColor: "#3B82F6",
+            secondaryColor: "#10B981",
+            companyName: "Solidflo Invoicing Saas",
+            tagline: "Professional Services",
+            font: "Inter, system-ui, sans-serif",
+          });
+
+          const [invoiceData, setInvoiceData] = useState({
+            number: "",
+            date: "",
+            dueDate: "",
+            serviceType: "SERVICE",
+            merchantCode: "",
+            from: {
+              name: "",
+              address: "",
+              city: "",
+              email: "",
+              phone: "",
+            },
+            to: {
+              name: "",
+              address: "",
+              city: "",
+              email: "",
+              phone: "",
+            },
+            vehicle: {
+              registration: "",
+              make: "",
+              model: "",
+              engine: "",
+              vin: "",
+              odometer: "",
+            },
+            items: [],
+            notes: "",
+          });
+
+          const [sections, setSections] = useState([
+            { id: "header", name: "Header", visible: true },
+            { id: "client", name: "Client Info", visible: true },
+            { id: "items", name: "Line Items", visible: true },
+            { id: "totals", name: "Totals", visible: true },
+            { id: "notes", name: "Notes", visible: true },
+          ]);
+          const loadSavedTemplatesList = async (userId) => {
+            try {
+              const templatesSnapshot = await db
+                .collection("users")
+                .doc(userId)
+                .collection("invoiceTemplates")
+                .get();
+
+              const loadedTemplates = [];
+              templatesSnapshot.forEach((doc) => {
+                loadedTemplates.push({
+                  id: doc.id,
+                  ...doc.data(),
+                });
+              });
+
+              setTemplates(loadedTemplates);
+              return loadedTemplates;
+            } catch (error) {
+              console.error("Error loading templates:", error);
+              return [];
+            }
+          };
+          const applyTemplate = (template) => {
+            setInvoiceData({
+              ...invoiceData,
+              from: template.from || invoiceData.from,
+              to: template.to || invoiceData.to,
+              items: template.items || invoiceData.items,
+              notes: template.notes || invoiceData.notes,
+              // You can include other fields from the template
+            });
+            setShowTemplates(false);
+          };
+          const templates = [
+            {
+              id: "modern",
+              name: "Modern",
+              description: "Clean, minimalist design",
+              icon: "📄",
+              price: 9.99,
+            },
+            {
+              id: "classic",
+              name: "Classic",
+              description: "Traditional business style",
+              icon: "📋",
+              price: 9.99,
+            },
+            {
+              id: "creative",
+              name: "Creative",
+              description: "Bold and colorful",
+              icon: "🎨",
+              price: 14.99,
+            },
+            {
+              id: "corporate",
+              name: "Corporate",
+              description: "Professional enterprise look",
+              icon: "🏢",
+              price: 14.99,
+            },
+          ];
+          const industryTemplates = [
+            {
+              id: "contractors",
+              name: "Contractors & Builders",
+              description: "For construction and building services",
+              icon: "🏗️",
+              price: 12.99,
+              fields: ["project", "materials", "labor"],
+            },
+            {
+              id: "consultants",
+              name: "Consultants",
+              description: "Professional consulting services",
+              icon: "💼",
+              price: 11.99,
+              fields: ["hourly", "deliverables"],
+            },
+            {
+              id: "creators",
+              name: "Creators & Designers",
+              description: "Creative and design work",
+              icon: "🎨",
+              price: 13.99,
+              fields: ["projects", "revisions", "licenses"],
+            },
+            {
+              id: "coaches",
+              name: "Coaches",
+              description: "Coaching and training services",
+              icon: "🎯",
+              price: 11.99,
+              fields: ["sessions", "programs", "materials"],
+            },
+            {
+              id: "security",
+              name: "Security Services",
+              description: "Security and protection services",
+              icon: "🛡️",
+              price: 12.99,
+              fields: ["hours", "personnel", "equipment"],
+            },
+            {
+              id: "mechanics",
+              name: "Mechanics & Auto Repair",
+              description: "Vehicle repair and maintenance",
+              icon: "🔧",
+              price: 14.99,
+              fields: ["vehicle", "parts", "labor", "diagnostics"],
+            },
+            {
+              id: "towtruck",
+              name: "Tow Trucks",
+              description: "Towing and roadside assistance",
+              icon: "🚛",
+              price: 13.99,
+              fields: ["vehicle", "distance", "service"],
+            },
+          ];
+          // ============================================
+          // FIREBASE AUTH
+          // ============================================
+          useEffect(() => {
+            const unsubscribe = auth.onAuthStateChanged((user) => {
+              setUser(user);
+              if (user) {
+                loadSavedTemplates(user.uid);
+              }
+            });
+            return () => unsubscribe();
+          }, []);
+
+          const signInWithEmail = async (email, password) => {
+            try {
+              await auth.signInWithEmailAndPassword(email, password);
+              setShowAuthModal(false);
+            } catch (error) {
+              alert("Login failed: " + error.message);
+            }
+          };
+
+          const signUpWithEmail = async (email, password) => {
+            try {
+              await auth.createUserWithEmailAndPassword(email, password);
+              setShowAuthModal(false);
+            } catch (error) {
+              alert("Sign up failed: " + error.message);
+            }
+          };
+
+          const signOut = async () => {
+            try {
+              await auth.signOut();
+              setSavedTemplates([]);
+            } catch (error) {
+              alert("Sign out failed: " + error.message);
+            }
+          };
+
+          // ============================================
+          // FIREBASE FIRESTORE
+          // ============================================
+          const loadSavedTemplates = async (userId) => {
+            try {
+              const snapshot = await db
+                .collection("users")
+                .doc(userId)
+                .collection("invoiceTemplates")
+                .orderBy("createdAt", "desc")
+                .get();
+
+              const templates = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              setSavedTemplates(templates);
+            } catch (error) {
+              console.error("Error loading templates:", error);
+            }
+          };
+
+          const saveTemplateToFirebase = async (templateData) => {
+            if (!user) {
+              alert("Please sign in to save templates");
+              return;
+            }
+
+            try {
+              setLoading(true);
+
+              // Helper function to replace undefined with null
+              const cleanValue = (value) => {
+                return value === undefined ? null : value;
+              };
+
+              // Prepare the data with all undefined values replaced
+              const dataToSave = {
+                name: cleanValue(templateData.name) || "Untitled Template",
+                price: cleanValue(templateData.price) || 0,
+                isPurchased: cleanValue(templateData.isPurchased) || false,
+                isActive: cleanValue(templateData.isActive) || true,
+                isFree: cleanValue(templateData.isFree) || true,
+                purchaseDate:
+                  cleanValue(templateData.purchaseDate) || new Date(),
+                description:
+                  cleanValue(templateData.description) || "No description",
+
+                // SAVE COMPLETE STYLES
+                styles: {
+                  headerBg:
+                    cleanValue(currentTemplateStyles?.headerBg) || "bg-white",
+                  headerBorder:
+                    cleanValue(currentTemplateStyles?.headerBorder) ||
+                    "border-b-2",
+                  titleSize:
+                    cleanValue(currentTemplateStyles?.titleSize) ||
+                    "text-3xl sm:text-5xl",
+                  sectionTitle:
+                    cleanValue(currentTemplateStyles?.sectionTitle) ||
+                    "uppercase tracking-wider font-serif",
+                  tableBorder:
+                    cleanValue(currentTemplateStyles?.tableBorder) ||
+                    "border-2",
+                  cardBg:
+                    cleanValue(currentTemplateStyles?.cardBg) || "bg-gray-50",
+                },
+
+                branding: {
+                  primaryColor: cleanValue(branding.primaryColor) || "#3B82F6",
+                  logo: cleanValue(branding.logo) || null,
+                  tagline:
+                    cleanValue(branding.tagline) || "Professional Services",
+                  companyName:
+                    cleanValue(branding.companyName) || "Your Business Ltd",
+                  font:
+                    cleanValue(branding.font) || "Inter, system-ui, sans-serif",
+                },
+
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
+
+              await db
+                .collection("users")
+                .doc(user.uid)
+                .collection("invoiceTemplates")
+                .add(dataToSave);
+
+              alert("Template saved successfully!");
+              loadSavedTemplatesList(user.uid); // Reload the templates list
+              setShowSaveModal(false);
+              setTemplateName("");
+            } catch (error) {
+              console.error("Error saving template:", error);
+              alert("Error saving template: " + error.message);
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          // ALTERNATIVE VERSION - If you want to save current invoice styling
+          const saveCurrentInvoiceAsTemplate = async (templateName) => {
+            if (!user) {
+              alert("Please sign in to save templates");
+              return;
+            }
+
+            if (!templateName || templateName.trim() === "") {
+              alert("Please enter a template name");
+              return;
+            }
+
+            try {
+              setLoading(true);
+
+              const dataToSave = {
+                name: templateName,
+                price: 0,
+                isPurchased: false,
+                isActive: true,
+                isFree: true,
+                purchaseDate: new Date(),
+                description: `Custom template created from invoice ${invoiceData.number}`,
+
+                // Save current styles
+                styles: currentTemplateStyles || {
+                  headerBg: "bg-white",
+                  headerBorder: "border-b-2",
+                  titleSize: "text-3xl sm:text-5xl",
+                  sectionTitle: "uppercase tracking-wider font-serif",
+                  tableBorder: "border-2",
+                  cardBg: "bg-gray-50",
+                },
+
+                // Save current branding
+                branding: {
+                  primaryColor: branding.primaryColor || "#3B82F6",
+                  logo: branding.logo || null,
+                  tagline: branding.tagline || "Professional Services",
+                  companyName: branding.companyName || "Your Business Ltd",
+                  font: branding.font || "Inter, system-ui, sans-serif",
+                },
+
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
+
+              const docRef = await db
+                .collection("users")
+                .doc(user.uid)
+                .collection("invoiceTemplates")
+                .add(dataToSave);
+
+              alert("Template saved successfully!");
+              console.log("Template saved with ID:", docRef.id);
+
+              // Reload the templates list
+              await loadSavedTemplatesList(user.uid);
+
+              return docRef.id;
+            } catch (error) {
+              console.error("Error saving template:", error);
+              alert("Error saving template: " + error.message);
+            } finally {
+              setLoading(false);
+            }
+          };
+          useEffect(() => {
+            if (user?.uid) {
+              loadSavedTemplatesList(user.uid);
+            }
+          }, [user]);
+
+          // ADD THIS UI COMPONENT for saving templates
+          // Place this in your branding tab after the template selector
+
+          <div className="border-t pt-4 mt-4">
+            <h4 className="font-semibold mb-3">Save Current Design</h4>
+            <p className="text-xs text-gray-600 mb-3">
+              Save your current styling as a reusable template
+            </p>
+            <input
+              type="text"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg mb-2 text-sm"
+              placeholder="Enter template name"
+            />
+            <button
+              onClick={() => saveCurrentInvoiceAsTemplate(templateName)}
+              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+              disabled={!templateName || loading}
+            >
+              {loading ? "Saving..." : "💾 Save as Template"}
+            </button>
+          </div>;
+
+          const loadTemplate = async (templateId) => {
+            try {
+              const doc = await db
+                .collection("users")
+                .doc(user.uid)
+                .collection("invoiceTemplates")
+                .doc(templateId)
+                .get();
+
+              if (doc.exists) {
+                const templateData = doc.data();
+
+                // Set the template styles and branding
+                setSelectedTemplate(templateData);
+
+                // Update branding if it exists in template
+                if (templateData.branding) {
+                  setBranding(templateData.branding);
+                }
+
+                // If template has default invoice data, you can optionally load it
+                if (templateData.invoiceData) {
+                  setInvoiceData(templateData.invoiceData);
+                }
+
+                alert("Template loaded successfully!");
+              } else {
+                alert("Template not found");
+              }
+            } catch (error) {
+              alert("Error loading template: " + error.message);
+            }
+          };
+
+          const loadAndViewTemplate = async (templateId) => {
+            try {
+              const doc = await db
+                .collection("users")
+                .doc(user.uid)
+                .collection("invoiceTemplates")
+                .doc(templateId)
+                .get();
+
+              if (doc.exists) {
+                const data = doc.data();
+
+                // Prepare the complete invoice payload
+                const invoicePayload = {
+                  selectedTemplate: data.templateType,
+                  branding: data.branding,
+                  invoiceData: data.invoiceData,
+                  sections: data.sections,
+                };
+
+                // Save to sessionStorage
+                sessionStorage.setItem(
+                  "invoiceData",
+                  JSON.stringify(invoicePayload)
+                );
+
+                // Navigate to invoice.html
+                window.location.href = "invoice.html";
+              }
+            } catch (error) {
+              alert("Error loading template: " + error.message);
+            }
+          };
+
+          const deleteTemplate = async (templateId) => {
+            if (!confirm("Are you sure you want to delete this template?"))
+              return;
+
+            try {
+              await db
+                .collection("users")
+                .doc(user.uid)
+                .collection("invoiceTemplates")
+                .doc(templateId)
+                .delete();
+
+              loadSavedTemplates(user.uid);
+              alert("Template deleted successfully!");
+            } catch (error) {
+              alert("Error deleting template: " + error.message);
+            }
+          };
+
+          // ============================================
+          // PAYMENT SIMULATION
+          // ============================================
+          const handlePayment = async (paymentMethod) => {
+            setLoading(true);
+
+            // Simulate payment processing
+            setTimeout(() => {
+              setLoading(false);
+              setShowPaymentModal(false);
+              setShowSaveModal(true);
+              alert("Payment successful! You can now save your template.");
+            }, 2000);
+          };
+
+          // ============================================
+          // VIEW INVOICE - SAVES TO SESSION STORAGE
+          // ============================================
+          const viewInvoice = () => {
+            // Prepare the complete invoice payload including template selection
+            const invoicePayload = {
+              selectedTemplate: selectedTemplate,
+              branding: branding,
+              invoiceData: invoiceData,
+              sections: sections,
+            };
+
+            // Save to sessionStorage
+            sessionStorage.setItem(
+              "invoiceData",
+              JSON.stringify(invoicePayload)
+            );
+
+            // Navigate to invoice.html
+            window.location.href = "invoice.html";
+          };
+          const viewInvoiceTemplate = () => {
+            // Prepare the complete invoice payload including template selection
+            const invoicePayload = {
+              selectedInvoiceTemplate: selectedInvoiceTemplate,
+              branding: branding,
+              invoiceData: invoiceData,
+              sections: sections,
+            };
+
+            // Save to sessionStorage
+            sessionStorage.setItem(
+              "invoiceData",
+              JSON.stringify(invoicePayload)
+            );
+
+            // Navigate to invoice.html
+            window.location.href = "invoice.html";
+          };
+          const designInvoice = () => {
+            window.location.href = "design.html";
+          };
+
+          // ============================================
+          // INVOICE FUNCTIONS
+          // ============================================
+          const calculateTotals = () => {
+            const subtotal = invoiceData.items.reduce(
+              (sum, item) => sum + item.amount,
+              0
+            );
+            const tax = subtotal * 0.1;
+            const total = subtotal + tax;
+            return { subtotal, tax, total };
+          };
+
+          const { subtotal, tax, total } = calculateTotals();
+
+          const handleLogoUpload = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                setBranding({ ...branding, logo: reader.result });
+              };
+              reader.readAsDataURL(file);
+            }
+          };
+
+          const addLineItem = () => {
+            setInvoiceData({
+              ...invoiceData,
+              items: [
+                ...invoiceData.items,
+                { description: "New Item", quantity: 1, rate: 0, amount: 0 },
+              ],
+            });
+          };
+
+          const updateLineItem = (index, field, value) => {
+            const newItems = [...invoiceData.items];
+            newItems[index][field] = value;
+            if (field === "quantity" || field === "rate") {
+              newItems[index].amount =
+                newItems[index].quantity * newItems[index].rate;
+            }
+            setInvoiceData({ ...invoiceData, items: newItems });
+          };
+
+          const removeLineItem = (index) => {
+            const newItems = invoiceData.items.filter((_, i) => i !== index);
+            setInvoiceData({ ...invoiceData, items: newItems });
+          };
+
+          // ============================================
+          // MODALS
+          // ============================================
+          const AuthModal = () => {
+            const [isLogin, setIsLogin] = useState(true);
+            const [email, setEmail] = useState("");
+            const [password, setPassword] = useState("");
+
+            const handleSubmit = (e) => {
+              e.preventDefault();
+              if (isLogin) {
+                signInWithEmail(email, password);
+              } else {
+                signUpWithEmail(email, password);
+              }
+            };
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-8 max-w-md w-full">
+                  <h2 className="text-2xl font-bold mb-6">
+                    {isLogin ? "Sign In" : "Sign Up"}
+                  </h2>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-2 border rounded-lg"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-2 border rounded-lg"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      {isLogin ? "Sign In" : "Sign Up"}
+                    </button>
+                  </form>
+                  <button
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="w-full mt-4 text-blue-600 text-sm"
+                  >
+                    {isLogin
+                      ? "Don't have an account? Sign Up"
+                      : "Already have an account? Sign In"}
+                  </button>
+                  <button
+                    onClick={() => setShowAuthModal(false)}
+                    className="w-full mt-2 text-gray-600 text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            );
+          };
+
+          const PaymentModal = () => {
+            const templatePrice =
+              templates.find((t) => t.id === selectedTemplate)?.price || 9.99;
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-8 max-w-md w-full">
+                  <h2 className="text-2xl font-bold mb-6">Complete Payment</h2>
+                  <div className="mb-6">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-600">Template:</span>
+                      <span className="font-semibold">
+                        {templates.find((t) => t.id === selectedTemplate)?.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between mb-4">
+                      <span className="text-gray-600">Price:</span>
+                      <span className="font-bold text-xl">
+                        ${templatePrice}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => handlePayment("card")}
+                      disabled={loading}
+                      className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                    >
+                      {loading ? "Processing..." : "💳 Pay with Card"}
+                    </button>
+                    <button
+                      onClick={() => handlePayment("paypal")}
+                      disabled={loading}
+                      className="w-full bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 disabled:bg-gray-400"
+                    >
+                      {loading ? "Processing..." : "PayPal"}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    className="w-full mt-4 text-gray-600 text-sm"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+
+                  <p className="text-xs text-gray-500 mt-4 text-center">
+                    This is a demo. No real payment will be processed.
+                  </p>
+                </div>
+              </div>
+            );
+          };
+
+          const SaveModal = () => (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6">Save Template</h2>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2">
+                    Template Name
+                  </label>
+                  <input
+                    type="text"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    placeholder="e.g., My Business Invoice"
+                  />
+                </div>
+                <button
+                  onClick={() => saveTemplateToFirebase({ name: templateName })}
+                  disabled={loading || !templateName}
+                  className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+                >
+                  {loading ? "Saving..." : "Save Template"}
+                </button>
+                <button
+                  onClick={() => setShowSaveModal(false)}
+                  className="w-full mt-2 text-gray-600 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          );
+
+          // ============================================
+          // TEMPLATE RENDERERS - These are what display in invoice.html
+          // ============================================
+          const renderModernTemplate = () => {
+            // Modern template configuration
+            const modernTemplate = {
+              id: "modern",
+              name: "Modern",
+              price: 0,
+              isPurchased: true,
+              isActive: true,
+              isFree: true,
+              purchaseDate: "2024-01-01",
+              description: "Clean and modern design",
+              styles: {
+                headerBg: "",
+                headerBorder: "border-b-2",
+                titleSize: "text-2xl sm:text-4xl",
+                sectionTitle: "font-semibold",
+                tableBorder: "border-b-2",
+                cardBg: "bg-gray-50",
+              },
+              branding: {
+                primaryColor: branding.primaryColor || "#2563eb",
+                logo: branding.logo || null,
+                tagline: branding.tagline || "Professional Auto Service",
+              },
+            };
+
+            return (
+              <div className="bg-white p-8 rounded-lg shadow-lg">
+                <div
+                  className="flex justify-between items-start mb-8 pb-6 border-b-2"
+                  style={{ borderColor: modernTemplate.branding.primaryColor }}
+                >
+                  <div className="flex items-center gap-4">
+                    {modernTemplate.branding.logo && (
+                      <img
+                        src={modernTemplate.branding.logo}
+                        alt="Logo"
+                        className="h-16 w-16 object-contain"
+                      />
+                    )}
+                    <div>
+                      <h1
+                        className="text-4xl font-bold mb-1"
+                        style={{ color: modernTemplate.branding.primaryColor }}
+                      >
+                        INVOICE
+                      </h1>
+                      <p className="text-gray-600 text-sm">
+                        {modernTemplate.branding.tagline}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right text-sm">
+                    <p className="font-semibold">#{invoiceData.number}</p>
+                    <p className="text-gray-600">Date: {invoiceData.date}</p>
+                    <p className="text-gray-600">Due: {invoiceData.dueDate}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
+                  <div>
+                    <h3
+                      className="font-semibold mb-2"
+                      style={{ color: modernTemplate.branding.primaryColor }}
+                    >
+                      FROM
+                    </h3>
+                    <p className="font-semibold">{invoiceData.from.name}</p>
+                    <p className="text-gray-600">{invoiceData.from.address}</p>
+                    <p className="text-gray-600">{invoiceData.from.city}</p>
+                    <p className="text-gray-600">{invoiceData.from.email}</p>
+                    <p className="text-gray-600">{invoiceData.from.phone}</p>
+                  </div>
+                  <div>
+                    <h3
+                      className="font-semibold mb-2"
+                      style={{ color: modernTemplate.branding.primaryColor }}
+                    >
+                      TO
+                    </h3>
+                    <p className="font-semibold">{invoiceData.to.name}</p>
+                    <p className="text-gray-600">{invoiceData.to.address}</p>
+                    <p className="text-gray-600">{invoiceData.to.city}</p>
+                    <p className="text-gray-600">{invoiceData.to.email}</p>
+                    <p className="text-gray-600">{invoiceData.to.phone}</p>
+                  </div>
+                </div>
+
+                {invoiceData.vehicle && (
+                  <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+                    <h3
+                      className="font-semibold mb-3"
+                      style={{ color: modernTemplate.branding.primaryColor }}
+                    >
+                      VEHICLE DETAILS
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Registration:</span>
+                        <span className="ml-2 font-medium">
+                          {invoiceData.vehicle.registration}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Make:</span>
+                        <span className="ml-2 font-medium">
+                          {invoiceData.vehicle.make}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Model:</span>
+                        <span className="ml-2 font-medium">
+                          {invoiceData.vehicle.model}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Engine:</span>
+                        <span className="ml-2 font-medium">
+                          {invoiceData.vehicle.engine}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">VIN:</span>
+                        <span className="ml-2 font-medium">
+                          {invoiceData.vehicle.vin}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Odometer:</span>
+                        <span className="ml-2 font-medium">
+                          {invoiceData.vehicle.odometer}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <table className="w-full mb-8">
+                  <thead>
+                    <tr
+                      className="border-b-2"
+                      style={{
+                        borderColor: modernTemplate.branding.primaryColor,
+                      }}
+                    >
+                      <th className="text-left py-3 text-sm font-semibold">
+                        Description
+                      </th>
+                      <th className="text-right py-3 text-sm font-semibold">
+                        Qty
+                      </th>
+                      <th className="text-right py-3 text-sm font-semibold">
+                        Rate
+                      </th>
+                      <th className="text-right py-3 text-sm font-semibold">
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoiceData.items.map((item, i) => (
+                      <tr key={i} className="border-b border-gray-200">
+                        <td className="py-3 text-sm">{item.description}</td>
+                        <td className="text-right py-3 text-sm">
+                          {item.quantity}
+                        </td>
+                        <td className="text-right py-3 text-sm">
+                          ${item.rate.toFixed(2)}
+                        </td>
+                        <td className="text-right py-3 text-sm font-semibold">
+                          ${item.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="flex justify-end mb-8">
+                  <div className="w-72">
+                    <div className="flex justify-between py-2 text-sm">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span className="font-medium">
+                        ${subtotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-2 text-sm">
+                      <span className="text-gray-600">Tax (10%):</span>
+                      <span className="font-medium">${tax.toFixed(2)}</span>
+                    </div>
+                    <div
+                      className="flex justify-between py-3 border-t-2 mt-2 font-bold text-xl"
+                      style={{
+                        borderColor: modernTemplate.branding.primaryColor,
+                        color: modernTemplate.branding.primaryColor,
+                      }}
+                    >
+                      <span>Total:</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {invoiceData.notes && (
+                  <div className="mt-6 p-4 bg-gray-50 rounded">
+                    <p className="text-sm text-gray-600">{invoiceData.notes}</p>
+                  </div>
+                )}
+              </div>
+            );
+          };
+
+          const renderClassicTemplate = () => {
+            // Classic template configuration
+            const classicTemplate = {
+              id: "classic",
+              name: "Classic",
+              price: 9.99,
+              isPurchased: false,
+              isActive: true,
+              isFree: false,
+              purchaseDate: null,
+              description: "Traditional and elegant design",
+              styles: {
+                headerBg: "bg-gray-100",
+                headerBorder: "border-b-4 border-double",
+                titleSize: "text-3xl sm:text-5xl",
+                sectionTitle: "uppercase tracking-wider font-serif",
+                tableBorder: "border-2",
+                cardBg: "bg-gray-100",
+              },
+              branding: {
+                primaryColor: "#8B4513",
+                logo: branding.logo || null,
+                tagline: branding.tagline || "Professional Auto Service",
+              },
+            };
+
+            return (
+              <div className="bg-white p-8 rounded-lg shadow-lg border-4 border-gray-800">
+                <div className="text-center mb-8 pb-6 border-b-4 border-gray-800">
+                  {classicTemplate.branding.logo && (
+                    <img
+                      src={classicTemplate.branding.logo}
+                      alt="Logo"
+                      className="h-20 w-20 object-contain mx-auto mb-4"
+                    />
+                  )}
+                  <h1
+                    className="text-5xl font-serif font-bold mb-2"
+                    style={{ color: classicTemplate.branding.primaryColor }}
+                  >
+                    INVOICE
+                  </h1>
+                  <p className="text-gray-600 italic">
+                    {classicTemplate.branding.tagline}
+                  </p>
+                </div>
+
+                <div className="flex justify-between mb-6 text-sm">
+                  <div>
+                    <p className="font-semibold">
+                      Invoice: #{invoiceData.number}
+                    </p>
+                    <p className="text-gray-600">Date: {invoiceData.date}</p>
+                    <p className="text-gray-600">Due: {invoiceData.dueDate}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 mb-8 text-sm">
+                  <div className="border-l-4 border-gray-800 pl-4">
+                    <h3 className="font-bold mb-2 text-gray-800">FROM</h3>
+                    <p className="font-semibold">{invoiceData.from.name}</p>
+                    <p className="text-gray-600">{invoiceData.from.address}</p>
+                    <p className="text-gray-600">{invoiceData.from.city}</p>
+                    <p className="text-gray-600">{invoiceData.from.email}</p>
+                    <p className="text-gray-600">{invoiceData.from.phone}</p>
+                  </div>
+                  <div className="border-l-4 border-gray-800 pl-4">
+                    <h3 className="font-bold mb-2 text-gray-800">TO</h3>
+                    <p className="font-semibold">{invoiceData.to.name}</p>
+                    <p className="text-gray-600">{invoiceData.to.address}</p>
+                    <p className="text-gray-600">{invoiceData.to.city}</p>
+                    <p className="text-gray-600">{invoiceData.to.email}</p>
+                    <p className="text-gray-600">{invoiceData.to.phone}</p>
+                  </div>
+                </div>
+
+                <table className="w-full mb-8 border-2 border-gray-800">
+                  <thead className="bg-gray-800 text-white">
+                    <tr>
+                      <th className="text-left py-3 px-4 text-sm font-semibold">
+                        Description
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold">
+                        Qty
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold">
+                        Rate
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold">
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoiceData.items.map((item, i) => (
+                      <tr key={i} className="border-b border-gray-300">
+                        <td className="py-3 px-4 text-sm">
+                          {item.description}
+                        </td>
+                        <td className="text-right py-3 px-4 text-sm">
+                          {item.quantity}
+                        </td>
+                        <td className="text-right py-3 px-4 text-sm">
+                          ${item.rate.toFixed(2)}
+                        </td>
+                        <td className="text-right py-3 px-4 text-sm font-semibold">
+                          ${item.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="flex justify-end">
+                  <div className="w-80 border-4 border-gray-800 p-4">
+                    <div className="flex justify-between py-2 text-sm">
+                      <span>Subtotal:</span>
+                      <span className="font-medium">
+                        ${subtotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-2 text-sm">
+                      <span>Tax (10%):</span>
+                      <span className="font-medium">${tax.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-3 border-t-4 border-gray-800 mt-2 font-bold text-xl">
+                      <span>Total:</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          const renderCreativeTemplate = () => {
+            // Creative template configuration
+            const creativeTemplate = {
+              id: "creative",
+              name: "Creative",
+              price: 14.99,
+              isPurchased: false,
+              isActive: true,
+              isFree: false,
+              purchaseDate: null,
+              description: "Bold and colorful design",
+              styles: {
+                headerBg: "bg-gradient-to-r from-purple-50 to-pink-50",
+                headerBorder: "border-b-4",
+                titleSize: "text-3xl sm:text-5xl font-black italic",
+                sectionTitle: "uppercase font-bold",
+                tableBorder: "border-l-4",
+                cardBg: "bg-gradient-to-br from-blue-50 to-purple-50",
+              },
+              branding: {
+                primaryColor: "#9333ea",
+                secondaryColor: "#ec4899",
+                logo: branding.logo || null,
+                tagline: branding.tagline || "Professional Auto Service",
+              },
+            };
+
+            return (
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-lg shadow-2xl">
+                <div className="bg-white rounded-lg p-6 mb-6 shadow-lg">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-4">
+                      {creativeTemplate.branding.logo && (
+                        <img
+                          src={creativeTemplate.branding.logo}
+                          alt="Logo"
+                          className="h-16 w-16 object-contain"
+                        />
+                      )}
+                      <div>
+                        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          INVOICE
+                        </h1>
+                        <p className="text-gray-600 text-sm">
+                          {creativeTemplate.branding.tagline}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-sm bg-gradient-to-r from-purple-100 to-pink-100 p-3 rounded-lg">
+                      <p className="font-semibold">#{invoiceData.number}</p>
+                      <p className="text-gray-600">Date: {invoiceData.date}</p>
+                      <p className="text-gray-600">
+                        Due: {invoiceData.dueDate}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white rounded-lg p-4 shadow-md">
+                    <h3 className="font-semibold mb-2 text-purple-600">FROM</h3>
+                    <p className="font-semibold text-sm">
+                      {invoiceData.from.name}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      {invoiceData.from.address}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      {invoiceData.from.city}
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-md">
+                    <h3 className="font-semibold mb-2 text-pink-600">TO</h3>
+                    <p className="font-semibold text-sm">
+                      {invoiceData.to.name}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      {invoiceData.to.address}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      {invoiceData.to.city}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 shadow-lg">
+                  <table className="w-full mb-6">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                        <th className="text-left py-3 px-4 text-sm font-semibold rounded-tl-lg">
+                          Description
+                        </th>
+                        <th className="text-right py-3 px-2 text-sm font-semibold">
+                          Qty
+                        </th>
+                        <th className="text-right py-3 px-2 text-sm font-semibold">
+                          Rate
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold rounded-tr-lg">
+                          Amount
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoiceData.items.map((item, i) => (
+                        <tr key={i} className="border-b border-gray-200">
+                          <td className="py-3 px-4 text-sm">
+                            {item.description}
+                          </td>
+                          <td className="text-right py-3 px-2 text-sm">
+                            {item.quantity}
+                          </td>
+                          <td className="text-right py-3 px-2 text-sm">
+                            ${item.rate.toFixed(2)}
+                          </td>
+                          <td className="text-right py-3 px-4 text-sm font-semibold">
+                            ${item.amount.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div className="flex justify-end">
+                    <div className="w-72 bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg">
+                      <div className="flex justify-between py-2 text-sm">
+                        <span>Subtotal:</span>
+                        <span className="font-medium">
+                          ${subtotal.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-2 text-sm">
+                        <span>Tax (10%):</span>
+                        <span className="font-medium">${tax.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between py-3 border-t-2 border-purple-300 mt-2 font-bold text-xl text-purple-700">
+                        <span>Total:</span>
+                        <span>${total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          const renderCorporateTemplate = () => {
+            // Corporate template configuration
+            const corporateTemplate = {
+              id: "corporate",
+              name: "Corporate",
+              price: 12.99,
+              isPurchased: false,
+              isActive: true,
+              isFree: false,
+              purchaseDate: null,
+              description: "Professional business design",
+              styles: {
+                headerBg: "bg-slate-50",
+                headerBorder: "border-b-2",
+                titleSize: "text-2xl sm:text-4xl uppercase tracking-wide",
+                sectionTitle: "uppercase text-xs tracking-widest",
+                tableBorder: "border",
+                cardBg: "bg-slate-50",
+              },
+              branding: {
+                primaryColor: "#000000",
+                logo: branding.logo || null,
+                tagline: branding.tagline || "Professional Auto Service",
+              },
+            };
+
+            return (
+              <div className="bg-white p-8 border-8 border-black">
+                <div className="border-b-4 border-black pb-6 mb-8">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                      {corporateTemplate.branding.logo && (
+                        <img
+                          src={corporateTemplate.branding.logo}
+                          alt="Logo"
+                          className="h-20 w-20 object-contain"
+                        />
+                      )}
+                      <div>
+                        <h1 className="text-5xl font-bold tracking-widest">
+                          INVOICE
+                        </h1>
+                        <p className="text-gray-700 text-sm uppercase tracking-wide mt-2">
+                          {corporateTemplate.branding.tagline}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-sm bg-black text-white p-4">
+                      <p className="font-bold text-lg">#{invoiceData.number}</p>
+                      <p className="mt-2">DATE: {invoiceData.date}</p>
+                      <p>DUE: {invoiceData.dueDate}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                  <div className="border-4 border-black p-4">
+                    <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2">
+                      FROM
+                    </h3>
+                    <p className="font-bold text-sm">{invoiceData.from.name}</p>
+                    <p className="text-gray-700 text-sm">
+                      {invoiceData.from.address}
+                    </p>
+                    <p className="text-gray-700 text-sm">
+                      {invoiceData.from.city}
+                    </p>
+                  </div>
+                  <div className="border-4 border-black p-4">
+                    <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2">
+                      TO
+                    </h3>
+                    <p className="font-bold text-sm">{invoiceData.to.name}</p>
+                    <p className="text-gray-700 text-sm">
+                      {invoiceData.to.address}
+                    </p>
+                    <p className="text-gray-700 text-sm">
+                      {invoiceData.to.city}
+                    </p>
+                  </div>
+                </div>
+
+                <table className="w-full mb-8 border-4 border-black">
+                  <thead>
+                    <tr className="bg-black text-white">
+                      <th className="text-left py-4 px-4 text-sm font-bold uppercase">
+                        Description
+                      </th>
+                      <th className="text-right py-4 px-4 text-sm font-bold uppercase">
+                        Qty
+                      </th>
+                      <th className="text-right py-4 px-4 text-sm font-bold uppercase">
+                        Rate
+                      </th>
+                      <th className="text-right py-4 px-4 text-sm font-bold uppercase">
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoiceData.items.map((item, i) => (
+                      <tr key={i} className="border-b-2 border-black">
+                        <td className="py-4 px-4 text-sm font-medium">
+                          {item.description}
+                        </td>
+                        <td className="text-right py-4 px-4 text-sm">
+                          {item.quantity}
+                        </td>
+                        <td className="text-right py-4 px-4 text-sm">
+                          ${item.rate.toFixed(2)}
+                        </td>
+                        <td className="text-right py-4 px-4 text-sm font-bold">
+                          ${item.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="flex justify-end">
+                  <div className="w-96 border-4 border-black">
+                    <div className="flex justify-between py-3 px-4 text-sm border-b-2 border-black">
+                      <span className="uppercase font-bold">Subtotal:</span>
+                      <span className="font-bold">${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-3 px-4 text-sm border-b-2 border-black">
+                      <span className="uppercase font-bold">Tax (10%):</span>
+                      <span className="font-bold">${tax.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-4 px-4 bg-black text-white font-bold text-2xl">
+                      <span className="uppercase">Total:</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+          const renderTemplate = () => {
+            switch (selectedTemplate) {
+              case "classic":
+                return renderClassicTemplate();
+              case "creative":
+                return renderCreativeTemplate();
+              case "corporate":
+                return renderCorporateTemplate();
+              case "modern":
+              default:
+                return renderModernTemplate();
+            }
+          };
+          const renderInvoiceTemplate = () => {
+            switch (selectedInvoiceTemplate) {
+              case "classic":
+                return renderInvoiceClassicTemplate();
+              case "creative":
+                return renderInvoiceCreativeTemplate();
+              case "corporate":
+                return renderInvoiceCorporateTemplate();
+              case "modern":
+              default:
+                return renderInvoiceModernTemplate();
+            }
+          };
+          // ============================================
+          // MAIN RENDER
+          // ============================================
+          return (
+            <div className="min-h-screen bg-gray-50">
+              {showAuthModal && <AuthModal />}
+              {showPaymentModal && <PaymentModal />}
+              {showSaveModal && <SaveModal />}
+
+              <div className="bg-white border-b shadow-sm print:hidden">
+                <div className="max-w-7xl mx-auto px-6 py-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-800">
+                        Professional Invoice Templates
+                      </h1>
+                      <p className="text-gray-600 text-sm">
+                        Create, customize, and save professional invoices
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {user ? (
+                        <>
+                          <span className="text-sm text-gray-600">
+                            {user.email}
+                          </span>
+                          <button
+                            onClick={signOut}
+                            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                          >
+                            Sign Out
+                          </button>
+                          <button
+                            onClick={() => setShowPaymentModal(true)}
+                            className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                          >
+                            💾 Buy & Save Template
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setShowAuthModal(true)}
+                          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          Sign In to Save
+                        </button>
+                      )}
+                      <button
+                        onClick={viewInvoice}
+                        className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                      >
+                        👁️ View Invoice
+                      </button>
+                      <button
+                        onClick={designInvoice}
+                        className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                      >
+                        Design Invoice
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-w-l mx-auto px-6 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                  {/* Saved Templates Sidebar */}
+                  {user && (
+                    <div className="lg:col-span-1 print:hidden">
+                      <div className="bg-white rounded-lg shadow-sm border p-6">
+                        <h3 className="text-lg font-semibold mb-4">
+                          Saved Templates
+                        </h3>
+                        {savedTemplates.length === 0 ? (
+                          <p className="text-sm text-gray-500">
+                            No saved templates yet
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {savedTemplates.map((template) => (
+                              <div
+                                key={template.id}
+                                className="p-3 bg-gray-50 rounded border"
+                              >
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <span className="font-medium text-sm block">
+                                      {template.name}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {templates.find(
+                                        (t) => t.id === template.templateType
+                                      )?.name || template.templateType}
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => deleteTemplate(template.id)}
+                                    className="text-red-600 text-xs hover:text-red-800"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => loadTemplate(template.id)}
+                                    className="flex-1 px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+                                  >
+                                    Load to Editor
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      viewInvoiceTemplate(template.id)
+                                    }
+                                    className="flex-1 px-3 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+                                  >
+                                    View Invoice
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Editor */}
+                  <div className={user ? "lg:col-span-2" : "lg:col-span-3"}>
+                    {renderTemplate()}
+                  </div>
+
+                  {/* Template Selection */}
+                  <div className="lg:col-span-1 print:hidden">
+                    <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-8">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Template Style
+                      </h3>
+                      <div className="space-y-3">
+                        {templates.map((template) => (
+                          <button
+                            key={template.id}
+                            onClick={() => setSelectedTemplate(template.id)}
+                            className={`w-full p-4 rounded-lg border-2 text-left ${
+                              selectedTemplate === template.id
+                                ? "border-blue-600 bg-blue-50"
+                                : "border-gray-200 hover:border-gray-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-2xl">{template.icon}</span>
+                              <div className="flex-1">
+                                <div className="font-semibold">
+                                  {template.name}
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  {template.description}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-sm font-bold text-green-600">
+                              ${template.price}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="mt-6">
+                        <h3 className="text-lg font-semibold mb-4">Branding</h3>
+                        <label className="block text-sm font-medium mb-2">
+                          Logo
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="w-full px-3 py-2 border rounded-lg mb-4 text-sm"
+                        />
+
+                        <label className="block text-sm font-medium mb-2">
+                          Primary Color
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="color"
+                            value={branding.primaryColor}
+                            onChange={(e) =>
+                              setBranding({
+                                ...branding,
+                                primaryColor: e.target.value,
+                              })
+                            }
+                            className="w-16 h-10 border rounded cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={branding.primaryColor}
+                            onChange={(e) =>
+                              setBranding({
+                                ...branding,
+                                primaryColor: e.target.value,
+                              })
+                            }
+                            className="flex-1 px-3 py-2 border rounded-lg"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        ReactDOM.createRoot(document.getElementById("root")).render(
+          <InvoiceTemplateManager />
+        );
+        function openTemplateInInvoiceManager(templateId) {
+          window.location.href = `invoices.html?template=${templateId}`;
+        }
+      </script>
+      <script>
+        // After user purchases or clicks on a template they own
+        function viewTemplateInInvoiceManager(templateId) {
+          // Redirect to invoice manager with template parameter
+          window.location.href = `invoices.html?template=${templateId}`;
+        }
+
+        // Example: Add this to your template card click handler
+        document.querySelectorAll(".template-card").forEach((card) => {
+          card.addEventListener("click", function () {
+            const templateId = this.dataset.templateId;
+            const isPurchased = this.dataset.purchased === "true";
+
+            if (isPurchased) {
+              viewTemplateInInvoiceManager(templateId);
+            } else {
+              // Show purchase modal
+              showPurchaseModal(templateId);
+            }
+          });
+        });
+      </script>
+    </div>
+  </body>
+</html>

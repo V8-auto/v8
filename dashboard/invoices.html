@@ -817,6 +817,9 @@
         <a href="/dashboard/payments.html">
           <span class="ico">💳</span><span>Payments</span>
         </a>
+         <a href="/dashboard/templates.html"
+            ><span class="ico">💳</span><span>Templates</span></a
+          >
         <a href="#"> <span class="ico">📊</span><span>Reports</span> </a>
       </nav>
 
@@ -847,7 +850,7 @@
     <div class="main-content">
        
       
-       <div class="invoices-section">
+       <div class="invoices-section bg-gray-300">
         <div class="header">
           <div>
             <h1>Invoices</h1>
@@ -1768,8 +1771,7 @@
           .join("");
       }
       document.addEventListener("DOMContentLoaded", () => {
-        // Wait for auth to complete before loading
-        // displayInvoicesTable will be called in onAuthStateChanged
+      
       });
 
       // Security - Disable right-click and dev tools
