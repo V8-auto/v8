@@ -318,6 +318,10 @@
         margin-top: 16px;
       }
     </style>
+    <script>
+
+    </script>
+    
   </head>
   <body>
     <div class="main-container">
@@ -394,8 +398,12 @@
         </div>
       </aside>
       <div id="root"></div>
-
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</script>
       <script type="text/babel">
+        
         const { useState, useEffect } = React;
 
         // ============================================
@@ -418,8 +426,41 @@
 
         const auth = firebase.auth();
         const db = firebase.firestore();
+window.db = db;
+    window.auth = auth;
+    async function getTemplateById(templateId) {
+  try {
+    const user = window.auth.currentUser;
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
 
+    const docSnapshot = await window.db
+      .collection('users')
+      .doc(user.uid)
+      .collection('invoiceTemplates')
+      .doc(templateId)
+      .get();
+
+    if (!docSnapshot.exists) {
+      throw new Error("Template not found");
+    }
+
+    const data = docSnapshot.data();
+    return {
+      id: docSnapshot.id,
+      ...data,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+      purchaseDate: data.purchaseDate?.toDate() || new Date(),
+    };
+  } catch (error) {
+    console.error("Error fetching template:", error);
+    throw error;
+  }
+}
         const InvoiceTemplateManager = () => {
+          
           const [activeTab, setActiveTab] = useState("editor");
           const [selectedTemplate, setSelectedTemplate] = useState("null");
           const [selectedInvoiceTemplate, setSelectedInvoiceTemplate] =
@@ -483,6 +524,107 @@
             { id: "totals", name: "Totals", visible: true },
             { id: "notes", name: "Notes", visible: true },
           ]);
+          const templateService = {
+        async saveTemplate(userId, templateData) {
+          try {
+            const templateRef = doc(
+              collection(db, "users", userId, "invoiceTemplates")
+            );
+
+            const template = {
+              ...templateData,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            };
+
+            await setDoc(templateRef, template);
+            return { success: true, id: templateRef.id };
+          } catch (error) {
+            console.error("Error saving template:", error);
+            return { success: false, error: error.message };
+          }
+        },
+
+        async updateTemplate(userId, templateId, templateData) {
+          try {
+            const templateRef = doc(
+              db,
+              "users",
+              userId,
+              "invoiceTemplates",
+              templateId
+            );
+            await updateDoc(templateRef, {
+              ...templateData,
+              updatedAt: serverTimestamp(),
+            });
+            return { success: true };
+          } catch (error) {
+            console.error("Error updating template:", error);
+            return { success: false, error: error.message };
+          }
+        },
+
+        async getTemplate(userId, templateId) {
+          try {
+            const templateRef = doc(
+              db,
+              "users",
+              userId,
+              "invoiceTemplates",
+              templateId
+            );
+            const templateSnap = await getDoc(templateRef);
+
+            if (templateSnap.exists()) {
+              return {
+                success: true,
+                data: { id: templateSnap.id, ...templateSnap.data() },
+              };
+            } else {
+              return { success: false, error: "Template not found" };
+            }
+          } catch (error) {
+            console.error("Error getting template:", error);
+            return { success: false, error: error.message };
+          }
+        },
+
+        async getUserTemplates(userId) {
+          try {
+            const templatesRef = collection(
+              db,
+              "users",
+              userId,
+              "invoiceTemplates"
+            );
+            const querySnapshot = await getDocs(templatesRef);
+
+            const templates = [];
+            querySnapshot.forEach((doc) => {
+              templates.push({ id: doc.id, ...doc.data() });
+            });
+
+            return { success: true, data: templates };
+          } catch (error) {
+            console.error("Error getting user templates:", error);
+            return { success: false, error: error.message };
+          }
+        },
+
+        async deleteTemplate(userId, templateId) {
+          try {
+            await deleteDoc(
+              doc(db, "users", userId, "invoiceTemplates", templateId)
+            );
+            return { success: true };
+          } catch (error) {
+            console.error("Error deleting template:", error);
+            return { success: false, error: error.message };
+          }
+        },
+      };
+
           const loadSavedTemplatesList = async (userId) => {
             try {
               const templatesSnapshot = await db
@@ -547,6 +689,7 @@
               price: 14.99,
             },
           ];
+          
           const industryTemplates = [
             {
               id: "contractors",
@@ -746,6 +889,25 @@
             }
           };
 
+ async function loadTemplates() {
+        if (!currentUser) {
+          showMessage("Please wait for authentication...", "info");
+          return;
+        }
+
+        showLoading(true);
+        const result = await templateService.getUserTemplates(currentUser.uid);
+
+        if (result.success) {
+          templates = result.data;
+          renderTemplatesList();
+          showMessage(`Loaded ${templates.length} template(s)`, "success");
+        } else {
+          showMessage("Failed to load templates: " + result.error, "error");
+        }
+        showLoading(false);
+      }
+
           // ALTERNATIVE VERSION - If you want to save current invoice styling
           const saveCurrentInvoiceAsTemplate = async (templateName) => {
             if (!user) {
@@ -842,93 +1004,150 @@
               {loading ? "Saving..." : "💾 Save as Template"}
             </button>
           </div>;
+          async function loadTemplateIntoEditor(templateId) {
+  try {
+    const template = await getTemplateById(templateId);
 
-          const loadTemplate = async (templateId) => {
-            try {
-              const doc = await db
-                .collection("users")
-                .doc(user.uid)
-                .collection("invoiceTemplates")
-                .doc(templateId)
-                .get();
+    // Apply branding with null checks
+    if (template.branding) {
+      const primaryColorInput = document.getElementById("primaryColor");
+      const fontInput = document.getElementById("font");
+      const businessNameInput = document.getElementById("businessName");
 
-              if (doc.exists) {
-                const templateData = doc.data();
+      if (primaryColorInput) {
+        primaryColorInput.value = template.branding.primaryColor || "#ff9d00";
+        root.style.setProperty("--primary", template.branding.primaryColor);
+      }
+      
+      if (fontInput) {
+        fontInput.value = template.branding.font || "Inter, Arial, sans-serif";
+        root.style.setProperty("--font", template.branding.font);
+      }
+      
+      if (businessNameInput) {
+        businessNameInput.value = template.branding.companyName || "Your Business Ltd";
+      }
+    }
 
-                // Set the template styles and branding
-                setSelectedTemplate(templateData);
+    // Load sections if they exist
+    if (template.config && template.config.sections) {
+      // Clear existing sections
+      const mainZone = document.getElementById("mainDropZone");
+      const footerZone = document.getElementById("footerDropZone");
+      
+      if (mainZone) mainZone.innerHTML = "";
+      if (footerZone) footerZone.innerHTML = "";
 
-                // Update branding if it exists in template
-                if (templateData.branding) {
-                  setBranding(templateData.branding);
-                }
+      // Rebuild sections
+      template.config.sections.forEach((section) => {
+        const targetZone = section.zone === "footerDropZone" ? footerZone : mainZone;
+        
+        if (!targetZone) {
+          console.warn(`Zone ${section.zone} not found`);
+          return;
+        }
 
-                // If template has default invoice data, you can optionally load it
-                if (templateData.invoiceData) {
-                  setInvoiceData(templateData.invoiceData);
-                }
-
-                alert("Template loaded successfully!");
-              } else {
-                alert("Template not found");
-              }
-            } catch (error) {
-              alert("Error loading template: " + error.message);
+        // Add the component
+        addComponent(section.type, targetZone);
+        
+        // Get the last added section
+        const lastSection = targetZone.lastElementChild;
+        
+        if (lastSection && section.data) {
+          // Restore input values
+          Object.entries(section.data).forEach(([placeholder, value]) => {
+            // Try multiple selectors to find the input
+            let input = lastSection.querySelector(`input[placeholder="${placeholder}"]`);
+            if (!input) {
+              input = lastSection.querySelector(`textarea[placeholder="${placeholder}"]`);
             }
-          };
+            if (!input) {
+              input = lastSection.querySelector(`select[placeholder="${placeholder}"]`);
+            }
+            
+            if (input && value !== undefined && value !== null) {
+              input.value = value;
+            }
+          });
+          
+          // Restore alignment if it exists
+          if (section.alignment) {
+            lastSection.style.textAlign = section.alignment;
+            
+            // Update alignment buttons if they exist
+            const alignButtons = lastSection.querySelectorAll('.align-btn');
+            alignButtons.forEach(btn => {
+              btn.classList.remove('active');
+              if (btn.textContent.toLowerCase().includes(section.alignment)) {
+                btn.classList.add('active');
+              }
+            });
+          }
+        }
+      });
+    }
 
+    alert("Template loaded successfully!");
+    console.log("Loaded template:", template);
+    return template;
+  } catch (error) {
+    console.error("Error loading template:", error);
+    alert("Failed to load template: " + error.message);
+    throw error;
+  }
+}
           const loadAndViewTemplate = async (templateId) => {
             try {
-              const doc = await db
-                .collection("users")
-                .doc(user.uid)
-                .collection("invoiceTemplates")
-                .doc(templateId)
-                .get();
+             const docRef = await db
+  .collection('users')
+  .doc(user.uid)
+  .collection('invoiceTemplates')
+  .doc(templateId)
+  .get();
 
-              if (doc.exists) {
-                const data = doc.data();
+if (!docRef.exists) throw new Error("Template not found");
 
-                // Prepare the complete invoice payload
-                const invoicePayload = {
-                  selectedTemplate: data.templateType,
-                  branding: data.branding,
-                  invoiceData: data.invoiceData,
-                  sections: data.sections,
-                };
-
-                // Save to sessionStorage
-                sessionStorage.setItem(
-                  "invoiceData",
-                  JSON.stringify(invoicePayload)
-                );
-
-                // Navigate to invoice.html
-                window.location.href = "invoice.html";
-              }
+const data = docRef.data();
+return {
+  id: docRef.id,
+  ...data,
+  createdAt: data.createdAt?.toDate(),
+  updatedAt: data.updatedAt?.toDate(),
+  purchaseDate: data.purchaseDate?.toDate()
+};
             } catch (error) {
               alert("Error loading template: " + error.message);
             }
           };
 
-          const deleteTemplate = async (templateId) => {
-            if (!confirm("Are you sure you want to delete this template?"))
-              return;
+         async function deleteTemplate(templateId) {
+  if (!confirm("Are you sure you want to delete this template?")) {
+    return;
+  }
 
-            try {
-              await db
-                .collection("users")
-                .doc(user.uid)
-                .collection("invoiceTemplates")
-                .doc(templateId)
-                .delete();
+  try {
+    const user = window.auth.currentUser;
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
 
-              loadSavedTemplates(user.uid);
-              alert("Template deleted successfully!");
-            } catch (error) {
-              alert("Error deleting template: " + error.message);
-            }
-          };
+    await window.db
+      .collection('users')
+      .doc(user.uid)
+      .collection('invoiceTemplates')
+      .doc(templateId)
+      .delete();
+
+    alert("Template deleted successfully!");
+    // Refresh the list if you have one
+    if (typeof displayTemplatesList === 'function') {
+      displayTemplatesList();
+    }
+  } catch (error) {
+    console.error("Error deleting template:", error);
+    alert("Failed to delete template: " + error.message);
+  }
+}
 
           // ============================================
           // PAYMENT SIMULATION
@@ -987,7 +1206,76 @@
           const designInvoice = () => {
             window.location.href = "design.html";
           };
+ async function saveCurrentAsTemplate() {
+        if (!currentUser) {
+          showMessage("Please wait for authentication...", "error");
+          return;
+        }
 
+        const templateName = prompt("Enter a name for this template:");
+        if (!templateName) return;
+
+        const templateDescription = prompt("Enter a description (optional):");
+
+        showLoading(true);
+        const templateData = {
+          name: templateName,
+          description: templateDescription || "",
+          type: "mechanics",
+          invoiceData,
+          branding,
+        };
+
+        const result = await templateService.saveTemplate(
+          currentUser.uid,
+          templateData
+        );
+
+        if (result.success) {
+          showMessage("Template saved successfully!", "success");
+          await loadTemplates();
+        } else {
+          showMessage("Failed to save template: " + result.error, "error");
+        }
+        showLoading(false);
+      }
+
+      async function loadTemplate(templateId) {
+        if (!currentUser) {
+          showMessage("Please authenticate first", "error");
+          return;
+        }
+
+        showLoading(true);
+        const result = await templateService.getTemplate(
+          currentUser.uid,
+          templateId
+        );
+
+        if (result.success) {
+          const template = result.data;
+
+          // Load invoice data from template
+          if (template.invoiceData) {
+            invoiceData = template.invoiceData;
+          }
+
+          // Load branding from template
+          if (template.branding) {
+            branding = template.branding;
+          }
+
+          selectedTemplate = template;
+          showMessage(
+            `Template "${template.name}" loaded successfully!`,
+            "success"
+          );
+          renderInvoicePreview();
+        } else {
+          showMessage("Failed to load template: " + result.error, "error");
+        }
+        showLoading(false);
+      }
           // ============================================
           // INVOICE FUNCTIONS
           // ============================================
@@ -1696,7 +1984,190 @@
               </div>
             );
           };
+         const renderInvoicePreview = () => {
+  const subtotal = invoiceData.items.reduce(
+    (sum, item) => sum + item.amount,
+    0
+  );
+  const tax = subtotal * 0.15; // 15% VAT
+  const total = subtotal + tax;
 
+  return (
+    <div className="bg-white p-8 rounded-lg shadow-lg border-2 border-gray-200">
+      <div
+        className="flex justify-between items-start mb-8 pb-6 border-b-2"
+        style={{ borderColor: branding.primaryColor }}
+      >
+        <div className="flex items-center gap-4">
+          {branding.logo && (
+            <img
+              src={branding.logo}
+              alt="Logo"
+              className="h-16 w-16 object-contain"
+            />
+          )}
+          <div>
+            <h1
+              className="text-4xl font-bold mb-1"
+              style={{ color: branding.primaryColor }}
+            >
+              INVOICE
+            </h1>
+            <p className="text-gray-600 text-sm">{branding.tagline}</p>
+          </div>
+        </div>
+        <div className="text-right text-sm">
+          <p className="font-semibold">#{invoiceData.number}</p>
+          <p className="text-gray-600">Date: {invoiceData.date}</p>
+          <p className="text-gray-600">Due: {invoiceData.dueDate}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
+        <div>
+          <h3
+            className="font-semibold mb-2"
+            style={{ color: branding.primaryColor }}
+          >
+            FROM
+          </h3>
+          <p className="font-semibold">{invoiceData.from.name}</p>
+          <p className="text-gray-600">{invoiceData.from.address}</p>
+          <p className="text-gray-600">{invoiceData.from.city}</p>
+          <p className="text-gray-600">{invoiceData.from.email}</p>
+          <p className="text-gray-600">{invoiceData.from.phone}</p>
+        </div>
+        <div>
+          <h3
+            className="font-semibold mb-2"
+            style={{ color: branding.primaryColor }}
+          >
+            TO
+          </h3>
+          <p className="font-semibold">{invoiceData.to.name}</p>
+          <p className="text-gray-600">{invoiceData.to.address}</p>
+          <p className="text-gray-600">{invoiceData.to.city}</p>
+          <p className="text-gray-600">{invoiceData.to.email || ""}</p>
+          <p className="text-gray-600">{invoiceData.to.phone || ""}</p>
+        </div>
+      </div>
+
+      {invoiceData.vehicle && (
+        <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+          <h3
+            className="font-semibold mb-3"
+            style={{ color: branding.primaryColor }}
+          >
+            VEHICLE DETAILS
+          </h3>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Registration:</span>
+              <span className="ml-2 font-medium">
+                {invoiceData.vehicle.registration}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">Make:</span>
+              <span className="ml-2 font-medium">
+                {invoiceData.vehicle.make}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">Model:</span>
+              <span className="ml-2 font-medium">
+                {invoiceData.vehicle.model}
+              </span>
+            </div>
+            {invoiceData.vehicle.year && (
+              <div>
+                <span className="text-gray-600">Year:</span>
+                <span className="ml-2 font-medium">
+                  {invoiceData.vehicle.year}
+                </span>
+              </div>
+            )}
+            {invoiceData.vehicle.vin && (
+              <div>
+                <span className="text-gray-600">VIN:</span>
+                <span className="ml-2 font-medium">
+                  {invoiceData.vehicle.vin}
+                </span>
+              </div>
+            )}
+            {invoiceData.vehicle.odometer && (
+              <div>
+                <span className="text-gray-600">Odometer:</span>
+                <span className="ml-2 font-medium">
+                  {invoiceData.vehicle.odometer}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <table className="w-full mb-8">
+        <thead>
+          <tr
+            className="border-b-2"
+            style={{ borderColor: branding.primaryColor }}
+          >
+            <th className="text-left py-3 text-sm font-semibold">
+              Description
+            </th>
+            <th className="text-right py-3 text-sm font-semibold">Qty</th>
+            <th className="text-right py-3 text-sm font-semibold">Rate</th>
+            <th className="text-right py-3 text-sm font-semibold">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoiceData.items.map((item, i) => (
+            <tr key={i} className="border-b border-gray-200">
+              <td className="py-3 text-sm">{item.description}</td>
+              <td className="text-right py-3 text-sm">{item.quantity}</td>
+              <td className="text-right py-3 text-sm">
+                R {item.rate.toFixed(2)}
+              </td>
+              <td className="text-right py-3 text-sm font-semibold">
+                R {item.amount.toFixed(2)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="flex justify-end mb-8">
+        <div className="w-72">
+          <div className="flex justify-between py-2 text-sm">
+            <span className="text-gray-600">Subtotal:</span>
+            <span className="font-medium">R {subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between py-2 text-sm">
+            <span className="text-gray-600">Tax (15%):</span>
+            <span className="font-medium">R {tax.toFixed(2)}</span>
+          </div>
+          <div
+            className="flex justify-between py-3 border-t-2 mt-2 font-bold text-xl"
+            style={{
+              borderColor: branding.primaryColor,
+              color: branding.primaryColor,
+            }}
+          >
+            <span>Total:</span>
+            <span>R {total.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
+      {invoiceData.notes && (
+        <div className="mt-6 p-4 bg-gray-50 rounded">
+          <p className="text-sm text-gray-600">{invoiceData.notes}</p>
+        </div>
+      )}
+    </div>
+  );
+};
           const renderCorporateTemplate = () => {
             // Corporate template configuration
             const corporateTemplate = {
@@ -1843,24 +2314,14 @@
                 return renderCreativeTemplate();
               case "corporate":
                 return renderCorporateTemplate();
+              case "load":
+                return renderInvoicePreview()
               case "modern":
               default:
                 return renderModernTemplate();
             }
           };
-          const renderInvoiceTemplate = () => {
-            switch (selectedInvoiceTemplate) {
-              case "classic":
-                return renderInvoiceClassicTemplate();
-              case "creative":
-                return renderInvoiceCreativeTemplate();
-              case "corporate":
-                return renderInvoiceCorporateTemplate();
-              case "modern":
-              default:
-                return renderInvoiceModernTemplate();
-            }
-          };
+         
           // ============================================
           // MAIN RENDER
           // ============================================
@@ -1964,12 +2425,12 @@
                                   </button>
                                 </div>
                                 <div className="flex gap-2">
-                                  <button
-                                    onClick={() => loadTemplate(template.id)}
-                                    className="flex-1 px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
-                                  >
-                                    Load to Editor
-                                  </button>
+                             <button
+    onClick={() => window.loadTemplate(template.id)}
+    className="flex-1 px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+  >
+    Load to Editor
+  </button>
                                   <button
                                     onClick={() =>
                                       viewInvoiceTemplate(template.id)
@@ -2103,6 +2564,428 @@
             }
           });
         });
+      </script>
+      <script>
+        import React, { useState, useEffect } from 'react';
+
+const FirebaseTemplateDisplay = () => {
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Sample invoice data for preview
+  const [invoiceData] = useState({
+    number: "INV-2025-001",
+    date: "2025-12-20",
+    dueDate: "2026-01-19",
+    from: {
+      name: "Your Business Ltd",
+      address: "123 Business Street",
+      city: "Pretoria, Gauteng, 0001",
+      email: "hello@yourbusiness.com",
+      phone: "+27 (012) 987-6543"
+    },
+    to: {
+      name: "Client Company",
+      address: "456 Client Avenue",
+      city: "Johannesburg, Gauteng, 2000",
+      email: "client@email.com",
+      phone: "+27 (011) 123-4567"
+    },
+    vehicle: {
+      registration: "ABC 123 GP",
+      make: "Toyota",
+      model: "Hilux 2.8 GD-6",
+      engine: "H78627282",
+      vin: "AHTFS26L5G0000000",
+      odometer: "45,230 km"
+    },
+    items: [
+      { description: "Oil Change Service", quantity: 1, rate: 850, amount: 850 },
+      { description: "Brake Pad Replacement", quantity: 4, rate: 450, amount: 1800 },
+      { description: "Wheel Alignment", quantity: 1, rate: 600, amount: 600 }
+    ],
+    notes: "Thank you for your business. Payment is due within 30 days."
+  });
+
+  const subtotal = invoiceData.items.reduce((sum, item) => sum + item.amount, 0);
+  const tax = subtotal * 0.15;
+  const total = subtotal + tax;
+
+  // Fetch templates from Firebase
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const fetchTemplates = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Check if Firebase is available
+      if (!window.db || !window.auth) {
+        throw new Error("Firebase not initialized");
+      }
+
+      const user = window.auth.currentUser;
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      const querySnapshot = await window.db
+        .collection('users')
+        .doc(user.uid)
+        .collection('invoiceTemplates')
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      const fetchedTemplates = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedTemplates.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          purchaseDate: data.purchaseDate?.toDate() || new Date(),
+        });
+      });
+
+      setTemplates(fetchedTemplates);
+      
+      // Auto-select first template if available
+      if (fetchedTemplates.length > 0) {
+        setSelectedTemplate(fetchedTemplates[0]);
+      }
+    } catch (err) {
+      console.error("Error fetching templates:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderTemplatePreview = (template) => {
+    if (!template) {
+      return (
+        <div className="flex items-center justify-center h-full text-gray-400">
+          <p>Select a template to preview</p>
+        </div>
+      );
+    }
+
+    const branding = template.branding || {};
+    const styles = template.styles || {};
+    const primaryColor = branding.primaryColor || "#2563eb";
+
+    return (
+      <div className="bg-white p-8 rounded-lg shadow-lg">
+        {/* Header */}
+        <div
+          className={`flex justify-between items-start mb-8 pb-6 ${styles.headerBorder || 'border-b-2'}`}
+          style={{ borderColor: primaryColor }}
+        >
+          <div className="flex items-center gap-4">
+            {branding.logo && (
+              <img
+                src={branding.logo}
+                alt="Logo"
+                className="h-16 w-16 object-contain"
+              />
+            )}
+            <div>
+              <h1
+                className={`${styles.titleSize || 'text-4xl'} font-bold mb-1`}
+                style={{ color: primaryColor }}
+              >
+                INVOICE
+              </h1>
+              <p className="text-gray-600 text-sm">
+                {branding.tagline || branding.companyName || "Professional Services"}
+              </p>
+            </div>
+          </div>
+          <div className="text-right text-sm">
+            <p className="font-semibold">#{invoiceData.number}</p>
+            <p className="text-gray-600">Date: {invoiceData.date}</p>
+            <p className="text-gray-600">Due: {invoiceData.dueDate}</p>
+          </div>
+        </div>
+
+        {/* From/To Section */}
+        <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
+          <div>
+            <h3
+              className={`${styles.sectionTitle || 'font-semibold'} mb-2`}
+              style={{ color: primaryColor }}
+            >
+              FROM
+            </h3>
+            <p className="font-semibold">{branding.companyName || invoiceData.from.name}</p>
+            <p className="text-gray-600">{invoiceData.from.address}</p>
+            <p className="text-gray-600">{invoiceData.from.city}</p>
+            <p className="text-gray-600">{invoiceData.from.email}</p>
+            <p className="text-gray-600">{invoiceData.from.phone}</p>
+          </div>
+          <div>
+            <h3
+              className={`${styles.sectionTitle || 'font-semibold'} mb-2`}
+              style={{ color: primaryColor }}
+            >
+              TO
+            </h3>
+            <p className="font-semibold">{invoiceData.to.name}</p>
+            <p className="text-gray-600">{invoiceData.to.address}</p>
+            <p className="text-gray-600">{invoiceData.to.city}</p>
+            <p className="text-gray-600">{invoiceData.to.email}</p>
+            <p className="text-gray-600">{invoiceData.to.phone}</p>
+          </div>
+        </div>
+
+        {/* Vehicle Details */}
+        {invoiceData.vehicle && (
+          <div className={`mb-8 p-4 ${styles.cardBg || 'bg-gray-50'} rounded-lg`}>
+            <h3
+              className={`${styles.sectionTitle || 'font-semibold'} mb-3`}
+              style={{ color: primaryColor }}
+            >
+              VEHICLE DETAILS
+            </h3>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Registration:</span>
+                <span className="ml-2 font-medium">{invoiceData.vehicle.registration}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Make:</span>
+                <span className="ml-2 font-medium">{invoiceData.vehicle.make}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Model:</span>
+                <span className="ml-2 font-medium">{invoiceData.vehicle.model}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Engine:</span>
+                <span className="ml-2 font-medium">{invoiceData.vehicle.engine}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">VIN:</span>
+                <span className="ml-2 font-medium">{invoiceData.vehicle.vin}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Odometer:</span>
+                <span className="ml-2 font-medium">{invoiceData.vehicle.odometer}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Items Table */}
+        <table className="w-full mb-8">
+          <thead>
+            <tr
+              className={styles.tableBorder || 'border-b-2'}
+              style={{ borderColor: primaryColor }}
+            >
+              <th className="text-left py-3 text-sm font-semibold">Description</th>
+              <th className="text-right py-3 text-sm font-semibold">Qty</th>
+              <th className="text-right py-3 text-sm font-semibold">Rate</th>
+              <th className="text-right py-3 text-sm font-semibold">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoiceData.items.map((item, i) => (
+              <tr key={i} className="border-b border-gray-200">
+                <td className="py-3 text-sm">{item.description}</td>
+                <td className="text-right py-3 text-sm">{item.quantity}</td>
+                <td className="text-right py-3 text-sm">R {item.rate.toFixed(2)}</td>
+                <td className="text-right py-3 text-sm font-semibold">
+                  R {item.amount.toFixed(2)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Totals */}
+        <div className="flex justify-end mb-8">
+          <div className="w-72">
+            <div className="flex justify-between py-2 text-sm">
+              <span className="text-gray-600">Subtotal:</span>
+              <span className="font-medium">R {subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between py-2 text-sm">
+              <span className="text-gray-600">Tax (15%):</span>
+              <span className="font-medium">R {tax.toFixed(2)}</span>
+            </div>
+            <div
+              className="flex justify-between py-3 border-t-2 mt-2 font-bold text-xl"
+              style={{ borderColor: primaryColor, color: primaryColor }}
+            >
+              <span>Total:</span>
+              <span>R {total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Notes */}
+        {invoiceData.notes && (
+          <div className={`mt-6 p-4 ${styles.cardBg || 'bg-gray-50'} rounded`}>
+            <p className="text-sm text-gray-600">{invoiceData.notes}</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading templates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+          <h3 className="text-red-800 font-semibold mb-2">Error Loading Templates</h3>
+          <p className="text-red-600 text-sm mb-4">{error}</p>
+          <button
+            onClick={fetchTemplates}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar - Template List */}
+      <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-xl font-bold text-gray-800">My Templates</h2>
+          <p className="text-sm text-gray-600 mt-1">{templates.length} templates</p>
+        </div>
+
+        {templates.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className="text-gray-500 mb-4">No templates found</p>
+            <button
+              onClick={fetchTemplates}
+              className="text-blue-600 text-sm hover:underline"
+            >
+              Refresh
+            </button>
+          </div>
+        ) : (
+          <div className="p-4 space-y-3">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                onClick={() => setSelectedTemplate(template)}
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  selectedTemplate?.id === template.id
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-gray-800 truncate">
+                    {template.name || "Untitled Template"}
+                  </h3>
+                  {template.isFree && (
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                      Free
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                  {template.description || "No description"}
+                </p>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>
+                    {template.createdAt?.toLocaleDateString() || "N/A"}
+                  </span>
+                  {template.price > 0 && (
+                    <span className="font-semibold">R {template.price}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Preview Area */}
+      <div className="flex-1 overflow-auto p-8">
+        {selectedTemplate && (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {selectedTemplate.name || "Untitled Template"}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {selectedTemplate.description || "No description"}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (window.loadTemplateIntoEditor) {
+                    window.loadTemplateIntoEditor(selectedTemplate.id);
+                  } else {
+                    alert("Load function not available");
+                  }
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+              >
+                Load Template
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirm("Delete this template?")) {
+                    try {
+                      await window.db
+                        .collection('users')
+                        .doc(window.auth.currentUser.uid)
+                        .collection('invoiceTemplates')
+                        .doc(selectedTemplate.id)
+                        .delete();
+                      
+                      setTemplates(templates.filter(t => t.id !== selectedTemplate.id));
+                      setSelectedTemplate(null);
+                      alert("Template deleted successfully");
+                    } catch (err) {
+                      alert("Failed to delete: " + err.message);
+                    }
+                  }
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="max-w-4xl mx-auto">
+          {renderTemplatePreview(selectedTemplate)}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FirebaseTemplateDisplay;
       </script>
     </div>
   </body>

@@ -20,8 +20,8 @@
       body {
         margin: 0;
         background: #e5e7eb;
-        display: grid;
-        grid-template-columns: 320px 1fr;
+        display: flex;
+
         height: 100vh;
         font-family: Inter, Arial, sans-serif;
         overflow: hidden;
@@ -35,6 +35,7 @@
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        width: 50%;
       }
 
       .editor h2 {
@@ -74,8 +75,8 @@
       }
 
       .available-sections {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 4 columns */
         gap: 0.5rem;
       }
 
@@ -133,19 +134,24 @@
         overflow: auto;
         background: #f3f4f6;
       }
-
-      .page {
-        width: var(--page-width);
-        min-height: var(--page-height);
-        margin: auto;
-        background: #fff;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        padding: var(--margin);
-        font-family: var(--font);
-        color: #111827;
-        position: relative;
+      @page {
+        size: A4 portrait;
+        margin: 20mm;
       }
 
+      .page {
+        width: 210mm;
+        min-height: 297mm;
+        background: white;
+        margin: 0 auto;
+        padding: 20mm;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
       .drop-zone {
         min-height: 60px;
         border: 2px dashed transparent;
@@ -181,7 +187,7 @@
 
       .invoice-section:hover {
         border-color: #d1d5db;
-        background: #f9fafb;
+        background: #000000;
       }
 
       .invoice-section.selected {
@@ -430,6 +436,99 @@
           <div
             class="draggable-component"
             draggable="true"
+            data-type="header-logo"
+          >
+            📋 Header Logo
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="invoice-header"
+          >
+            📋 Invoice Header
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="line-items"
+          >
+            📋 Line Items
+          </div>
+          <div class="draggable-component" draggable="true" data-type="totals">
+            📋 Totals
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="payment-info"
+          >
+            💰 Payment Info
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="contact-info"
+          >
+            📇 Contact Info
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="shipping-details"
+          >
+            🚚 Shipping Details
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="project-details"
+          >
+            📁 Project Details
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="signature"
+          >
+            ✍️ Signature
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="additional-notes"
+          >
+            📝qr-code
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="social-media"
+          >
+            📝 Social Media
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="late-fee"
+          >
+            📝 Late Fee
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
+            data-type="custom-field"
+          >
+            📝 Custom Field
+          </div>
+          <div class="draggable-component" draggable="true" data-type="divider">
+            📝 Divider
+          </div>
+          <div class="draggable-component" draggable="true" data-type="spacer">
+            📝 Spacer
+          </div>
+          <div
+            class="draggable-component"
+            draggable="true"
             data-type="billed-to"
           >
             💰 Billed To
@@ -455,20 +554,10 @@
             📄 Terms & Conditions
           </div>
         </div>
-        <script>
-          const [sections, setSections] = useState([
-          { id: "header", name: "Header", visible: true },
-          { id: "client", name: "Client Info", visible: true },
-          { id: "vehicle", name: "Vehicle Details", visible: true },
-          { id: "items", name: "Line Items", visible: true },
-          { id: "totals", name: "Totals", visible: true },
-          { id: "notes", name: "Notes", visible: true },
-        ]);
-        </script>
       </div>
 
       <!-- Actions -->
-      <div style="display: flex; flex-direction: column; gap: 0.5rem">
+      <div style="display: block; flex-direction: column; gap: 0.5rem">
         <button class="btn btn-primary" onclick="saveTemplate()">
           💾 Save Template
         </button>
@@ -484,130 +573,19 @@
     <!-- Preview Area -->
     <div class="preview">
       <div class="page" id="invoicePage">
-        <!-- Header (Fixed) -->
-        <div class="header-section">
-          <div class="logo" id="logoText">Your Business Ltd</div>
-          <div style="text-align: right">
-            <strong style="font-size: 1.2rem">INVOICE</strong><br />
-            <div style="margin-top: 0.5rem; font-size: 0.85rem">
-              <div style="margin: 0.3rem 0">
-                <strong>Invoice #:</strong>
-                <input
-                  type="text"
-                  value="INV-2025-001"
-                  style="
-                    width: 120px;
-                    border: none;
-                    border-bottom: 1px solid #e5e7eb;
-                    padding: 0.2rem;
-                    font-size: 0.85rem;
-                  "
-                />
-              </div>
-              <div style="margin: 0.3rem 0">
-                <strong>Date:</strong>
-                <input
-                  type="date"
-                  value="2025-12-18"
-                  style="
-                    width: 130px;
-                    border: none;
-                    border-bottom: 1px solid #e5e7eb;
-                    padding: 0.2rem;
-                    font-size: 0.85rem;
-                  "
-                />
-              </div>
-            </div>
-          </div>
+        <!-- HEADER DROP ZONE -->
+        <div class="drop-zone" id="headerDropZone">
+          <p class="drop-zone-placeholder">Drag header components here</p>
         </div>
 
-        <!-- Drop Zone for Components -->
+        <!-- MAIN DROP ZONE -->
         <div class="drop-zone" id="mainDropZone">
-          <p class="drop-zone-placeholder">
-            Drag components here (2 columns max)
-          </p>
+          <p class="drop-zone-placeholder">Drag invoice components here</p>
         </div>
 
-        <!-- Line Items (Fixed) -->
-        <div style="margin: 2rem 0">
-          <table>
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th style="width: 80px">Qty</th>
-                <th style="width: 100px">Price</th>
-                <th style="width: 100px">Total</th>
-              </tr>
-            </thead>
-            <tbody id="itemsTable">
-              <tr>
-                <td>
-                  <input
-                    type="text"
-                    value="Service Item 1"
-                    style="width: 100%; border: none; background: transparent"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value="1"
-                    style="width: 60px; border: none; background: transparent"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value="$250.00"
-                    style="width: 80px; border: none; background: transparent"
-                  />
-                </td>
-                <td>$250.00</td>
-              </tr>
-              <tr>
-                <td>
-                  <input
-                    type="text"
-                    value="Service Item 2"
-                    style="width: 100%; border: none; background: transparent"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value="2"
-                    style="border: none; background: transparent; width: 60px"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value="$150.00"
-                    style="width: 80px; border: none; background: transparent"
-                  />
-                </td>
-                <td>$300.00</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="totals">
-            <div style="font-size: 0.9rem; margin-bottom: 0.3rem">
-              <strong>Subtotal:</strong> $550.00
-            </div>
-            <div style="font-size: 0.9rem; margin-bottom: 0.5rem">
-              <strong>Tax (15%):</strong> $82.50
-            </div>
-            <div class="grand-total">Total: $632.50</div>
-          </div>
-        </div>
-
-        <!-- Footer Drop Zone -->
+        <!-- FOOTER DROP ZONE -->
         <div class="drop-zone" id="footerDropZone">
-          <p class="drop-zone-placeholder">
-            Drag footer components here (2 columns max)
-          </p>
+          <p class="drop-zone-placeholder">Drag footer components here</p>
         </div>
       </div>
     </div>
@@ -668,6 +646,243 @@
           <input type="text" placeholder="Phone" value="+1 234 567 8900" />
         </div>
       `,
+        "header-logo": () => `
+    <div class="info-block" style="text-align: center;">
+      <div style="margin-bottom: 1rem;">
+        <img src="https://via.placeholder.com/150x50" alt="Company Logo" style="max-height: 80px;" />
+      </div>
+      <input type="text" placeholder="Company Name" value="Your Business Ltd" style="font-size: 1.5rem; font-weight: bold; text-align: center;" />
+      <input type="text" placeholder="Tagline" value="Professional Services" style="text-align: center; font-size: 0.9rem;" />
+    </div>
+  `,
+
+        // Invoice Header Details
+        "invoice-header": () => `
+    <div class="info-block" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div>
+        <label style="font-size: 0.75rem; color: #6b7280;">Invoice Number</label>
+        <input type="text" placeholder="INV-2025-001" value="INV-2025-001" />
+      </div>
+      <div>
+        <label style="font-size: 0.75rem; color: #6b7280;">Invoice Date</label>
+        <input type="date" value="2025-12-20" />
+      </div>
+      <div>
+        <label style="font-size: 0.75rem; color: #6b7280;">Due Date</label>
+        <input type="date" value="2026-01-19" />
+      </div>
+      <div>
+        <label style="font-size: 0.75rem; color: #6b7280;">PO Number</label>
+        <input type="text" placeholder="PO-12345" value="" />
+      </div>
+    </div>
+  `,
+
+        // Line Items Table
+        "line-items": () => `
+    <div class="info-block">
+      <strong>Line Items:</strong>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 0.5rem;">
+        <thead>
+          <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+            <th style="padding: 0.5rem; text-align: left; font-size: 0.85rem;">Description</th>
+            <th style="padding: 0.5rem; text-align: center; font-size: 0.85rem; width: 80px;">Qty</th>
+            <th style="padding: 0.5rem; text-align: right; font-size: 0.85rem; width: 100px;">Rate</th>
+            <th style="padding: 0.5rem; text-align: right; font-size: 0.85rem; width: 100px;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 0.5rem;"><input type="text" placeholder="Service description" value="Web Design Services" style="width: 100%;" /></td>
+            <td style="padding: 0.5rem; text-align: center;"><input type="number" value="1" style="width: 60px; text-align: center;" /></td>
+            <td style="padding: 0.5rem; text-align: right;"><input type="number" value="2500" style="width: 90px; text-align: right;" /></td>
+            <td style="padding: 0.5rem; text-align: right; font-weight: 600;">R 2,500.00</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 0.5rem;"><input type="text" placeholder="Service description" value="SEO Optimization" style="width: 100%;" /></td>
+            <td style="padding: 0.5rem; text-align: center;"><input type="number" value="3" style="width: 60px; text-align: center;" /></td>
+            <td style="padding: 0.5rem; text-align: right;"><input type="number" value="500" style="width: 90px; text-align: right;" /></td>
+            <td style="padding: 0.5rem; text-align: right; font-weight: 600;">R 1,500.00</td>
+          </tr>
+        </tbody>
+      </table>
+      <button style="margin-top: 0.5rem; padding: 0.5rem 1rem; border: 1px dashed #d1d5db; background: white; border-radius: 4px; cursor: pointer;">+ Add Line Item</button>
+    </div>
+  `,
+
+        // Totals/Summary
+        totals: () => `
+    <div class="info-block" style="margin-left: auto; max-width: 300px;">
+      <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb;">
+        <span style="color: #6b7280;">Subtotal:</span>
+        <span style="font-weight: 600;">R 4,000.00</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb;">
+        <span style="color: #6b7280;">Tax (15%):</span>
+        <span style="font-weight: 600;">R 600.00</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb;">
+        <span style="color: #6b7280;">Discount:</span>
+        <input type="number" value="0" style="width: 100px; text-align: right;" placeholder="0.00" />
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; font-size: 1.25rem; font-weight: bold; border-top: 2px solid #3b82f6; margin-top: 0.5rem; color: #3b82f6;">
+        <span>Total:</span>
+        <span>R 4,600.00</span>
+      </div>
+    </div>
+  `,
+
+        // Payment Information
+        "payment-info": () => `
+    <div class="info-block" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem;">
+      <strong style="color: #92400e;">Payment Information:</strong>
+      <div style="margin-top: 0.5rem; font-size: 0.9rem;">
+        <input type="text" placeholder="Accepted payment methods" value="Bank Transfer, Credit Card, Cash" style="margin-bottom: 0.5rem;" />
+        <input type="text" placeholder="Payment deadline" value="Payment due within 30 days" />
+      </div>
+    </div>
+  `,
+
+        // Contact Information
+        "contact-info": () => `
+    <div class="info-block">
+      <strong>Contact Information:</strong>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+        <div>
+          <label style="font-size: 0.75rem; color: #6b7280;">Email</label>
+          <input type="email" placeholder="contact@business.com" value="hello@yourbusiness.com" />
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; color: #6b7280;">Phone</label>
+          <input type="tel" placeholder="+1 234 567 8900" value="+27 (012) 987-6543" />
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; color: #6b7280;">Website</label>
+          <input type="url" placeholder="www.business.com" value="www.yourbusiness.com" />
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; color: #6b7280;">Tax ID / VAT</label>
+          <input type="text" placeholder="VAT123456789" value="VAT987654321" />
+        </div>
+      </div>
+    </div>
+  `,
+
+        // Shipping Details
+        "shipping-details": () => `
+    <div class="info-block">
+      <strong>Shipping Details:</strong>
+      <input type="text" placeholder="Recipient Name" value="" style="margin-top: 0.5rem;" />
+      <input type="text" placeholder="Shipping Address" value="" />
+      <input type="text" placeholder="City, State ZIP" value="" />
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+        <div>
+          <label style="font-size: 0.75rem; color: #6b7280;">Shipping Method</label>
+          <select style="width: 100%; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 4px;">
+            <option>Standard Shipping</option>
+            <option>Express Shipping</option>
+            <option>Overnight</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.75rem; color: #6b7280;">Tracking Number</label>
+          <input type="text" placeholder="TRACK123456" value="" />
+        </div>
+      </div>
+    </div>
+  `,
+
+        // Project Details
+        "project-details": () => `
+    <div class="info-block">
+      <strong>Project Details:</strong>
+      <div style="margin-top: 0.5rem;">
+        <label style="font-size: 0.75rem; color: #6b7280;">Project Name</label>
+        <input type="text" placeholder="Project name" value="Website Redesign 2025" />
+        <label style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; display: block;">Project ID</label>
+        <input type="text" placeholder="PRJ-001" value="PRJ-2025-001" />
+        <label style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; display: block;">Description</label>
+        <textarea style="width: 100%; min-height: 60px; border: 1px solid #e5e7eb; padding: 0.5rem; border-radius: 4px;" placeholder="Project description...">Complete website redesign including new branding and SEO optimization.</textarea>
+      </div>
+    </div>
+  `,
+
+        // Signature Section
+        signature: () => `
+    <div class="info-block">
+      <strong>Authorized Signature:</strong>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+        <div>
+          <div style="border-bottom: 2px solid #000; height: 60px; margin-bottom: 0.5rem;"></div>
+          <div style="text-align: center;">
+            <input type="text" placeholder="Authorized Person" value="John Doe" style="text-align: center; border: none; font-weight: 600;" />
+            <div style="font-size: 0.75rem; color: #6b7280;">Signature</div>
+          </div>
+        </div>
+        <div>
+          <div style="border-bottom: 2px solid #000; height: 60px; margin-bottom: 0.5rem;"></div>
+          <div style="text-align: center;">
+            <input type="date" value="2025-12-20" style="text-align: center; border: none;" />
+            <div style="font-size: 0.75rem; color: #6b7280;">Date</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+
+        // QR Code / Barcode
+        "qr-code": () => `
+    <div class="info-block" style="text-align: center;">
+      <strong>Quick Payment:</strong>
+      <div style="margin: 1rem auto; width: 150px; height: 150px; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+        <span style="color: #9ca3af; font-size: 0.75rem;">QR Code</span>
+      </div>
+      <input type="text" placeholder="Payment URL or Code" value="" style="text-align: center; font-size: 0.85rem;" />
+    </div>
+  `,
+
+        // Social Media Links
+        "social-media": () => `
+    <div class="info-block">
+      <strong>Connect With Us:</strong>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
+        <input type="url" placeholder="🌐 Website" value="www.yourbusiness.com" />
+        <input type="url" placeholder="📘 Facebook" value="" />
+        <input type="url" placeholder="📷 Instagram" value="" />
+        <input type="url" placeholder="🐦 Twitter" value="" />
+        <input type="url" placeholder="💼 LinkedIn" value="" />
+        <input type="url" placeholder="📧 Email" value="hello@yourbusiness.com" />
+      </div>
+    </div>
+  `,
+
+        // Late Fee Policy
+        "late-fee": () => `
+    <div class="info-block" style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 1rem;">
+      <strong style="color: #991b1b;">Late Payment Policy:</strong>
+      <textarea style="width: 100%; min-height: 60px; border: 1px solid #fecaca; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; background: white;" placeholder="Late fee terms...">A late fee of 1.5% per month will be applied to overdue invoices after 30 days.</textarea>
+    </div>
+  `,
+
+        // Custom Fields
+        "custom-field": () => `
+    <div class="info-block">
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 0.5rem; align-items: center;">
+        <input type="text" placeholder="Field Name" value="Custom Field" style="font-weight: 600;" />
+        <input type="text" placeholder="Value" value="" />
+      </div>
+    </div>
+  `,
+
+        // Divider/Separator
+        divider: () => `
+    <div style="margin: 1.5rem 0; border-top: 2px solid #e5e7eb;"></div>
+  `,
+
+        // Spacer
+        spacer: () => `
+    <div style="height: 2rem;"></div>
+  `,
         "billed-to": () => `
         <div class="info-block">
           <strong>Billed To:</strong>
@@ -776,6 +991,45 @@
           }
         });
       });
+      function loadTemplate(config) {
+        // Brand
+        root.style.setProperty("--primary", config.brand.primaryColor);
+        root.style.setProperty("--font", config.brand.font);
+        document.getElementById("businessName").value =
+          config.brand.businessName;
+        document.getElementById("logoText").textContent =
+          config.brand.businessName;
+
+        // Clear zones
+        mainDropZone.innerHTML = "";
+        footerDropZone.innerHTML = "";
+
+        config.sections.forEach((section) => {
+          const zone =
+            section.zone === "footerDropZone" ? footerDropZone : mainDropZone;
+
+          const sectionEl = document.createElement("div");
+          sectionEl.className = "invoice-section";
+          sectionEl.dataset.componentType = section.type;
+          sectionEl.dataset.componentId = section.id;
+          sectionEl.style.textAlign = section.alignment;
+
+          const content = document.createElement("div");
+          content.className = "info-grid";
+          content.innerHTML = componentTemplates[section.type]();
+
+          // Restore input values
+          Object.entries(section.data).forEach(([key, value]) => {
+            const input = [...content.querySelectorAll("input, textarea")].find(
+              (i) => i.placeholder === key
+            );
+            if (input) input.value = value;
+          });
+
+          sectionEl.appendChild(content);
+          zone.appendChild(sectionEl);
+        });
+      }
 
       function addComponent(type, targetZone) {
         // Check if zone already has 2 components
@@ -927,30 +1181,24 @@
         document.getElementById("saveModal").classList.remove("active");
       }
 
-      function confirmSave() {
+      async function confirmSave() {
         const templateName =
           document.getElementById("templateName").value || "Untitled Template";
+
         const config = getTemplateConfig();
 
-        // Store in localStorage (replace with Firebase in production)
-        const templates = JSON.parse(
-          localStorage.getItem("invoiceTemplates") || "[]"
-        );
-        templates.push({
-          id: `template-${Date.now()}`,
-          name: templateName,
-          config: config,
-        });
-        localStorage.setItem("invoiceTemplates", JSON.stringify(templates));
+        try {
+          await window.saveToFirebase(templateName, config);
 
-        closeSaveModal();
+          closeSaveModal();
 
-        // Show success message
-        const successMsg = document.getElementById("successMessage");
-        successMsg.classList.add("show");
-        setTimeout(() => successMsg.classList.remove("show"), 3000);
-
-        console.log("Template saved:", { name: templateName, config });
+          const successMsg = document.getElementById("successMessage");
+          successMsg.classList.add("show");
+          setTimeout(() => successMsg.classList.remove("show"), 3000);
+        } catch (err) {
+          alert("Failed to save template");
+          console.error(err);
+        }
       }
 
       function exportPDF() {
@@ -986,42 +1234,65 @@
       document.head.appendChild(style);
     </script>
 
-    <!-- Firebase Integration Example (Uncomment and configure) -->
     <script type="module">
-      // import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-      // import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-      // import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        serverTimestamp,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-      // const firebaseConfig = {
-      //   apiKey: "YOUR_API_KEY",
-      //   authDomain: "YOUR_AUTH_DOMAIN",
-      //   projectId: "YOUR_PROJECT_ID"
-      // };
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+        authDomain: "solidflow-1f753.firebaseapp.com",
+        projectId: "solidflow-1f753",
+        storageBucket: "solidflow-1f753.firebasestorage.app",
+        messagingSenderId: "68885400864",
+        appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+        measurementId: "G-RTL0CM1B44",
+      };
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
 
-      // const app = initializeApp(firebaseConfig);
-      // const db = getFirestore(app);
-      // const auth = getAuth(app);
+      window.saveToFirebase = async function (templateName, config) {
+        const user = auth.currentUser;
+        if (!user) {
+          alert("Please sign in to save templates");
+          return;
+        }
 
-      // window.saveToFirebase = async function(templateName, config) {
-      //   const user = auth.currentUser;
-      //   if (!user) {
-      //     alert('Please sign in to save templates');
-      //     return;
-      //   }
+        try {
+          await addDoc(collection(db, "users", user.uid, "invoiceTemplates"), {
+            name: templateName,
+            config: config,
+            isDefault: false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          console.log("Template saved to Firebase");
+        } catch (error) {
+          console.error("Error saving template:", error);
+        }
+      };
+    </script>
+    <script>
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
 
-      //   try {
-      //     await addDoc(collection(db, 'users', user.uid, 'invoiceTemplates'), {
-      //       name: templateName,
-      //       config: config,
-      //       isDefault: false,
-      //       createdAt: serverTimestamp(),
-      //       updatedAt: serverTimestamp()
-      //     });
-      //     console.log('Template saved to Firebase');
-      //   } catch (error) {
-      //     console.error('Error saving template:', error);
-      //   }
-      // };
+        const type = e.dataTransfer.getData("componentType");
+        if (!type) return;
+
+        const section = document.createElement("div");
+        section.className = "invoice-section";
+        section.dataset.type = type;
+
+        section.innerHTML = componentTemplates[type]();
+
+        dropZone.appendChild(section);
+      });
     </script>
   </body>
 </html>

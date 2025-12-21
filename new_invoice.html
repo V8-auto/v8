@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 20mm;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+
+    .invoice {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+
+    .total {
+      text-align: right;
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+  <style>
+    <style>
+  @page {
+    size: A4 portrait;
+    margin: 20mm;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+
+  .invoice {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    box-sizing: border-box;
+    background: white;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .header,
+  .footer {
+    width: 100%;
+  }
+
+  .details {
+    margin-top: 20px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  table, th, td {
+    border: 1px solid #ccc;
+  }
+
+  th, td {
+    padding: 8px;
+    text-align: left;
+  }
+
+  .total {
+    text-align: right;
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+</style>
+
+  </style>
+</head>
+
+<body>
+  <div class="invoice">
+    <h1>INVOICE</h1>
+
+    <p><strong>Invoice #:</strong> {{invoiceNumber}}</p>
+    <p><strong>Client:</strong> {{clientName}}</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Qty</th>
+          <th>Price</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{items}}
+      </tbody>
+    </table>
+
+    <div class="total">
+      Total: {{totalAmount}}
+    </div>
+  </div>
+  <script>
+    import { getDoc, doc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
+async function getInvoiceTemplate(userId, templateId) {
+  const ref = doc(db, "users", userId, "invoiceTemplates", templateId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return null;
+  return snap.data().html;
+}
+
+
+
+const db = getFirestore();
+
+async function saveInvoiceTemplate(userId, templateName, htmlContent) {
+  const templateRef = doc(
+    collection(db, "users", userId, "invoiceTemplates")
+  );
+
+  await setDoc(templateRef, {
+    name: templateName,
+    html: htmlContent,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+}
+iframe.contentWindow.print();
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice Template Manager - Firebase Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      // ============================================
+      // FIREBASE CONFIGURATION
+      // ============================================
+      const firebaseConfig = {
+         apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+          authDomain: "solidflow-1f753.firebaseapp.com",
+          projectId: "solidflow-1f753",
+          storageBucket: "solidflow-1f753.firebasestorage.app",
+          messagingSenderId: "68885400864",
+          appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+          measurementId: "G-RTL0CM1B44",
+      };
+
+      // Initialize Firebase
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      const InvoiceTemplateManager = () => {
+        const [activeTab, setActiveTab] = useState("editor");
+        const [selectedTemplate, setSelectedTemplate] = useState("modern");
+        const [user, setUser] = useState(null);
+        const [showAuthModal, setShowAuthModal] = useState(false);
+        const [showPaymentModal, setShowPaymentModal] = useState(false);
+        const [showSaveModal, setShowSaveModal] = useState(false);
+        const [savedTemplates, setSavedTemplates] = useState([]);
+        const [loading, setLoading] = useState(false);
+        const [templateName, setTemplateName] = useState("");
+
+        const [branding, setBranding] = useState({
+          logo: null,
+          primaryColor: "#3B82F6",
+          secondaryColor: "#10B981",
+          companyName: "Solidflo Invoicing Saas",
+          tagline: "Professional Services",
+          font: "Inter, system-ui, sans-serif",
+        });
+
+        const [invoiceData, setInvoiceData] = useState({
+          number: "INV-2025-001",
+          date: "2025-12-18",
+          dueDate: "2026-01-17",
+          serviceType: "SERVICE",
+          from: {
+            name: "Solidflo Invoicing Saas",
+            address: "123 Business St",
+            city: "Pretoria, 0157",
+            email: "hello@solidflo.co.za",
+            phone: "+27 (012) 123 4521",
+          },
+          to: {
+            name: "Client Company",
+            address: "456 Client Ave",
+            city: "Pretoria, 0157",
+            email: "client@example.com",
+            phone: "+27 (012) 123 4521",
+          },
+          vehicle: {
+            registration: "ABC 123 GP",
+            make: "Toyota",
+            model: "Hilux 2.8 GD-6",
+            engine: "h78627282",
+            vin: "AHTFS26L5G0000000",
+            odometer: "45,230 km",
+          },
+          items: [
+            {
+              description: "Web Design Services",
+              quantity: 1,
+              rate: 2500,
+              amount: 2500,
+            },
+            {
+              description: "SEO Optimization",
+              quantity: 3,
+              rate: 500,
+              amount: 1500,
+            },
+            {
+              description: "Hosting (Annual)",
+              quantity: 1,
+              rate: 300,
+              amount: 300,
+            },
+          ],
+          notes: "Thank you for your business. Payment due within 30 days.",
+        });
+
+        const [sections, setSections] = useState([
+          { id: "header", name: "Header", visible: true },
+          { id: "client", name: "Client Info", visible: true },
+          { id: "items", name: "Line Items", visible: true },
+          { id: "totals", name: "Totals", visible: true },
+          { id: "notes", name: "Notes", visible: true },
+        ]);
+         const industryTemplates = [
+          {
+            id: "contractors",
+            name: "Contractors & Builders",
+            description: "For construction and building services",
+            icon: "🏗️",
+            price: 12.99,
+            fields: ["project", "materials", "labor"]
+          },
+          {
+            id: "consultants",
+            name: "Consultants",
+            description: "Professional consulting services",
+            icon: "💼",
+            price: 11.99,
+            fields: ["hourly", "deliverables"]
+          },
+          {
+            id: "creators",
+            name: "Creators & Designers",
+            description: "Creative and design work",
+            icon: "🎨",
+            price: 13.99,
+            fields: ["projects", "revisions", "licenses"]
+          },
+          {
+            id: "coaches",
+            name: "Coaches",
+            description: "Coaching and training services",
+            icon: "🎯",
+            price: 11.99,
+            fields: ["sessions", "programs", "materials"]
+          },
+          {
+            id: "security",
+            name: "Security Services",
+            description: "Security and protection services",
+            icon: "🛡️",
+            price: 12.99,
+            fields: ["hours", "personnel", "equipment"]
+          },
+          {
+            id: "mechanics",
+            name: "Mechanics & Auto Repair",
+            description: "Vehicle repair and maintenance",
+            icon: "🔧",
+            price: 14.99,
+            fields: ["vehicle", "parts", "labor", "diagnostics"]
+          },
+          {
+            id: "towtruck",
+            name: "Tow Trucks",
+            description: "Towing and roadside assistance",
+            icon: "🚛",
+            price: 13.99,
+            fields: ["vehicle", "distance", "service"]
+          },
+        ];
+        // ============================================
+        // FIREBASE AUTH
+        // ============================================
+        useEffect(() => {
+          const unsubscribe = auth.onAuthStateChanged((user) => {
+            setUser(user);
+            if (user) {
+              loadSavedTemplates(user.uid);
+            }
+          });
+          return () => unsubscribe();
+        }, []);
+
+        const signInWithEmail = async (email, password) => {
+          try {
+            await auth.signInWithEmailAndPassword(email, password);
+            setShowAuthModal(false);
+          } catch (error) {
+            alert("Login failed: " + error.message);
+          }
+        };
+
+        const signUpWithEmail = async (email, password) => {
+          try {
+            await auth.createUserWithEmailAndPassword(email, password);
+            setShowAuthModal(false);
+          } catch (error) {
+            alert("Sign up failed: " + error.message);
+          }
+        };
+
+        const signOut = async () => {
+          try {
+            await auth.signOut();
+            setSavedTemplates([]);
+          } catch (error) {
+            alert("Sign out failed: " + error.message);
+          }
+        };
+
+        // ============================================
+        // FIREBASE FIRESTORE
+        // ============================================
+        const loadSavedTemplates = async (userId) => {
+          try {
+            const snapshot = await db
+              .collection("users")
+              .doc(userId)
+              .collection("invoiceTemplates")
+              .orderBy("createdAt", "desc")
+              .get();
+
+            const industryTemplates = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            setSavedTemplates(industryTemplates);
+          } catch (error) {
+            console.error("Error loading industryTemplates:", error);
+          }
+        };
+
+        const saveTemplateToFirebase = async (templateData) => {
+          if (!user) {
+            alert("Please sign in to save industryTemplates");
+            return;
+          }
+
+          try {
+            setLoading(true);
+            await db
+              .collection("users")
+              .doc(user.uid)
+              .collection("invoiceTemplates")
+              .add({
+                name: templateData.name,
+                templateType: selectedTemplate,
+                branding: branding,
+                invoiceData: invoiceData,
+                sections: sections,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                paid: true,
+              });
+
+            alert("Template saved successfully!");
+            loadSavedTemplates(user.uid);
+            setShowSaveModal(false);
+            setTemplateName("");
+          } catch (error) {
+            alert("Error saving template: " + error.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const loadTemplate = async (templateId) => {
+          try {
+            const doc = await db
+              .collection("users")
+              .doc(user.uid)
+              .collection("invoiceTemplates")
+              .doc(templateId)
+              .get();
+
+            if (doc.exists) {
+              const data = doc.data();
+              setSelectedTemplate(data.templateType);
+              setBranding(data.branding);
+              setInvoiceData(data.invoiceData);
+              setSections(data.sections);
+              alert("Template loaded successfully! Click 'View Invoice' to see it.");
+            }
+          } catch (error) {
+            alert("Error loading template: " + error.message);
+          }
+        };
+
+        const loadAndViewTemplate = async (templateId) => {
+          try {
+            const doc = await db
+              .collection("users")
+              .doc(user.uid)
+              .collection("invoiceTemplates")
+              .doc(templateId)
+              .get();
+
+            if (doc.exists) {
+              const data = doc.data();
+              
+              // Prepare the complete invoice payload
+              const invoicePayload = {
+                selectedTemplate: data.templateType,
+                branding: data.branding,
+                invoiceData: data.invoiceData,
+                sections: data.sections,
+              };
+              
+              // Save to sessionStorage
+              sessionStorage.setItem('invoiceData', JSON.stringify(invoicePayload));
+              
+              // Navigate to invoice.html
+              window.location.href = 'invoice.html';
+            }
+          } catch (error) {
+            alert("Error loading template: " + error.message);
+          }
+        };
+
+        const deleteTemplate = async (templateId) => {
+          if (!confirm("Are you sure you want to delete this template?"))
+            return;
+
+          try {
+            await db
+              .collection("users")
+              .doc(user.uid)
+              .collection("invoiceTemplates")
+              .doc(templateId)
+              .delete();
+
+            loadSavedTemplates(user.uid);
+            alert("Template deleted successfully!");
+          } catch (error) {
+            alert("Error deleting template: " + error.message);
+          }
+        };
+
+        // ============================================
+        // PAYMENT SIMULATION
+        // ============================================
+        const handlePayment = async (paymentMethod) => {
+          setLoading(true);
+
+          // Simulate payment processing
+          setTimeout(() => {
+            setLoading(false);
+            setShowPaymentModal(false);
+            setShowSaveModal(true);
+            alert("Payment successful! You can now save your template.");
+          }, 2000);
+        };
+
+        // ============================================
+        // VIEW INVOICE - SAVES TO SESSION STORAGE
+        // ============================================
+        const viewInvoice = () => {
+          // Prepare the complete invoice payload including template selection
+          const invoicePayload = {
+            selectedTemplate: selectedTemplate,
+            branding: branding,
+            invoiceData: invoiceData,
+            sections: sections,
+          };
+          
+          // Save to sessionStorage
+          sessionStorage.setItem('invoiceData', JSON.stringify(invoicePayload));
+          
+          // Navigate to invoice.html
+          window.location.href = 'invoice.html';
+        };
+
+        // ============================================
+        // INVOICE FUNCTIONS
+        // ============================================
+        const calculateTotals = () => {
+          const subtotal = invoiceData.items.reduce(
+            (sum, item) => sum + item.amount,
+            0
+          );
+          const tax = subtotal * 0.1;
+          const total = subtotal + tax;
+          return { subtotal, tax, total };
+        };
+
+        const { subtotal, tax, total } = calculateTotals();
+
+        const handleLogoUpload = (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setBranding({ ...branding, logo: reader.result });
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+
+        const addLineItem = () => {
+          setInvoiceData({
+            ...invoiceData,
+            items: [
+              ...invoiceData.items,
+              { description: "New Item", quantity: 1, rate: 0, amount: 0 },
+            ],
+          });
+        };
+
+        const updateLineItem = (index, field, value) => {
+          const newItems = [...invoiceData.items];
+          newItems[index][field] = value;
+          if (field === "quantity" || field === "rate") {
+            newItems[index].amount =
+              newItems[index].quantity * newItems[index].rate;
+          }
+          setInvoiceData({ ...invoiceData, items: newItems });
+        };
+
+        const removeLineItem = (index) => {
+          const newItems = invoiceData.items.filter((_, i) => i !== index);
+          setInvoiceData({ ...invoiceData, items: newItems });
+        };
+
+        // ============================================
+        // MODALS
+        // ============================================
+        const AuthModal = () => {
+          const [isLogin, setIsLogin] = useState(true);
+          const [email, setEmail] = useState("");
+          const [password, setPassword] = useState("");
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            if (isLogin) {
+              signInWithEmail(email, password);
+            } else {
+              signUpWithEmail(email, password);
+            }
+          };
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6">
+                  {isLogin ? "Sign In" : "Sign Up"}
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    {isLogin ? "Sign In" : "Sign Up"}
+                  </button>
+                </form>
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="w-full mt-4 text-blue-600 text-sm"
+                >
+                  {isLogin
+                    ? "Don't have an account? Sign Up"
+                    : "Already have an account? Sign In"}
+                </button>
+                <button
+                  onClick={() => setShowAuthModal(false)}
+                  className="w-full mt-2 text-gray-600 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        const PaymentModal = () => {
+          const templatePrice =
+            industryTemplates.find((t) => t.id === selectedTemplate)?.price || 9.99;
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6">Complete Payment</h2>
+                <div className="mb-6">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-600">Template:</span>
+                    <span className="font-semibold">
+                      {industryTemplates.find((t) => t.id === selectedTemplate)?.name}
+                    </span>
+                  </div>
+                  <div className="flex justify-between mb-4">
+                    <span className="text-gray-600">Price:</span>
+                    <span className="font-bold text-xl">${templatePrice}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handlePayment("card")}
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                  >
+                    {loading ? "Processing..." : "💳 Pay with Card"}
+                  </button>
+                  <button
+                    onClick={() => handlePayment("paypal")}
+                    disabled={loading}
+                    className="w-full bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 disabled:bg-gray-400"
+                  >
+                    {loading ? "Processing..." : "PayPal"}
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="w-full mt-4 text-gray-600 text-sm"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+
+                <p className="text-xs text-gray-500 mt-4 text-center">
+                  This is a demo. No real payment will be processed.
+                </p>
+              </div>
+            </div>
+          );
+        };
+
+        const SaveModal = () => (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 max-w-md w-full">
+              <h2 className="text-2xl font-bold mb-6">Save Template</h2>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">
+                  Template Name
+                </label>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  placeholder="e.g., My Business Invoice"
+                />
+              </div>
+              <button
+                onClick={() => saveTemplateToFirebase({ name: templateName })}
+                disabled={loading || !templateName}
+                className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+              >
+                {loading ? "Saving..." : "Save Template"}
+              </button>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="w-full mt-2 text-gray-600 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        );
+
+        // ============================================
+        // TEMPLATE RENDERERS - These are what display in invoice.html
+        // ============================================
+       const renderContractorTemplate = () => (
+  <div className="bg-white p-8 rounded-lg shadow-lg">
+    <div
+      className="flex justify-between items-start mb-8 pb-6 border-b-2"
+      style={{ borderColor: branding.primaryColor }}
+    >
+      <div className="flex items-center gap-4">
+        {branding.logo && (
+          <img
+            src={branding.logo}
+            alt="Logo"
+            className="h-16 w-16 object-contain"
+          />
+        )}
+        <div>
+          <h1
+            className="text-4xl font-bold mb-1"
+            style={{ color: branding.primaryColor }}
+          >
+            INVOICE
+          </h1>
+          <p className="text-gray-600 text-sm">{branding.tagline}</p>
+        </div>
+      </div>
+      <div className="text-right text-sm">
+        <p className="font-semibold">#{invoiceData.number}</p>
+        <p className="text-gray-600">Date: {invoiceData.date}</p>
+        <p className="text-gray-600">Due: {invoiceData.dueDate}</p>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
+      <div>
+        <h3
+          className="font-semibold mb-2"
+          style={{ color: branding.primaryColor }}
+        >
+          FROM
+        </h3>
+        <p className="font-semibold">{invoiceData.from.name}</p>
+        <p className="text-gray-600">{invoiceData.from.address}</p>
+        <p className="text-gray-600">{invoiceData.from.city}</p>
+        <p className="text-gray-600">{invoiceData.from.email}</p>
+        <p className="text-gray-600">{invoiceData.from.phone}</p>
+      </div>
+      <div>
+        <h3
+          className="font-semibold mb-2"
+          style={{ color: branding.primaryColor }}
+        >
+          TO
+        </h3>
+        <p className="font-semibold">{invoiceData.to.name}</p>
+        <p className="text-gray-600">{invoiceData.to.address}</p>
+        <p className="text-gray-600">{invoiceData.to.city}</p>
+        <p className="text-gray-600">{invoiceData.to.email}</p>
+        <p className="text-gray-600">{invoiceData.to.phone}</p>
+      </div>
+    </div>
+
+    {invoiceData.project && (
+      <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+        <h3
+          className="font-semibold mb-3"
+          style={{ color: branding.primaryColor }}
+        >
+          PROJECT DETAILS
+        </h3>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Project Name:</span>
+            <span className="ml-2 font-medium">{invoiceData.project.name}</span>
+          </div>
+          <div>
+            <span className="text-gray-600">Location:</span>
+            <span className="ml-2 font-medium">{invoiceData.project.location}</span>
+          </div>
+          <div>
+            <span className="text-gray-600">Start Date:</span>
+            <span className="ml-2 font-medium">{invoiceData.project.startDate}</span>
+          </div>
+          <div>
+            <span className="text-gray-600">Completion Date:</span>
+            <span className="ml-2 font-medium">{invoiceData.project.completionDate}</span>
+          </div>
+          {invoiceData.project.reference && (
+            <div className="col-span-2">
+              <span className="text-gray-600">Reference/PO:</span>
+              <span className="ml-2 font-medium">{invoiceData.project.reference}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <table className="w-full mb-8">
+      <thead>
+        <tr
+          className="border-b-2"
+          style={{ borderColor: branding.primaryColor }}
+        >
+          <th className="text-left py-3 text-sm font-semibold">
+            Description
+          </th>
+          <th className="text-right py-3 text-sm font-semibold">Qty</th>
+          <th className="text-right py-3 text-sm font-semibold">
+            Rate
+          </th>
+          <th className="text-right py-3 text-sm font-semibold">
+            Amount
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {invoiceData.items.map((item, i) => (
+          <tr key={i} className="border-b border-gray-200">
+            <td className="py-3 text-sm">{item.description}</td>
+            <td className="text-right py-3 text-sm">{item.quantity}</td>
+            <td className="text-right py-3 text-sm">
+              ${item.rate.toFixed(2)}
+            </td>
+            <td className="text-right py-3 text-sm font-semibold">
+              ${item.amount.toFixed(2)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div className="flex justify-end mb-8">
+      <div className="w-72">
+        <div className="flex justify-between py-2 text-sm">
+          <span className="text-gray-600">Subtotal:</span>
+          <span className="font-medium">${subtotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-2 text-sm">
+          <span className="text-gray-600">Tax (10%):</span>
+          <span className="font-medium">${tax.toFixed(2)}</span>
+        </div>
+        <div
+          className="flex justify-between py-3 border-t-2 mt-2 font-bold text-xl"
+          style={{
+            borderColor: branding.primaryColor,
+            color: branding.primaryColor,
+          }}
+        >
+          <span>Total:</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+
+    {invoiceData.notes && (
+      <div className="mt-6 p-4 bg-gray-50 rounded">
+        <p className="text-sm text-gray-600">{invoiceData.notes}</p>
+      </div>
+    )}
+  </div>
+);
+
+       const renderConsultantTemplate = () => (
+  <div className="bg-white p-8 rounded-lg shadow-lg border-4 border-gray-800">
+    <div className="text-center mb-8 pb-6 border-b-4 border-gray-800">
+      {branding.logo && (
+        <img
+          src={branding.logo}
+          alt="Logo"
+          className="h-20 w-20 object-contain mx-auto mb-4"
+        />
+      )}
+      <h1 className="text-5xl font-serif font-bold mb-2" style={{ color: '#8B4513' }}>
+        INVOICE
+      </h1>
+      <p className="text-gray-600 italic">{branding.tagline}</p>
+    </div>
+
+    <div className="flex justify-between mb-6 text-sm">
+      <div>
+        <p className="font-semibold">Invoice: #{invoiceData.number}</p>
+        <p className="text-gray-600">Date: {invoiceData.date}</p>
+        <p className="text-gray-600">Due: {invoiceData.dueDate}</p>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-8 mb-8 text-sm">
+      <div className="border-l-4 border-gray-800 pl-4">
+        <h3 className="font-bold mb-2 text-gray-800">CONSULTANT</h3>
+        <p className="font-semibold">{invoiceData.from.name}</p>
+        <p className="text-gray-600">{invoiceData.from.address}</p>
+        <p className="text-gray-600">{invoiceData.from.city}</p>
+        <p className="text-gray-600">{invoiceData.from.email}</p>
+        <p className="text-gray-600">{invoiceData.from.phone}</p>
+      </div>
+      <div className="border-l-4 border-gray-800 pl-4">
+        <h3 className="font-bold mb-2 text-gray-800">CLIENT</h3>
+        <p className="font-semibold">{invoiceData.to.name}</p>
+        <p className="text-gray-600">{invoiceData.to.address}</p>
+        <p className="text-gray-600">{invoiceData.to.city}</p>
+        <p className="text-gray-600">{invoiceData.to.email}</p>
+        <p className="text-gray-600">{invoiceData.to.phone}</p>
+      </div>
+    </div>
+
+    {invoiceData.engagement && (
+      <div className="mb-8 p-4 bg-gray-50 rounded border-l-4 border-gray-800">
+        <h3 className="font-bold mb-3 text-gray-800">ENGAGEMENT DETAILS</h3>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Project:</span>
+            <span className="ml-2 font-medium">{invoiceData.engagement.project}</span>
+          </div>
+          <div>
+            <span className="text-gray-600">Period:</span>
+            <span className="ml-2 font-medium">{invoiceData.engagement.period}</span>
+          </div>
+          {invoiceData.engagement.reference && (
+            <div className="col-span-2">
+              <span className="text-gray-600">Reference/PO:</span>
+              <span className="ml-2 font-medium">{invoiceData.engagement.reference}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <table className="w-full mb-8 border-2 border-gray-800">
+      <thead className="bg-gray-800 text-white">
+        <tr>
+          <th className="text-left py-3 px-4 text-sm font-semibold">Description</th>
+          <th className="text-right py-3 px-4 text-sm font-semibold">Hours/Qty</th>
+          <th className="text-right py-3 px-4 text-sm font-semibold">Rate</th>
+          <th className="text-right py-3 px-4 text-sm font-semibold">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {invoiceData.items.map((item, i) => (
+          <tr key={i} className="border-b border-gray-300">
+            <td className="py-3 px-4 text-sm">{item.description}</td>
+            <td className="text-right py-3 px-4 text-sm">{item.quantity}</td>
+            <td className="text-right py-3 px-4 text-sm">${item.rate.toFixed(2)}</td>
+            <td className="text-right py-3 px-4 text-sm font-semibold">${item.amount.toFixed(2)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div className="flex justify-end mb-8">
+      <div className="w-80 border-4 border-gray-800 p-4">
+        <div className="flex justify-between py-2 text-sm">
+          <span>Subtotal:</span>
+          <span className="font-medium">${subtotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-2 text-sm">
+          <span>Tax (10%):</span>
+          <span className="font-medium">${tax.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-3 border-t-4 border-gray-800 mt-2 font-bold text-xl">
+          <span>Total:</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+
+    {invoiceData.notes && (
+      <div className="mt-6 p-4 bg-gray-50 rounded border-l-4 border-gray-800">
+        <h3 className="font-bold mb-2 text-gray-800 text-sm">NOTES</h3>
+        <p className="text-sm text-gray-600">{invoiceData.notes}</p>
+      </div>
+    )}
+
+    {invoiceData.terms && (
+      <div className="mt-4 p-4 bg-gray-50 rounded border-l-4 border-gray-800">
+        <h3 className="font-bold mb-2 text-gray-800 text-sm">PAYMENT TERMS</h3>
+        <p className="text-sm text-gray-600">{invoiceData.terms}</p>
+      </div>
+    )}
+  </div>
+);
+
+        const renderCreatorsTemplate = () => (
+  <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-lg shadow-2xl">
+    <div className="bg-white rounded-lg p-6 mb-6 shadow-lg">
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-4">
+          {branding.logo && (
+            <img src={branding.logo} alt="Logo" className="h-16 w-16 object-contain rounded-full" />
+          )}
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              INVOICE
+            </h1>
+            <p className="text-gray-600 text-sm italic">{branding.tagline}</p>
+          </div>
+        </div>
+        <div className="text-right text-sm bg-gradient-to-r from-purple-100 to-pink-100 p-3 rounded-lg">
+          <p className="font-semibold">#{invoiceData.number}</p>
+          <p className="text-gray-600">Date: {invoiceData.date}</p>
+          <p className="text-gray-600">Due: {invoiceData.dueDate}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="bg-white rounded-lg p-4 shadow-md">
+        <h3 className="font-semibold mb-2 text-purple-600">CREATOR</h3>
+        <p className="font-semibold text-sm">{invoiceData.from.name}</p>
+        <p className="text-gray-600 text-sm">{invoiceData.from.address}</p>
+        <p className="text-gray-600 text-sm">{invoiceData.from.city}</p>
+        <p className="text-gray-600 text-sm">{invoiceData.from.email}</p>
+        <p className="text-gray-600 text-sm">{invoiceData.from.phone}</p>
+      </div>
+      <div className="bg-white rounded-lg p-4 shadow-md">
+        <h3 className="font-semibold mb-2 text-pink-600">CLIENT</h3>
+        <p className="font-semibold text-sm">{invoiceData.to.name}</p>
+        <p className="text-gray-600 text-sm">{invoiceData.to.address}</p>
+        <p className="text-gray-600 text-sm">{invoiceData.to.city}</p>
+        <p className="text-gray-600 text-sm">{invoiceData.to.email}</p>
+        <p className="text-gray-600 text-sm">{invoiceData.to.phone}</p>
+      </div>
+    </div>
+
+    {invoiceData.project && (
+      <div className="bg-white rounded-lg p-4 shadow-md mb-6">
+        <h3 className="font-semibold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          PROJECT DETAILS
+        </h3>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Project:</span>
+            <span className="ml-2 font-medium">{invoiceData.project.name}</span>
+          </div>
+          <div>
+            <span className="text-gray-600">Type:</span>
+            <span className="ml-2 font-medium">{invoiceData.project.type}</span>
+          </div>
+          {invoiceData.project.deliverables && (
+            <div className="col-span-2">
+              <span className="text-gray-600">Deliverables:</span>
+              <span className="ml-2 font-medium">{invoiceData.project.deliverables}</span>
+            </div>
+          )}
+          {invoiceData.project.reference && (
+            <div className="col-span-2">
+              <span className="text-gray-600">Reference:</span>
+              <span className="ml-2 font-medium">{invoiceData.project.reference}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <div className="bg-white rounded-lg p-6 shadow-lg">
+      <table className="w-full mb-6">
+        <thead>
+          <tr className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+            <th className="text-left py-3 px-4 text-sm font-semibold rounded-tl-lg">Description</th>
+            <th className="text-right py-3 px-2 text-sm font-semibold">Qty</th>
+            <th className="text-right py-3 px-2 text-sm font-semibold">Rate</th>
+            <th className="text-right py-3 px-4 text-sm font-semibold rounded-tr-lg">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoiceData.items.map((item, i) => (
+            <tr key={i} className="border-b border-gray-200 hover:bg-purple-50 transition-colors">
+              <td className="py-3 px-4 text-sm">{item.description}</td>
+              <td className="text-right py-3 px-2 text-sm">{item.quantity}</td>
+              <td className="text-right py-3 px-2 text-sm">${item.rate.toFixed(2)}</td>
+              <td className="text-right py-3 px-4 text-sm font-semibold">${item.amount.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="flex justify-end">
+        <div className="w-72 bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg">
+          <div className="flex justify-between py-2 text-sm">
+            <span>Subtotal:</span>
+            <span className="font-medium">${subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between py-2 text-sm">
+            <span>Tax (10%):</span>
+            <span className="font-medium">${tax.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between py-3 border-t-2 border-purple-300 mt-2 font-bold text-xl text-purple-700">
+            <span>Total:</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {invoiceData.notes && (
+      <div className="bg-white rounded-lg p-4 shadow-md mt-6">
+        <h3 className="font-semibold mb-2 text-sm text-purple-600">NOTES</h3>
+        <p className="text-sm text-gray-600">{invoiceData.notes}</p>
+      </div>
+    )}
+
+    {invoiceData.paymentInfo && (
+      <div className="bg-white rounded-lg p-4 shadow-md mt-4">
+        <h3 className="font-semibold mb-2 text-sm text-pink-600">PAYMENT INFORMATION</h3>
+        <p className="text-sm text-gray-600">{invoiceData.paymentInfo}</p>
+      </div>
+    )}
+  </div>
+);
+
+       const renderCoachesTemplate = () => (
+  <div className="bg-white p-8 border-8 border-black">
+    <div className="border-b-4 border-black pb-6 mb-8">
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-4">
+          {branding.logo && (
+            <img src={branding.logo} alt="Logo" className="h-20 w-20 object-contain" />
+          )}
+          <div>
+            <h1 className="text-5xl font-bold tracking-widest">INVOICE</h1>
+            <p className="text-gray-700 text-sm uppercase tracking-wide mt-2">{branding.tagline}</p>
+          </div>
+        </div>
+        <div className="text-right text-sm bg-black text-white p-4">
+          <p className="font-bold text-lg">#{invoiceData.number}</p>
+          <p className="mt-2">DATE: {invoiceData.date}</p>
+          <p>DUE: {invoiceData.dueDate}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-8 mb-8">
+      <div className="border-4 border-black p-4">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2">COACH</h3>
+        <p className="font-bold text-sm">{invoiceData.from.name}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.address}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.city}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.email}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.phone}</p>
+      </div>
+      <div className="border-4 border-black p-4">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2">CLIENT</h3>
+        <p className="font-bold text-sm">{invoiceData.to.name}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.address}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.city}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.email}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.phone}</p>
+      </div>
+    </div>
+
+    {invoiceData.program && (
+      <div className="border-4 border-black p-4 mb-8">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2 inline-block">
+          COACHING PROGRAM
+        </h3>
+        <div className="grid grid-cols-2 gap-4 text-sm mt-4">
+          <div>
+            <span className="uppercase font-bold text-xs">Program:</span>
+            <span className="ml-2 font-medium">{invoiceData.program.name}</span>
+          </div>
+          <div>
+            <span className="uppercase font-bold text-xs">Duration:</span>
+            <span className="ml-2 font-medium">{invoiceData.program.duration}</span>
+          </div>
+          {invoiceData.program.sessions && (
+            <div>
+              <span className="uppercase font-bold text-xs">Sessions:</span>
+              <span className="ml-2 font-medium">{invoiceData.program.sessions}</span>
+            </div>
+          )}
+          {invoiceData.program.period && (
+            <div>
+              <span className="uppercase font-bold text-xs">Period:</span>
+              <span className="ml-2 font-medium">{invoiceData.program.period}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <table className="w-full mb-8 border-4 border-black">
+      <thead>
+        <tr className="bg-black text-white">
+          <th className="text-left py-4 px-4 text-sm font-bold uppercase">Description</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Sessions/Qty</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Rate</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {invoiceData.items.map((item, i) => (
+          <tr key={i} className="border-b-2 border-black">
+            <td className="py-4 px-4 text-sm font-medium">{item.description}</td>
+            <td className="text-right py-4 px-4 text-sm">{item.quantity}</td>
+            <td className="text-right py-4 px-4 text-sm">${item.rate.toFixed(2)}</td>
+            <td className="text-right py-4 px-4 text-sm font-bold">${item.amount.toFixed(2)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div className="flex justify-end mb-8">
+      <div className="w-96 border-4 border-black">
+        <div className="flex justify-between py-3 px-4 text-sm border-b-2 border-black">
+          <span className="uppercase font-bold">Subtotal:</span>
+          <span className="font-bold">${subtotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-3 px-4 text-sm border-b-2 border-black">
+          <span className="uppercase font-bold">Tax (10%):</span>
+          <span className="font-bold">${tax.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-4 px-4 bg-black text-white font-bold text-2xl">
+          <span className="uppercase">Total:</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+
+    {invoiceData.notes && (
+      <div className="border-4 border-black p-4 mb-4">
+        <h3 className="font-bold mb-2 text-sm uppercase tracking-wide">NOTES</h3>
+        <p className="text-sm text-gray-700">{invoiceData.notes}</p>
+      </div>
+    )}
+
+    {invoiceData.terms && (
+      <div className="border-4 border-black p-4">
+        <h3 className="font-bold mb-2 text-sm uppercase tracking-wide">PAYMENT TERMS</h3>
+        <p className="text-sm text-gray-700">{invoiceData.terms}</p>
+      </div>
+    )}
+  </div>
+);
+       const renderSecurityTemplate = () => (
+  <div className="bg-white p-8 border-8 border-black">
+    <div className="border-b-4 border-black pb-6 mb-8">
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-4">
+          {branding.logo && (
+            <img src={branding.logo} alt="Logo" className="h-20 w-20 object-contain" />
+          )}
+          <div>
+            <h1 className="text-5xl font-bold tracking-widest">INVOICE</h1>
+            <p className="text-gray-700 text-sm uppercase tracking-wide mt-2">{branding.tagline}</p>
+          </div>
+        </div>
+        <div className="text-right text-sm bg-black text-white p-4">
+          <p className="font-bold text-lg">#{invoiceData.number}</p>
+          <p className="mt-2">DATE: {invoiceData.date}</p>
+          <p>DUE: {invoiceData.dueDate}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-8 mb-8">
+      <div className="border-4 border-black p-4">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2">SECURITY PROVIDER</h3>
+        <p className="font-bold text-sm">{invoiceData.from.name}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.address}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.city}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.email}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.phone}</p>
+        {invoiceData.from.license && (
+          <p className="text-gray-700 text-sm font-medium mt-2">LICENSE: {invoiceData.from.license}</p>
+        )}
+      </div>
+      <div className="border-4 border-black p-4">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2">CLIENT</h3>
+        <p className="font-bold text-sm">{invoiceData.to.name}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.address}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.city}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.email}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.phone}</p>
+      </div>
+    </div>
+
+    {invoiceData.service && (
+      <div className="border-4 border-black p-4 mb-8">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2 inline-block">
+          SERVICE DETAILS
+        </h3>
+        <div className="grid grid-cols-2 gap-4 text-sm mt-4">
+          <div>
+            <span className="uppercase font-bold text-xs">Service Type:</span>
+            <span className="ml-2 font-medium">{invoiceData.service.type}</span>
+          </div>
+          <div>
+            <span className="uppercase font-bold text-xs">Location:</span>
+            <span className="ml-2 font-medium">{invoiceData.service.location}</span>
+          </div>
+          {invoiceData.service.period && (
+            <div>
+              <span className="uppercase font-bold text-xs">Service Period:</span>
+              <span className="ml-2 font-medium">{invoiceData.service.period}</span>
+            </div>
+          )}
+          {invoiceData.service.contract && (
+            <div>
+              <span className="uppercase font-bold text-xs">Contract #:</span>
+              <span className="ml-2 font-medium">{invoiceData.service.contract}</span>
+            </div>
+          )}
+          {invoiceData.service.officers && (
+            <div>
+              <span className="uppercase font-bold text-xs">Officers Assigned:</span>
+              <span className="ml-2 font-medium">{invoiceData.service.officers}</span>
+            </div>
+          )}
+          {invoiceData.service.shift && (
+            <div>
+              <span className="uppercase font-bold text-xs">Shift:</span>
+              <span className="ml-2 font-medium">{invoiceData.service.shift}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <table className="w-full mb-8 border-4 border-black">
+      <thead>
+        <tr className="bg-black text-white">
+          <th className="text-left py-4 px-4 text-sm font-bold uppercase">Description</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Hours/Qty</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Rate</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {invoiceData.items.map((item, i) => (
+          <tr key={i} className="border-b-2 border-black">
+            <td className="py-4 px-4 text-sm font-medium">{item.description}</td>
+            <td className="text-right py-4 px-4 text-sm">{item.quantity}</td>
+            <td className="text-right py-4 px-4 text-sm">${item.rate.toFixed(2)}</td>
+            <td className="text-right py-4 px-4 text-sm font-bold">${item.amount.toFixed(2)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div className="flex justify-end mb-8">
+      <div className="w-96 border-4 border-black">
+        <div className="flex justify-between py-3 px-4 text-sm border-b-2 border-black">
+          <span className="uppercase font-bold">Subtotal:</span>
+          <span className="font-bold">${subtotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-3 px-4 text-sm border-b-2 border-black">
+          <span className="uppercase font-bold">Tax (10%):</span>
+          <span className="font-bold">${tax.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-4 px-4 bg-black text-white font-bold text-2xl">
+          <span className="uppercase">Total:</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+
+    {invoiceData.notes && (
+      <div className="border-4 border-black p-4 mb-4">
+        <h3 className="font-bold mb-2 text-sm uppercase tracking-wide">NOTES</h3>
+        <p className="text-sm text-gray-700">{invoiceData.notes}</p>
+      </div>
+    )}
+
+    {invoiceData.terms && (
+      <div className="border-4 border-black p-4">
+        <h3 className="font-bold mb-2 text-sm uppercase tracking-wide">PAYMENT TERMS</h3>
+        <p className="text-sm text-gray-700">{invoiceData.terms}</p>
+      </div>
+    )}
+
+    <div className="border-t-4 border-black mt-8 pt-4">
+      <p className="text-xs text-gray-600 text-center uppercase tracking-wide">
+        PROFESSIONAL SECURITY SERVICES • LICENSED & INSURED
+      </p>
+    </div>
+  </div>
+);
+   const renderMechanicsTemplate = () => (
+  <div className="bg-white border border-gray-300">
+    {/* Header */}
+    <div className="border-b-2 border-black p-6">
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-4">
+          {branding.logo && (
+            <img src={branding.logo} alt="Logo" className="h-16 w-16 object-contain" />
+          )}
+          <div>
+            <h1 className="text-4xl font-bold">INVOICE</h1>
+            <p className="text-gray-600 text-sm mt-1">{branding.tagline}</p>
+          </div>
+        </div>
+        <div className="text-right text-sm bg-gray-100 px-4 py-3 rounded">
+          <p className="font-bold text-lg">#{invoiceData.number}</p>
+          <p className="text-gray-600 mt-1">Date: {invoiceData.date}</p>
+          <p className="text-gray-600">Due: {invoiceData.dueDate}</p>
+        </div>
+      </div>
+    </div>
+
+    {/* Company Info */}
+    <div className="p-6 border-b border-gray-300">
+      <div className="text-xs space-y-1 text-gray-700">
+        <div className="font-bold">{invoiceData.from.name}</div>
+        <div>{invoiceData.from.address}</div>
+        <div>{invoiceData.from.city}</div>
+        {invoiceData.from.email && <div>Email: {invoiceData.from.email}</div>}
+        {invoiceData.from.phone && <div>Tel: {invoiceData.from.phone}</div>}
+      </div>
+    </div>
+
+    {/* Invoice To / Bill To / Vehicle Details */}
+    <div className="grid grid-cols-3 gap-4 p-6 border-b-2 border-gray-300">
+      {/* Invoice To */}
+      <div className="bg-gray-50 p-3 rounded">
+        <div className="bg-gray-400 text-white text-xs font-bold px-2 py-1 mb-3 rounded">
+          INVOICE TO
+        </div>
+        <div className="text-xs space-y-2">
+          <div>
+            <span className="text-gray-600">Name:</span>
+            <div className="font-semibold">{invoiceData.to.name}</div>
+          </div>
+          {invoiceData.to.company && (
+            <div>
+              <span className="text-gray-600">Company:</span>
+              <div className="font-semibold">{invoiceData.to.company}</div>
+            </div>
+          )}
+          <div>
+            <span className="text-gray-600">Address:</span>
+            <div className="font-semibold">{invoiceData.to.address}</div>
+            <div className="font-semibold">{invoiceData.to.city}</div>
+          </div>
+          {invoiceData.to.email && (
+            <div>
+              <span className="text-gray-600">Email:</span>
+              <div className="font-semibold">{invoiceData.to.email}</div>
+            </div>
+          )}
+          {invoiceData.to.phone && (
+            <div>
+              <span className="text-gray-600">Tel:</span>
+              <div className="font-semibold">{invoiceData.to.phone}</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bill To */}
+      {invoiceData.billTo && (
+        <div className="bg-gray-50 p-3 rounded">
+          <div className="bg-gray-400 text-white text-xs font-bold px-2 py-1 mb-3 rounded">
+            BILL TO
+          </div>
+          <div className="text-xs space-y-2">
+            <div>
+              <span className="text-gray-600">Name:</span>
+              <div className="font-semibold">{invoiceData.billTo.name || '-'}</div>
+            </div>
+            {invoiceData.billTo.company && (
+              <div>
+                <span className="text-gray-600">Company:</span>
+                <div className="font-semibold">{invoiceData.billTo.company}</div>
+              </div>
+            )}
+            <div>
+              <span className="text-gray-600">Address:</span>
+              <div className="font-semibold">{invoiceData.billTo.address}</div>
+              <div className="font-semibold">{invoiceData.billTo.city}</div>
+            </div>
+            {invoiceData.billTo.email && (
+              <div>
+                <span className="text-gray-600">Email:</span>
+                <div className="font-semibold">{invoiceData.billTo.email}</div>
+              </div>
+            )}
+            {invoiceData.billTo.phone && (
+              <div>
+                <span className="text-gray-600">Tel:</span>
+                <div className="font-semibold">{invoiceData.billTo.phone}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Vehicle Details */}
+      {invoiceData.vehicle && (
+        <div className="bg-gray-50 p-3 rounded">
+          <div className="bg-gray-400 text-white text-xs font-bold px-2 py-1 mb-3 rounded">
+            VEHICLE DETAILS
+          </div>
+          <div className="text-xs space-y-2">
+            {invoiceData.vehicle.regNumber && (
+              <div>
+                <span className="text-gray-600">Reg Number:</span>
+                <div className="font-semibold">{invoiceData.vehicle.regNumber}</div>
+              </div>
+            )}
+            {invoiceData.vehicle.make && (
+              <div>
+                <span className="text-gray-600">Make:</span>
+                <div className="font-semibold">{invoiceData.vehicle.make}</div>
+              </div>
+            )}
+            {invoiceData.vehicle.model && (
+              <div>
+                <span className="text-gray-600">Model:</span>
+                <div className="font-semibold">{invoiceData.vehicle.model}</div>
+              </div>
+            )}
+            {invoiceData.vehicle.year && (
+              <div>
+                <span className="text-gray-600">Year:</span>
+                <div className="font-semibold">{invoiceData.vehicle.year}</div>
+              </div>
+            )}
+            {invoiceData.vehicle.vin && (
+              <div>
+                <span className="text-gray-600">VIN:</span>
+                <div className="font-semibold">{invoiceData.vehicle.vin}</div>
+              </div>
+            )}
+            {invoiceData.vehicle.odometer && (
+              <div>
+                <span className="text-gray-600">Odometer:</span>
+                <div className="font-semibold">{invoiceData.vehicle.odometer}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* Items Table */}
+    <div className="p-6">
+      <table className="w-full text-xs mb-6">
+        <thead>
+          <tr className="bg-gray-400 text-white">
+            <th className="text-left py-3 px-3 font-bold uppercase">Description</th>
+            <th className="text-center py-3 px-3 font-bold uppercase">Qty</th>
+            <th className="text-right py-3 px-3 font-bold uppercase">Rate</th>
+            <th className="text-right py-3 px-3 font-bold uppercase">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoiceData.items.map((item, i) => (
+            <tr key={i} className="border-b border-gray-300">
+              <td className="py-3 px-3">{item.description}</td>
+              <td className="text-center py-3 px-3">{item.quantity}</td>
+              <td className="text-right py-3 px-3">${item.rate.toFixed(2)}</td>
+              <td className="text-right py-3 px-3 font-bold">${item.amount.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Totals */}
+      <div className="flex justify-end">
+        <div className="w-72 border-2 border-gray-300 rounded">
+          <div className="flex justify-between py-2 px-4 text-sm border-b border-gray-300">
+            <span className="font-semibold">Subtotal:</span>
+            <span className="font-bold">${subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between py-2 px-4 text-sm border-b border-gray-300">
+            <span className="font-semibold">Tax (10%):</span>
+            <span className="font-bold">${tax.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between py-3 px-4 bg-gray-700 text-white font-bold text-lg rounded-b">
+            <span>TOTAL:</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Signatures */}
+    {invoiceData.signatures !== false && (
+      <div className="grid grid-cols-3 gap-4 px-6 py-4 border-t border-gray-300 text-xs">
+        <div>
+          <div className="border-b border-gray-400 pb-8 mb-1"></div>
+          <div className="text-gray-600 font-semibold">MECHANIC SIGNATURE</div>
+        </div>
+        <div>
+          <div className="border-b border-gray-400 pb-8 mb-1"></div>
+          <div className="text-gray-600 font-semibold">CLIENT SIGNATURE</div>
+        </div>
+        <div>
+          <div className="border-b border-gray-400 pb-8 mb-1"></div>
+          <div className="text-gray-600 font-semibold">DATE</div>
+        </div>
+      </div>
+    )}
+
+    {/* Banking Details / Notes */}
+    {(invoiceData.bankingDetails || invoiceData.notes) && (
+      <div className="bg-gray-50 border-t-2 border-gray-300 p-6 text-xs">
+        {invoiceData.bankingDetails && (
+          <>
+            <div className="text-gray-800 font-bold mb-3 uppercase">Payment Details</div>
+            <div className="space-y-1 text-gray-700 mb-4">
+              {invoiceData.bankingDetails.bankName && (
+                <div><span className="font-semibold">Bank:</span> {invoiceData.bankingDetails.bankName}</div>
+              )}
+              {invoiceData.bankingDetails.accountHolder && (
+                <div><span className="font-semibold">Account Holder:</span> {invoiceData.bankingDetails.accountHolder}</div>
+              )}
+              {invoiceData.bankingDetails.accountNumber && (
+                <div><span className="font-semibold">Account Number:</span> {invoiceData.bankingDetails.accountNumber}</div>
+              )}
+            </div>
+          </>
+        )}
+        {invoiceData.notes && (
+          <div className="text-gray-600 italic mt-4">
+            {invoiceData.notes}
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+);
+        const renderTowtrucksTemplate = () => (
+  <div className="bg-white p-8 border-8 border-black">
+    <div className="border-b-4 border-black pb-6 mb-8">
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-4">
+          {branding.logo && (
+            <img src={branding.logo} alt="Logo" className="h-20 w-20 object-contain" />
+          )}
+          <div>
+            <h1 className="text-5xl font-bold tracking-widest">INVOICE</h1>
+            <p className="text-gray-700 text-sm uppercase tracking-wide mt-2">{branding.tagline}</p>
+          </div>
+        </div>
+        <div className="text-right text-sm bg-black text-white p-4">
+          <p className="font-bold text-lg">#{invoiceData.number}</p>
+          <p className="mt-2">DATE: {invoiceData.date}</p>
+          <p>DUE: {invoiceData.dueDate}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-8 mb-8">
+      <div className="border-4 border-black p-4">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2">TOWING SERVICE</h3>
+        <p className="font-bold text-sm">{invoiceData.from.name}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.address}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.city}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.email}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.from.phone}</p>
+        {invoiceData.from.license && (
+          <p className="text-gray-700 text-sm font-medium mt-2">LICENSE: {invoiceData.from.license}</p>
+        )}
+      </div>
+      <div className="border-4 border-black p-4">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2">CUSTOMER</h3>
+        <p className="font-bold text-sm">{invoiceData.to.name}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.address}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.city}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.email}</p>
+        <p className="text-gray-700 text-sm">{invoiceData.to.phone}</p>
+      </div>
+    </div>
+
+    {invoiceData.vehicle && (
+      <div className="border-4 border-black p-4 mb-8">
+        <h3 className="font-bold mb-3 text-lg uppercase tracking-wide bg-black text-white p-2 inline-block">
+          VEHICLE & TOW DETAILS
+        </h3>
+        <div className="grid grid-cols-3 gap-4 text-sm mt-4">
+          <div>
+            <span className="uppercase font-bold text-xs">Make/Model:</span>
+            <span className="ml-2 font-medium">{invoiceData.vehicle.make} {invoiceData.vehicle.model}</span>
+          </div>
+          <div>
+            <span className="uppercase font-bold text-xs">Year:</span>
+            <span className="ml-2 font-medium">{invoiceData.vehicle.year}</span>
+          </div>
+          <div>
+            <span className="uppercase font-bold text-xs">Color:</span>
+            <span className="ml-2 font-medium">{invoiceData.vehicle.color}</span>
+          </div>
+          <div>
+            <span className="uppercase font-bold text-xs">License Plate:</span>
+            <span className="ml-2 font-medium">{invoiceData.vehicle.plate}</span>
+          </div>
+          <div>
+            <span className="uppercase font-bold text-xs">VIN:</span>
+            <span className="ml-2 font-medium">{invoiceData.vehicle.vin}</span>
+          </div>
+          {invoiceData.vehicle.towType && (
+            <div>
+              <span className="uppercase font-bold text-xs">Tow Type:</span>
+              <span className="ml-2 font-medium">{invoiceData.vehicle.towType}</span>
+            </div>
+          )}
+          {invoiceData.vehicle.pickupLocation && (
+            <div className="col-span-3">
+              <span className="uppercase font-bold text-xs">Pickup Location:</span>
+              <span className="ml-2 font-medium">{invoiceData.vehicle.pickupLocation}</span>
+            </div>
+          )}
+          {invoiceData.vehicle.dropoffLocation && (
+            <div className="col-span-3">
+              <span className="uppercase font-bold text-xs">Dropoff Location:</span>
+              <span className="ml-2 font-medium">{invoiceData.vehicle.dropoffLocation}</span>
+            </div>
+          )}
+          {invoiceData.vehicle.distance && (
+            <div>
+              <span className="uppercase font-bold text-xs">Distance:</span>
+              <span className="ml-2 font-medium">{invoiceData.vehicle.distance}</span>
+            </div>
+          )}
+          {invoiceData.vehicle.driver && (
+            <div>
+              <span className="uppercase font-bold text-xs">Driver:</span>
+              <span className="ml-2 font-medium">{invoiceData.vehicle.driver}</span>
+            </div>
+          )}
+          {invoiceData.vehicle.truckNumber && (
+            <div>
+              <span className="uppercase font-bold text-xs">Truck #:</span>
+              <span className="ml-2 font-medium">{invoiceData.vehicle.truckNumber}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <table className="w-full mb-8 border-4 border-black">
+      <thead>
+        <tr className="bg-black text-white">
+          <th className="text-left py-4 px-4 text-sm font-bold uppercase">Description</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Qty</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Rate</th>
+          <th className="text-right py-4 px-4 text-sm font-bold uppercase">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {invoiceData.items.map((item, i) => (
+          <tr key={i} className="border-b-2 border-black">
+            <td className="py-4 px-4 text-sm font-medium">{item.description}</td>
+            <td className="text-right py-4 px-4 text-sm">{item.quantity}</td>
+            <td className="text-right py-4 px-4 text-sm">${item.rate.toFixed(2)}</td>
+            <td className="text-right py-4 px-4 text-sm font-bold">${item.amount.toFixed(2)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div className="flex justify-end mb-8">
+      <div className="w-96 border-4 border-black">
+        <div className="flex justify-between py-3 px-4 text-sm border-b-2 border-black">
+          <span className="uppercase font-bold">Subtotal:</span>
+          <span className="font-bold">${subtotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-3 px-4 text-sm border-b-2 border-black">
+          <span className="uppercase font-bold">Tax (10%):</span>
+          <span className="font-bold">${tax.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between py-4 px-4 bg-black text-white font-bold text-2xl">
+          <span className="uppercase">Total:</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+
+    {invoiceData.notes && (
+      <div className="border-4 border-black p-4 mb-4">
+        <h3 className="font-bold mb-2 text-sm uppercase tracking-wide">NOTES</h3>
+        <p className="text-sm text-gray-700">{invoiceData.notes}</p>
+      </div>
+    )}
+
+    {invoiceData.terms && (
+      <div className="border-4 border-black p-4 mb-4">
+        <h3 className="font-bold mb-2 text-sm uppercase tracking-wide">PAYMENT TERMS</h3>
+        <p className="text-sm text-gray-700">{invoiceData.terms}</p>
+      </div>
+    )}
+
+    <div className="border-t-4 border-black mt-8 pt-4">
+      <p className="text-xs text-gray-600 text-center uppercase tracking-wide">
+        24/7 EMERGENCY TOWING SERVICE • LICENSED & INSURED
+      </p>
+    </div>
+  </div>
+);
+
+        const renderTemplate = () => {
+          switch (selectedTemplate) {
+            case 'contractors':
+              return renderContractorTemplate();
+            case 'consultants':
+              return renderConsultantTemplate();
+            case 'creators':
+              return renderCreatorsTemplate();
+            case 'coaches':
+              return renderCoachesTemplate();
+            case 'security':
+              return renderSecurityTemplate();
+            case 'mechanics':
+              return renderMechanicsTemplate();
+            case 'towtrucks':
+            default:
+              return renderTowtrucksTemplate();
+          }
+        };
+
+        // ============================================
+        // MAIN RENDER
+        // ============================================
+        return (
+          <div className="min-h-screen bg-gray-50">
+            {showAuthModal && <AuthModal />}
+            {showPaymentModal && <PaymentModal />}
+            {showSaveModal && <SaveModal />}
+
+            <div className="bg-white border-b shadow-sm print:hidden">
+              <div className="max-w-7xl mx-auto px-6 py-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-800">
+                      Invoice Template Manager
+                    </h1>
+                    <p className="text-gray-600 text-sm">
+                      Create, customize, and save professional invoices
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {user ? (
+                      <>
+                        <span className="text-sm text-gray-600">
+                          {user.email}
+                        </span>
+                        <button
+                          onClick={signOut}
+                          className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                        >
+                          Sign Out
+                        </button>
+                        <button
+                          onClick={() => setShowPaymentModal(true)}
+                          className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                        >
+                          💾 Buy & Save Template
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        Sign In to Save
+                      </button>
+                    )}
+                    <button
+                      onClick={viewInvoice}
+                      className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                    >
+                      👁️ View Invoice
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-6 py-8">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                {/* Saved Templates Sidebar */}
+                {user && (
+                  <div className="lg:col-span-1 print:hidden">
+                    <div className="bg-white rounded-lg shadow-sm border p-6">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Saved Templates
+                      </h3>
+                      {savedTemplates.length === 0 ? (
+                        <p className="text-sm text-gray-500">
+                          No saved industryTemplates yet
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {savedTemplates.map((template) => (
+                            <div
+                              key={template.id}
+                              className="p-3 bg-gray-50 rounded border"
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <span className="font-medium text-sm block">
+                                    {template.name}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {industryTemplates.find(t => t.id === template.templateType)?.name || template.templateType}
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => deleteTemplate(template.id)}
+                                  className="text-red-600 text-xs hover:text-red-800"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => loadTemplate(template.id)}
+                                  className="flex-1 px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+                                >
+                                  Load to Editor
+                                </button>
+                                <button
+                                  onClick={() => loadAndViewTemplate(template.id)}
+                                  className="flex-1 px-3 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+                                >
+                                  View Invoice
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Editor */}
+                <div className={user ? "lg:col-span-2" : "lg:col-span-3"}>
+                 
+                  {renderTemplate()}
+                </div>
+
+                {/* Template Selection */}
+               
+                <div className="lg:col-span-1 print:hidden">
+                  <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-8">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Industry Template Style
+                    </h3>
+                    <div className="space-y-3">
+                      {industryTemplates.map((template) => (
+                        <button
+                          key={template.id}
+                          onClick={() => setSelectedTemplate(template.id)}
+                          className={`w-full p-4 rounded-lg border-2 text-left ${
+                            selectedTemplate === template.id
+                              ? "border-blue-600 bg-blue-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-2xl">{template.icon}</span>
+                            <div className="flex-1">
+                              <div className="font-semibold">
+                                {template.name}
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                {template.description}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-sm font-bold text-green-600">
+                            ${template.price}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold mb-4">Branding</h3>
+                      <label className="block text-sm font-medium mb-2">
+                        Logo
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="w-full px-3 py-2 border rounded-lg mb-4 text-sm"
+                      />
+
+                      <label className="block text-sm font-medium mb-2">
+                        Primary Color
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={branding.primaryColor}
+                          onChange={(e) =>
+                            setBranding({
+                              ...branding,
+                              primaryColor: e.target.value,
+                            })
+                          }
+                          className="w-16 h-10 border rounded cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={branding.primaryColor}
+                          onChange={(e) =>
+                            setBranding({
+                              ...branding,
+                              primaryColor: e.target.value,
+                            })
+                          }
+                          className="flex-1 px-3 py-2 border rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+               
+            </div>
+          </div>
+        );
+      };
+
+      ReactDOM.createRoot(document.getElementById("root")).render(
+        <InvoiceTemplateManager />
+      );
+      function openTemplateInInvoiceManager(templateId) {
+  window.location.href = `invoices.html?template=${templateId}`;
+}
+    </script>
+    <script>
+// After user purchases or clicks on a template they own
+function viewTemplateInInvoiceManager(templateId) {
+  // Redirect to invoice manager with template parameter
+  window.location.href = `invoices.html?template=${templateId}`;
+}
+
+// Example: Add this to your template card click handler
+document.querySelectorAll('.template-card').forEach(card => {
+  card.addEventListener('click', function() {
+    const templateId = this.dataset.templateId;
+    const isPurchased = this.dataset.purchased === 'true';
+    
+    if (isPurchased) {
+      viewTemplateInInvoiceManager(templateId);
+    } else {
+      // Show purchase modal
+      showPurchaseModal(templateId);
+    }
+  });
+});
+</script>
+  </body>
+</html>

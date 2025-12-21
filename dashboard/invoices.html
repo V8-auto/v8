@@ -53,22 +53,22 @@
       .invoice-card:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
-        .invoice-card:hover {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
+      .invoice-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
 
-        /* Optional: Add alternating background colors for better readability */
-        .invoice-card:nth-child(even) {
-          background: #fafafa;
-        }
+      /* Optional: Add alternating background colors for better readability */
+      .invoice-card:nth-child(even) {
+        background: #fafafa;
+      }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .invoices-section {
-            width: 100%;
-            max-height: none;
-          }
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .invoices-section {
+          width: 100%;
+          max-height: none;
         }
+      }
       .card-header {
         display: flex;
         justify-content: space-between;
@@ -314,7 +314,7 @@
         overflow-y: auto; /* Add scroll if cards exceed container height */
         max-height: calc(100vh - 40px); /* Adjust based on your needs */
         scrollbar-width: none; /* Firefox */
-       -ms-overflow-style: none; 
+        -ms-overflow-style: none;
       }
 
       /* Right side - Stats */
@@ -774,6 +774,10 @@
           display: none;
         }
       }
+      .invoice-card.active {
+        border: 2px solid #2196f3;
+        background: #eef6ff;
+      }
     </style>
   </head>
   <body>
@@ -817,9 +821,9 @@
         <a href="/dashboard/payments.html">
           <span class="ico">💳</span><span>Payments</span>
         </a>
-         <a href="/dashboard/templates.html"
-            ><span class="ico">💳</span><span>Templates</span></a
-          >
+        <a href="/dashboard/templates.html"
+          ><span class="ico">💳</span><span>Templates</span></a
+        >
         <a href="#"> <span class="ico">📊</span><span>Reports</span> </a>
       </nav>
 
@@ -848,9 +852,7 @@
 
     <!-- Main Content -->
     <div class="main-content">
-       
-      
-       <div class="invoices-section bg-gray-300">
+      <div class="invoices-section bg-gray-300">
         <div class="header">
           <div>
             <h1>Invoices</h1>
@@ -947,7 +949,6 @@
         </div>
       </div>
       <!-- Right side - Stats -->
-     
     </div>
 
     <!-- Firebase Scripts -->
@@ -1129,6 +1130,8 @@
 
         // Load PDF preview
         loadInvoicePDF(invoiceNumber);
+        setActiveCard(invoiceNumber);
+
       }
 
       // Also update card click to show preview
@@ -1711,10 +1714,9 @@
 
         console.log("Cards updated with", invoices.length, "invoices");
         await updateStats();
-      }
-      function openInvoice(invoiceNumber) {
-        sessionStorage.setItem("loadInvoiceNumber", invoiceNumber);
-        window.location.href = "/dashboard/invoice.html";
+        if (invoices.length > 0) {
+          openInvoice(invoices[0].invoiceNumber);
+        }
       }
 
       // Search functionality
@@ -1770,9 +1772,7 @@
           )
           .join("");
       }
-      document.addEventListener("DOMContentLoaded", () => {
-      
-      });
+      document.addEventListener("DOMContentLoaded", () => {});
 
       // Security - Disable right-click and dev tools
       document.addEventListener("contextmenu", (e) => {
@@ -1829,6 +1829,18 @@
       setTimeout(() => {
         renderInvoiceCards(invoices);
       }, 500);
+    </script>
+    <script>
+      function setActiveCard(invoiceNumber) {
+  document.querySelectorAll(".invoice-card").forEach(card => {
+    card.classList.remove("active");
+  });
+
+  document
+    .querySelector(`[onclick*="${invoiceNumber}"]`)
+    ?.classList.add("active");
+}
+
     </script>
   </body>
 </html>
