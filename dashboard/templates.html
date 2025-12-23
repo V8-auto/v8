@@ -1715,11 +1715,11 @@ return (
             {/* Totals */}
             <div className="flex justify-end mb-6">
               <div className="w-64 text-xs">
-                <div className="flex justify-between py-1"><span>Subtotal</span><span>£{calculateSubtotal().toFixed(2)}</span></div>
-                <div className="flex justify-between py-1"><span>VAT ({invoiceDetails.vatRate}%)</span><span>£{calculateVAT().toFixed(2)}</span></div>
-                <div className="flex justify-between py-2 text-sm font-medium border-t"><span>Total</span><span>£{calculateTotal().toFixed(2)}</span></div>
-                <div className="flex justify-between py-1"><span>Paid</span><span>£{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}</span></div>
-                <div className="flex justify-between py-2 font-semibold"><span>Balance Due</span><span>£{calculateBalance().toFixed(2)}</span></div>
+                <div className="flex justify-between py-1"><span>Subtotal</span><span>R{calculateSubtotal().toFixed(2)}</span></div>
+                <div className="flex justify-between py-1"><span>VAT ({invoiceDetails.vatRate}%)</span><span>R{calculateVAT().toFixed(2)}</span></div>
+                <div className="flex justify-between py-2 text-sm font-medium border-t"><span>Total</span><span>R{calculateTotal().toFixed(2)}</span></div>
+                <div className="flex justify-between py-1"><span>Paid</span><span>R{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}</span></div>
+                <div className="flex justify-between py-2 font-semibold"><span>Balance Due</span><span>R{calculateBalance().toFixed(2)}</span></div>
               </div>
             </div>
 
@@ -1878,16 +1878,16 @@ return (
             <div className="flex justify-between items-start">
               <div className="flex-1 bg-blue-50 p-3 rounded text-xs mr-3">
                 <strong className="text-blue-800">Payment Information</strong><br />
-                Amount debited: £{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}
+                Amount debited: R{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}
               </div>
               <div className="w-64">
                 <table className="w-full text-xs">
                   <tbody>
-                    <tr><td className="text-right font-bold py-1 pr-2">Subtotal:</td><td className="text-right py-1">£{calculateSubtotal().toFixed(2)}</td></tr>
-                    <tr><td className="text-right font-bold py-1 pr-2">VAT (<input type="number" step="0.1" value={invoiceDetails.vatRate} onChange={(e) => updateInvoiceDetails('vatRate', parseFloat(e.target.value) || 0)} className="w-10 border border-gray-300 px-1 text-center" />%):</td><td className="text-right py-1">£{calculateVAT().toFixed(2)}</td></tr>
-                    <tr className="bg-gray-800 text-white font-bold"><td className="text-right py-2 pr-2">Total:</td><td className="text-right py-2">£{calculateTotal().toFixed(2)}</td></tr>
+                    <tr><td className="text-right font-bold py-1 pr-2">Subtotal:</td><td className="text-right py-1">R{calculateSubtotal().toFixed(2)}</td></tr>
+                    <tr><td className="text-right font-bold py-1 pr-2">VAT (<input type="number" step="0.1" value={invoiceDetails.vatRate} onChange={(e) => updateInvoiceDetails('vatRate', parseFloat(e.target.value) || 0)} className="w-10 border border-gray-300 px-1 text-center" />%):</td><td className="text-right py-1">R{calculateVAT().toFixed(2)}</td></tr>
+                    <tr className="bg-gray-800 text-white font-bold"><td className="text-right py-2 pr-2">Total:</td><td className="text-right py-2">R{calculateTotal().toFixed(2)}</td></tr>
                     <tr><td className="text-right font-bold py-1 pr-2">Payment Received:</td><td className="text-right py-1"><input type="number" step="0.01" value={invoiceDetails.paymentReceived} onChange={(e) => updateInvoiceDetails('paymentReceived', parseFloat(e.target.value) || 0)} className="w-20 border border-gray-300 px-1 py-1 text-xs text-right" /></td></tr>
-                    <tr className="bg-green-600 text-white font-bold"><td className="text-right py-2 pr-2">Balance Due:</td><td className="text-right py-2">£{calculateBalance().toFixed(2)}</td></tr>
+                    <tr className="bg-green-600 text-white font-bold"><td className="text-right py-2 pr-2">Balance Due:</td><td className="text-right py-2">R{calculateBalance().toFixed(2)}</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -2125,27 +2125,27 @@ return (
         <div className="w-[70mm] text-xs space-y-2">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>£{calculateSubtotal().toFixed(2)}</span>
+            <span>R{calculateSubtotal().toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between">
             <span>VAT ({invoiceDetails.vatRate}%)</span>
-            <span>£{calculateVAT().toFixed(2)}</span>
+            <span>R{calculateVAT().toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between font-semibold border-t pt-2">
             <span>Total</span>
-            <span>£{calculateTotal().toFixed(2)}</span>
+            <span>R{calculateTotal().toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between">
             <span>Paid</span>
-            <span>£{invoiceDetails.paymentReceived.toFixed(2)}</span>
+            <span>R{invoiceDetails.paymentReceived.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between font-semibold">
             <span>Balance Due</span>
-            <span>£{calculateBalance().toFixed(2)}</span>
+            <span>R{calculateBalance().toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -2496,7 +2496,7 @@ return (
             <tr>
               <td className="p-3 font-medium text-right">Subtotal</td>
               <td className="p-3 text-right">
-                £{calculateSubtotal().toFixed(2)}
+                R{calculateSubtotal().toFixed(2)}
               </td>
             </tr>
             <tr>
@@ -2504,25 +2504,25 @@ return (
                 VAT ({invoiceDetails.vatRate}%)
               </td>
               <td className="p-3 text-right">
-                £{calculateVAT().toFixed(2)}
+                R{calculateVAT().toFixed(2)}
               </td>
             </tr>
             <tr className="bg-slate-800 text-white font-semibold">
               <td className="p-3 text-right">Total</td>
               <td className="p-3 text-right">
-                £{calculateTotal().toFixed(2)}
+                R{calculateTotal().toFixed(2)}
               </td>
             </tr>
             <tr>
               <td className="p-3 font-medium text-right">Paid</td>
               <td className="p-3 text-right">
-                £{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}
+                R{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}
               </td>
             </tr>
             <tr className="bg-slate-100 font-semibold">
               <td className="p-3 text-right">Balance Due</td>
               <td className="p-3 text-right">
-                £{calculateBalance().toFixed(2)}
+                R{calculateBalance().toFixed(2)}
               </td>
             </tr>
           </tbody>

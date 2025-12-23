@@ -1448,11 +1448,11 @@
 
           // Update totals
           document.getElementById("subtotal").textContent =
-            invoiceData.subtotal || "£0.00";
+            invoiceData.subtotal || "R0.00";
           document.getElementById("vat").textContent =
-            invoiceData.vat || "£0.00";
+            invoiceData.vat || "R0.00";
           document.getElementById("total").textContent =
-            invoiceData.total || "£0.00";
+            invoiceData.total || "R0.00";
 
           alert("Invoice loaded successfully!");
         } catch (error) {
@@ -1476,7 +1476,7 @@
     <td><input type="text" class="item-desc" value="${description}" /></td>
     <td><input type="number" class="item-qty" value="${quantity}" min="1" /></td>
     <td><input type="number" class="item-price" value="${unitPrice}" min="0" step="0.01" /></td>
-    <td class="net-price">£${netPrice.toFixed(2)}</td>
+    <td class="net-price">R${netPrice.toFixed(2)}</td>
     <td><button onclick="removeItem(this)">Remove</button></td>
   `;
 
