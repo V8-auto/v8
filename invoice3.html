@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solidflo Invoice Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  
+  <style>
+    @media print {
+      @page { size: A4; margin: 15mm; }
+      body { margin: 0; padding: 0; }
+      .no-print { display: none !important; }
+      .a4-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; }
+      .a4-page { box-shadow: none !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+    .a4-container { max-width: 210mm; margin: 0 auto; }
+    .a4-page { width: 210mm; min-height: 297mm; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+      authDomain: "solidflow-1f753.firebaseapp.com",
+      projectId: "solidflow-1f753",
+      storageBucket: "solidflow-1f753.firebasestorage.app",
+      messagingSenderId: "68885400864",
+      appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+      measurementId: "G-RTL0CM1B44",
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Storage Service
+    const storage = {
+      async saveTemplate(userId, template) {
+        const ref = db.collection("users").doc(userId).collection("invoiceTemplates");
+        if (template.id) {
+          await ref.doc(template.id).set({
+            ...template,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+          return template;
+        } else {
+          const docRef = await ref.add({
+            ...template,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          return { ...template, id: docRef.id };
+        }
+      },
+
+      async getTemplates(userId) {
+        const snapshot = await db
+          .collection("users")
+          .doc(userId)
+          .collection("invoiceTemplates")
+          .get();
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      },
+
+      async deleteTemplate(userId, templateId) {
+        await db
+          .collection("users")
+          .doc(userId)
+          .collection("invoiceTemplates")
+          .doc(templateId)
+          .delete();
+      },
+
+      async saveInvoice(userId, invoice) {
+        const ref = db.collection("users").doc(userId).collection("invoices");
+        if (invoice.id) {
+          await ref.doc(invoice.id).set({
+            ...invoice,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+          return invoice;
+        } else {
+          const docRef = await ref.add({
+            ...invoice,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          return { ...invoice, id: docRef.id };
+        }
+      },
+
+      async getInvoices(userId) {
+        const snapshot = await db
+          .collection("users")
+          .doc(userId)
+          .collection("invoices")
+          .get();
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      },
+    };
+
+    // Template Presets
+    const TEMPLATE_PRESETS = [
+      {
+        name: "Modern Services",
+        designId: "modern",
+        branding: { companyName: "SOLIDFLO", tagline: "Modern Solutions" },
+        taxRate: 0.15,
+      },
+      {
+        name: "Classic Business",
+        designId: "classic",
+        branding: { companyName: "SOLIDFLO", tagline: "Professional Services" },
+        taxRate: 0.15,
+      },
+      {
+        name: "Creative Design",
+        designId: "creative",
+        branding: { companyName: "SOLIDFLO", tagline: "Creative Excellence" },
+        taxRate: 0.15,
+      },
+      {
+        name: "Corporate",
+        designId: "corporate",
+        branding: { companyName: "SOLIDFLO", tagline: "Enterprise Solutions" },
+        taxRate: 0.15,
+      },
+    ];
+
+    // Auth Modal Component
+    function AuthModal({ onClose }) {
+      const [isLogin, setIsLogin] = useState(true);
+      const [email, setEmail] = useState("");
+      const [password, setPassword] = useState("");
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+          if (isLogin) {
+            await auth.signInWithEmailAndPassword(email, password);
+          } else {
+            await auth.createUserWithEmailAndPassword(email, password);
+          }
+          onClose();
+        } catch (error) {
+          alert(error.message);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-6">{isLogin ? "Sign In" : "Sign Up"}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+              >
+                {isLogin ? "Sign In" : "Sign Up"}
+              </button>
+            </form>
+            <button
+              onClick={() => setIsLogin(!isLogin)}
+              className="w-full mt-4 text-blue-600 text-sm"
+            >
+              {isLogin ? "Need an account? Sign Up" : "Have an account? Sign In"}
+            </button>
+            <button onClick={onClose} className="w-full mt-2 text-gray-600 text-sm">
+              Cancel
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Invoice Editor Component
+    function InvoiceEditor({ invoice, setInvoice, onSave, onBack, templateDesign }) {
+      if (!invoice) return null;
+
+      const updateCompanyData = (field, value) => {
+        setInvoice(prev => ({
+          ...prev,
+          companyData: { ...prev.companyData, [field]: value }
+        }));
+      };
+
+      const updateInvoiceDetails = (field, value) => {
+        setInvoice(prev => ({
+          ...prev,
+          invoiceDetails: { ...prev.invoiceDetails, [field]: value }
+        }));
+      };
+
+      const updateItem = (index, field, value) => {
+        setInvoice(prev => ({
+          ...prev,
+          items: prev.items.map((item, i) => 
+            i === index ? { ...item, [field]: value } : item
+          )
+        }));
+      };
+
+      const addRow = () => {
+        setInvoice(prev => ({
+          ...prev,
+          items: [...prev.items, { quantity: 1, description: '', total: 0 }]
+        }));
+      };
+
+      const removeRow = (index) => {
+        setInvoice(prev => ({
+          ...prev,
+          items: prev.items.filter((_, i) => i !== index)
+        }));
+      };
+
+      const calculateSubtotal = () => {
+        return invoice.items.reduce((sum, item) => sum + parseFloat(item.total || 0), 0);
+      };
+
+      const calculateVAT = () => {
+        return calculateSubtotal() * (invoice.invoiceDetails.vatRate / 100);
+      };
+
+      const calculateTotal = () => {
+        return calculateSubtotal() + calculateVAT();
+      };
+
+      const calculateBalance = () => {
+        return calculateTotal() - parseFloat(invoice.invoiceDetails.paymentReceived || 0);
+      };
+
+      const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setInvoice(prev => ({ ...prev, logo: e.target.result }));
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      // Render based on template design
+      const renderInvoiceContent = () => {
+        switch (templateDesign) {
+          case 'modern':
+            return (
+              <div className="invoice-content bg-white p-8">
+                {/* Modern Design */}
+                <div className="flex justify-between items-center pb-6 mb-6 border-b border-neutral-200">
+                  <div>
+                    {invoice.logo && <img src={invoice.logo} alt="Logo" className="h-12 mb-2" />}
+                    <div contentEditable={!invoice.isLocked} suppressContentEditableWarning 
+                         onBlur={(e) => updateCompanyData('name', e.target.innerText)} 
+                         className="text-base font-semibold">
+                      {invoice.companyData.name}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-light tracking-wide">Invoice</div>
+                    <div className="text-xs text-neutral-500 mt-1">#{invoice.invoiceDetails.invoiceNumber}</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 mb-6">
+                  <div className="text-xs text-neutral-700 space-y-1">
+                    <div contentEditable={!invoice.isLocked} suppressContentEditableWarning 
+                         onBlur={(e) => updateCompanyData('address', e.target.innerText)} 
+                         className="whitespace-pre-line">
+                      {invoice.companyData.address}
+                    </div>
+                    <div contentEditable={!invoice.isLocked} suppressContentEditableWarning 
+                         onBlur={(e) => updateCompanyData('contact', e.target.innerText)} 
+                         className="whitespace-pre-line">
+                      {invoice.companyData.contact}
+                    </div>
+                  </div>
+
+                  <div className="text-xs">
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-neutral-500">Date</span>
+                      <input type="date" className="text-right border-none text-xs" 
+                             value={invoice.invoiceDetails.date} 
+                             onChange={(e) => updateInvoiceDetails('date', e.target.value)} />
+                    </div>
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-neutral-500">Invoice No</span>
+                      <input className="text-right border-none text-xs" 
+                             value={invoice.invoiceDetails.invoiceNumber} 
+                             onChange={(e) => updateInvoiceDetails('invoiceNumber', e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <div className="text-xs uppercase tracking-widest text-neutral-500 mb-1">Bill To</div>
+                  <div contentEditable suppressContentEditableWarning 
+                       onBlur={(e) => updateInvoiceDetails('clientName', e.target.innerText)} 
+                       className="text-sm font-medium">
+                    {invoice.invoiceDetails.clientName}
+                  </div>
+                  <div contentEditable suppressContentEditableWarning 
+                       onBlur={(e) => updateInvoiceDetails('clientAddress', e.target.innerText)} 
+                       className="text-xs text-neutral-700 whitespace-pre-line">
+                    {invoice.invoiceDetails.clientAddress}
+                  </div>
+                </div>
+
+                <table className="w-full mb-6 text-xs">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="pb-2 text-left">Description</th>
+                      <th className="pb-2 text-center w-16">Qty</th>
+                      <th className="pb-2 text-right w-24">Amount</th>
+                      <th className="no-print w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoice.items.map((item, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="py-2">
+                          <input className="w-full border-none text-xs" value={item.description} 
+                                 onChange={(e) => updateItem(index, 'description', e.target.value)} />
+                        </td>
+                        <td className="text-center">
+                          <input type="number" className="w-12 text-center border-none text-xs" 
+                                 value={item.quantity} 
+                                 onChange={(e) => updateItem(index, 'quantity', e.target.value)} />
+                        </td>
+                        <td className="text-right">
+                          <input type="number" step="0.01" className="w-20 text-right border-none text-xs" 
+                                 value={item.total} 
+                                 onChange={(e) => updateItem(index, 'total', e.target.value)} />
+                        </td>
+                        <td className="no-print">
+                          <button onClick={() => removeRow(index)} className="text-neutral-400">×</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="flex justify-end mb-6">
+                  <div className="w-64 text-xs">
+                    <div className="flex justify-between py-1">
+                      <span>Subtotal</span>
+                      <span>R{calculateSubtotal().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span>VAT ({invoice.invoiceDetails.vatRate}%)</span>
+                      <span>R{calculateVAT().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-2 text-sm font-medium border-t">
+                      <span>Total</span>
+                      <span>R{calculateTotal().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span>Paid</span>
+                      <span>R{parseFloat(invoice.invoiceDetails.paymentReceived || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-2 font-semibold">
+                      <span>Balance Due</span>
+                      <span>R{calculateBalance().toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t text-xs text-neutral-600">
+                  <div contentEditable={!invoice.isLocked} suppressContentEditableWarning 
+                       onBlur={(e) => updateCompanyData('bankDetails', e.target.innerText)} 
+                       className="whitespace-pre-line mb-2">
+                    {invoice.companyData.bankDetails}
+                  </div>
+                  <div>{invoice.companyData.footerNotes}</div>
+                </div>
+              </div>
+            );
+
+          case 'classic':
+          default:
+            return (
+              <div className="invoice-content bg-white p-8">
+                {/* Classic Design */}
+                <div className="flex justify-between items-start pb-4 mb-6 border-b-2 border-gray-800">
+                  <div className="flex-1">
+                    {invoice.logo && <img src={invoice.logo} alt="Logo" className="h-14 object-contain mb-3" />}
+                    <div className="text-xs space-y-1">
+                      <div contentEditable={!invoice.isLocked} suppressContentEditableWarning 
+                           onBlur={(e) => updateCompanyData('name', e.target.innerText)}>
+                        {invoice.companyData.name}
+                      </div>
+                      <div contentEditable={!invoice.isLocked} suppressContentEditableWarning 
+                           onBlur={(e) => updateCompanyData('address', e.target.innerText)} 
+                           className="whitespace-pre-line">
+                        {invoice.companyData.address}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-800">INVOICE</div>
+                </div>
+
+                <div className="flex justify-between mb-6">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-xs mb-1">INVOICE TO:</h3>
+                    <div contentEditable suppressContentEditableWarning 
+                         onBlur={(e) => updateInvoiceDetails('clientName', e.target.innerText)} 
+                         className="border border-gray-300 p-1 text-xs mb-1">
+                      {invoice.invoiceDetails.clientName}
+                    </div>
+                    <div contentEditable suppressContentEditableWarning 
+                         onBlur={(e) => updateInvoiceDetails('clientAddress', e.target.innerText)} 
+                         className="border border-gray-300 p-1 text-xs whitespace-pre-line">
+                      {invoice.invoiceDetails.clientAddress}
+                    </div>
+                  </div>
+                  <div className="ml-6">
+                    <table className="text-xs">
+                      <tbody>
+                        <tr>
+                          <td className="font-bold pr-2 py-1">Date:</td>
+                          <td>
+                            <input type="date" value={invoice.invoiceDetails.date} 
+                                   onChange={(e) => updateInvoiceDetails('date', e.target.value)} 
+                                   className="border border-gray-300 px-1 py-1 text-xs" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="font-bold pr-2 py-1">Invoice Number:</td>
+                          <td>
+                            <input type="text" value={invoice.invoiceDetails.invoiceNumber} 
+                                   onChange={(e) => updateInvoiceDetails('invoiceNumber', e.target.value)} 
+                                   className="border border-gray-300 px-1 py-1 text-xs w-full" />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <table className="w-full mb-6">
+                  <thead>
+                    <tr className="bg-gray-800 text-white">
+                      <th className="text-center p-2 text-xs">Quantity</th>
+                      <th className="text-left p-2 text-xs">Description</th>
+                      <th className="text-right p-2 text-xs">Total</th>
+                      <th className="w-10 no-print"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoice.items.map((item, index) => (
+                      <tr key={index} className="border-b border-gray-300">
+                        <td className="text-center p-1">
+                          <input type="number" value={item.quantity} 
+                                 onChange={(e) => updateItem(index, 'quantity', e.target.value)} 
+                                 className="w-12 border border-gray-300 px-1 py-1 text-xs text-center" />
+                        </td>
+                        <td className="p-1">
+                          <input type="text" value={item.description} 
+                                 onChange={(e) => updateItem(index, 'description', e.target.value)} 
+                                 className="w-full border border-gray-300 px-1 py-1 text-xs" />
+                        </td>
+                        <td className="text-right p-1">
+                          <input type="number" step="0.01" value={item.total} 
+                                 onChange={(e) => updateItem(index, 'total', e.target.value)} 
+                                 className="w-20 border border-gray-300 px-1 py-1 text-xs text-right" />
+                        </td>
+                        <td className="text-center p-1 no-print">
+                          <button onClick={() => removeRow(index)} 
+                                  className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">
+                            ×
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="flex justify-end">
+                  <div className="w-64">
+                    <table className="w-full text-xs">
+                      <tbody>
+                        <tr>
+                          <td className="text-right font-bold py-1 pr-2">Subtotal:</td>
+                          <td className="text-right py-1">R{calculateSubtotal().toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td className="text-right font-bold py-1 pr-2">VAT ({invoice.invoiceDetails.vatRate}%):</td>
+                          <td className="text-right py-1">R{calculateVAT().toFixed(2)}</td>
+                        </tr>
+                        <tr className="bg-gray-800 text-white font-bold">
+                          <td className="text-right py-2 pr-2">Total:</td>
+                          <td className="text-right py-2">R{calculateTotal().toFixed(2)}</td>
+                        </tr>
+                        <tr className="bg-green-600 text-white font-bold">
+                          <td className="text-right py-2 pr-2">Balance Due:</td>
+                          <td className="text-right py-2">R{calculateBalance().toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-3 bg-gray-100 border-l-4 border-gray-800">
+                  <strong className="text-xs">Bank Details</strong>
+                  <div contentEditable={!invoice.isLocked} suppressContentEditableWarning 
+                       onBlur={(e) => updateCompanyData('bankDetails', e.target.innerText)} 
+                       className="mt-1 text-xs whitespace-pre-line">
+                    {invoice.companyData.bankDetails}
+                  </div>
+                </div>
+              </div>
+            );
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-50 p-4">
+          <div className="a4-container">
+            <div className="a4-page bg-gray-50">
+              <div className="no-print mb-4 flex gap-2 justify-between flex-wrap">
+                <button onClick={onBack} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                  ← Back
+                </button>
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={addRow} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    + Add Line Item
+                  </button>
+                  {!invoice.isLocked && (
+                    <label className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 cursor-pointer">
+                      📷 Upload Logo
+                      <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                    </label>
+                  )}
+                  <button onClick={onSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    💾 Save Invoice
+                  </button>
+                  <button onClick={() => window.print()} className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">
+                    🖨️ Print
+                  </button>
+                </div>
+              </div>
+
+              {renderInvoiceContent()}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Main App Component
+    function UnifiedInvoiceSystem() {
+      const [user, setUser] = useState(null);
+      const [view, setView] = useState('templates');
+      const [templates, setTemplates] = useState([]);
+      const [invoices, setInvoices] = useState([]);
+      const [currentInvoice, setCurrentInvoice] = useState(null);
+      const [showAuthModal, setShowAuthModal] = useState(false);
+
+      useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+          setUser(user);
+          if (user) {
+            loadData(user.uid);
+          }
+        });
+        return () => unsubscribe();
+      }, []);
+
+      const loadData = async (userId) => {
+        const [loadedTemplates, loadedInvoices] = await Promise.all([
+          storage.getTemplates(userId),
+          storage.getInvoices(userId)
+        ]);
+        setTemplates(loadedTemplates);
+        setInvoices(loadedInvoices);
+      };
+
+      const createInvoiceFromTemplate = (template) => {
+        const newInvoice = {
+          templateId: template.id,
+          templateName: template.name,
+          designId: template.designId,
+          companyData: {
+            name: template.branding.companyName || 'SOLIDFLO',
+            address: '123 Business Street\nCity, Postal Code',
+            contact: 'Email: info@solidflo.com\nPhone: +27 123 4567',
+            vat: 'VAT No: ',
+            bankDetails: 'Bank: Standard Bank\nAccount: \nBranch Code: ',
+            footerNotes: 'Thank you for your business!'
+          },
+          invoiceDetails: {
+            clientName: 'Client Name',
+            clientAddress: 'Client Address\nCity, Postal Code',
+            date: new Date().toISOString().split('T')[0],
+            accountNo: '',
+            invoiceNumber: 'INV-' + Date.now().toString().slice(-6),
+            poNumber: '',
+            vatRate: (template.taxRate || 0.15) * 100,
+            paymentReceived: 0
+          },
+          items: [{ quantity: 1, description: 'Service/Product', total: 0 }],
+          logo: null,
+          isLocked: false
+        };
+        
+        setCurrentInvoice(newInvoice);
+        setView('invoice');
+      };
+
+      const saveCurrentInvoice = async () => {
+        if (!currentInvoice || !user) return;
+        const saved = await storage.saveInvoice(user.uid, currentInvoice);
+        setCurrentInvoice(saved);
+        await loadData(user.uid);
+        alert("Invoice saved successfully!");
+      };
+
+      const loadInvoice = (invoice) => {
+        setCurrentInvoice(invoice);
+        setView('invoice');
+      };
+
+      const saveTemplatePreset = async (preset) => {
+        if (!user) {
+          setShowAuthModal(true);
+          return;
+        }
+        await storage.saveTemplate(user.uid, preset);
+        await loadData(user.uid);
+        alert("Template saved successfully!");
+      };
+
+      if (view === 'presetTemplates') {
+        return (
+          <div className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold">Choose a Template</h1>
+                <button onClick={() => setView('templates')} className="bg-gray-600 text-white px-4 py-2 rounded">
+                  ← Back
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {TEMPLATE_PRESETS.map((preset, index) => (
+                  <div key={index} className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                    <h3 className="font-bold text-lg mb-2">{preset.name}</h3>
+                    <p className="text-sm text-gray-600 mb-4">{preset.branding.tagline}</p>
+                    <button
+                      onClick={() => saveTemplatePreset(preset)}
+                      className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+                    >
+                      Use This Template
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (view === 'templates') {
+        return (
+          <div className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-800">Invoice Templates</h1>
+                  {user && <p className="text-gray-600 text-sm">{user.email}</p>}
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {!user ? (
+                    <button
+                      onClick={() => setShowAuthModal(true)}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                    >
+                      Sign In
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setView('presetTemplates')}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                      >
+                        + New Template
+                      </button>
+                      <button
+                        onClick={() => setView('invoiceList')}
+                        className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700"
+                      >
+                        📄 View Invoices ({invoices.length})
+                      </button>
+                      <button
+                        onClick={() => auth.signOut()}
+                        className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700"
+                      >
+                        Sign Out
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {templates.map(template => (
+                  <div key={template.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                    <h3 className="font-bold text-lg mb-2">{template.name}</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {template.branding.companyName}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => createInvoiceFromTemplate(template)}
+                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                      >
+                        Create Invoice
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (confirm('Delete this template?')) {
+                            await storage.deleteTemplate(user.uid, template.id);
+                            await loadData(user.uid);
+                          }
+                        }}
+                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {templates.length === 0 && (
+                  <div className="col-span-full text-center py-12 text-gray-500">
+                    <p className="text-xl mb-4">No templates yet</p>
+                    <button
+                      onClick={() => setView('presetTemplates')}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                    >
+                      Create Your First Template
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (view === 'invoiceList') {
+        return (
+          <div className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+                <h1 className="text-3xl font-bold text-gray-800">My Invoices</h1>
+                <button
+                  onClick={() => setView('templates')}
+                  className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700"
+                >
+                  ← Back to Templates
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {invoices.map(invoice => {
+                  const total = invoice.items.reduce((sum, item) => sum + parseFloat(item.total || 0), 0) * (1 + invoice.invoiceDetails.vatRate / 100);
+                  return (
+                    <div key={invoice.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                      <div className="flex justify-between items-start flex-wrap gap-4">
+                        <div>
+                          <h3 className="font-bold text-lg mb-2">
+                            Invoice #{invoice.invoiceDetails.invoiceNumber}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Client: {invoice.invoiceDetails.clientName}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Date: {invoice.invoiceDetails.date}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Template: {invoice.templateName}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-green-600">
+                            R {total.toFixed(2)}
+                          </div>
+                          <button
+                            onClick={() => loadInvoice(invoice)}
+                            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                          >
+                            Open
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {invoices.length === 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-xl mb-4">No invoices yet</p>
+                    <button
+                      onClick={() => setView('templates')}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                    >
+                      Create Your First Invoice
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (view === 'invoice') {
+        return (
+          <InvoiceEditor
+            invoice={currentInvoice}
+            setInvoice={setCurrentInvoice}
+            onSave={saveCurrentInvoice}
+            onBack={() => setView('templates')}
+            templateDesign={currentInvoice?.designId || 'classic'}
+          />
+        );
+      }
+
+      return null;
+    }
+
+    // Render the app
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <>
+        <UnifiedInvoiceSystem />
+      </>
+    );
+  </script>
+</body>
+</html>

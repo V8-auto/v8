@@ -45,6 +45,148 @@
         flex-direction: column;
         gap: 6px;
       }
+      <style>
+  /* ============================================
+     A4 PORTRAIT INVOICE STYLING - PRINT & SCREEN
+     ============================================ */
+  
+  /* Invoice Container - A4 Dimensions */
+  .invoice-preview {
+        width: 210mm !important;
+        min-height: 297mm;
+        max-width: 210mm !important;
+        margin: 0 auto;
+        background: white;
+        padding: 20mm 15mm;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Print Styles */
+      @media print {
+        /* Set A4 Portrait page */
+        @page {
+          size: A4 portrait;
+          margin: 15mm 10mm;
+        }
+
+        /* Remove margins and background */
+        body {
+          margin: 0;
+          padding: 0;
+          background: white !important;
+        }
+
+        /* Full width for print */
+        .invoice-preview {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding: 20mm 15mm !important;
+          box-shadow: none !important;
+          page-break-after: avoid;
+        }
+
+        /* Hide everything except invoice */
+        .sidebar,
+        .no-print,
+        .mobile-sidebar,
+        button,
+        .hamburger-menu,
+        nav,
+        header {
+          display: none !important;
+        }
+
+        /* Ensure content area takes full width */
+        .content-area {
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        /* Force 2-column layout for client section */
+        .client-section {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 1.5rem !important;
+        }
+
+        /* Prevent page breaks inside sections */
+        .avoid-break {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        /* Table print settings */
+        table {
+          page-break-inside: auto;
+        }
+
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+
+        thead {
+          display: table-header-group;
+        }
+
+        /* Ensure colors print */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        /* Font sizes for print */
+        .text-xs {
+          font-size: 10pt !important;
+        }
+        .text-sm {
+          font-size: 11pt !important;
+        }
+        .text-base {
+          font-size: 12pt !important;
+        }
+        .text-lg {
+          font-size: 14pt !important;
+        }
+        .text-xl {
+          font-size: 16pt !important;
+        }
+        .text-2xl {
+          font-size: 18pt !important;
+        }
+        .text-3xl {
+          font-size: 24pt !important;
+        }
+        .text-4xl {
+          font-size: 32pt !important;
+        }
+      }
+
+      /* Screen responsive - stack on small screens only */
+      @media screen and (max-width: 768px) {
+        .invoice-preview {
+          width: 100% !important;
+          padding: 1rem !important;
+        }
+
+        .client-section {
+          grid-template-columns: 1fr !important;
+        }
+      }
+
+      /* Ensure 2-column layout on larger screens */
+      @media screen and (min-width: 769px) {
+        .client-section {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+      }
+    </style>
+    <style>
       .nav a {
         display: flex;
         align-items: center;
@@ -193,8 +335,245 @@
           display: none !important;
         }
       }
+      /* Force header to be side-by-side on print */
+      @media print {
+        .header-section {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 1.5rem !important;
+        }
+      }
+
+      /* Responsive stacking for mobile only */
+      @media screen and (max-width: 768px) {
+        .header-section {
+          grid-template-columns: 1fr !important;
+        }
+      }
     </style>
-    
+    <style>
+      /* ============================================
+     A4 PORTRAIT INVOICE STYLING - PRINT & SCREEN
+     ============================================ */
+
+      /* Invoice Container - A4 Dimensions */
+      .invoice-preview {
+        width: 210mm !important;
+        min-height: 297mm;
+        max-width: 210mm !important;
+        margin: 0 auto;
+        background: white;
+        padding: 10mm 10mm; /* Reduced padding */
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Hide scrollbars on print */
+      @media print {
+        /* Hide all scrollbars */
+        * {
+          overflow: visible !important;
+          scrollbar-width: none !important; /* Firefox */
+          -ms-overflow-style: none !important; /* IE/Edge */
+        }
+
+        *::-webkit-scrollbar {
+          display: none !important; /* Chrome/Safari */
+          width: 0 !important;
+          height: 0 !important;
+        }
+
+        /* Set A4 Portrait page */
+        @page {
+          size: A4 portrait;
+          margin: 10mm; /* Reduced margin */
+        }
+
+        /* Remove margins and background */
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          overflow: hidden !important;
+        }
+
+        /* Full width for print */
+        .invoice-preview {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding: 10mm !important; /* Reduced padding */
+          box-shadow: none !important;
+          page-break-after: avoid;
+          overflow: visible !important;
+        }
+
+        /* Hide everything except invoice */
+        .sidebar,
+        .no-print,
+        .mobile-sidebar,
+        button,
+        .hamburger-menu,
+        nav,
+        header,
+        .resizer-handle {
+          display: none !important;
+        }
+
+        /* Ensure content area takes full width */
+        .content-area {
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
+        }
+
+        /* Force 2-column layout for client section */
+        .client-section {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 1rem !important; /* Reduced gap */
+        }
+
+        /* Force header to be side-by-side */
+        .header-section {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 1.5rem !important;
+        }
+
+        /* Prevent page breaks inside sections */
+        .avoid-break {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        /* Table print settings */
+        table {
+          page-break-inside: auto;
+        }
+
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+
+        thead {
+          display: table-header-group;
+        }
+
+        /* Ensure colors print */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        /* Font sizes for print */
+        .text-xs {
+          font-size: 9pt !important;
+        }
+        .text-sm {
+          font-size: 10pt !important;
+        }
+        .text-base {
+          font-size: 11pt !important;
+        }
+        .text-lg {
+          font-size: 13pt !important;
+        }
+        .text-xl {
+          font-size: 15pt !important;
+        }
+        .text-2xl {
+          font-size: 17pt !important;
+        }
+        .text-3xl {
+          font-size: 22pt !important;
+        }
+        .text-4xl {
+          font-size: 28pt !important;
+        }
+
+        /* Reduce spacing in print */
+        .mb-8 {
+          margin-bottom: 1rem !important;
+        }
+        .mb-6 {
+          margin-bottom: 0.75rem !important;
+        }
+        .mb-4 {
+          margin-bottom: 0.5rem !important;
+        }
+        .pb-6 {
+          padding-bottom: 0.75rem !important;
+        }
+        .p-8 {
+          padding: 1rem !important;
+        }
+        .gap-6 {
+          gap: 1rem !important;
+        }
+
+        /* Ensure grid layouts work properly */
+        .grid {
+          display: grid !important;
+        }
+
+        .overflow-y-auto,
+        .overflow-x-auto {
+          overflow: visible !important;
+        }
+      }
+
+      /* Screen responsive - stack on small screens only */
+      @media screen and (max-width: 768px) {
+        .invoice-preview {
+          width: 100% !important;
+          padding: 1rem !important;
+        }
+
+        .client-section {
+          grid-template-columns: 1fr !important;
+        }
+
+        .header-section {
+          grid-template-columns: 1fr !important;
+        }
+      }
+
+      /* Ensure 2-column layout on larger screens */
+      @media screen and (min-width: 769px) {
+        .client-section {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+
+        .header-section {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+      }
+
+      /* Hide scrollbars in screen view for cleaner look */
+      .invoice-preview::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .invoice-preview::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      .invoice-preview::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+
+      .invoice-preview::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+    </style>
   </head>
   <body>
     <div class="main-container">
@@ -265,7 +644,8 @@
             👤
           </div>
           <div>
-            <div style="font-weight: 700; color: white" id="userName">User</div>          </div>
+            <div style="font-weight: 700; color: white" id="userName">User</div>
+          </div>
         </div>
       </aside>
 
@@ -273,7 +653,6 @@
     </div>
 
     <script type="text/babel">
-   
       const { useState, useRef, useEffect } = React;
 
       // Firebase Config
@@ -301,9 +680,9 @@
           );
         }
 
-       return (
-  <>
-    <style>{`
+        return (
+          <>
+            <style>{`
       @media print {
         @page {
           size: A4;
@@ -343,174 +722,178 @@
         }
       }
     `}</style>
-    
-    <div
-      className="invoice-container mx-auto"
-      style={{ width: "210mm", maxWidth: "210mm", minWidth: "210mm" }}
-    >
-      <div className="invoice-preview w-full mx-auto p-8 bg-white shadow-lg rounded-lg">
-        {/* Header with template styling */}
-        <div
-          className={`${styles?.headerBg || "bg-gray-100"} ${
-            styles?.headerBorder || "border-b-2"
-          } p-6 mb-6`}
-        >
-          {branding?.logo && (
-            <img src={branding.logo} alt="Logo" className="h-16 mb-4" />
-          )}
-          <h1 className={`${styles?.titleSize || "text-4xl"} font-bold`}>
-            INVOICE
-          </h1>
-          {branding?.tagline && (
-            <p className="text-sm text-gray-600 mt-2">
-              {branding.tagline}
-            </p>
-          )}
-        </div>
 
-        {/* Invoice Details */}
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          <div>
-            <h3
-              className={`${
-                styles?.sectionTitle || "font-semibold"
-              } mb-2`}
+            <div
+              className="invoice-container mx-auto"
+              style={{ width: "210mm", maxWidth: "210mm", minWidth: "210mm" }}
             >
-              From:
-            </h3>
-            <p className="font-semibold">{invoiceData.from?.name}</p>
-            <p>{invoiceData.from?.address}</p>
-            <p>{invoiceData.from?.city}</p>
-            <p>{invoiceData.from?.email}</p>
-            <p>{invoiceData.from?.phone}</p>
-          </div>
+              <div className="invoice-preview w-full mx-auto p-8 bg-white shadow-lg rounded-lg">
+                {/* Header with template styling */}
+                <div
+                  className={`${styles?.headerBg || "bg-gray-100"} ${
+                    styles?.headerBorder || "border-b-2"
+                  } p-6 mb-6`}
+                >
+                  {branding?.logo && (
+                    <img src={branding.logo} alt="Logo" className="h-16 mb-4" />
+                  )}
+                  <h1
+                    className={`${styles?.titleSize || "text-4xl"} font-bold`}
+                  >
+                    INVOICE
+                  </h1>
+                  {branding?.tagline && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      {branding.tagline}
+                    </p>
+                  )}
+                </div>
 
-          <div>
-            <h3
-              className={`${
-                styles?.sectionTitle || "font-semibold"
-              } mb-2`}
-            >
-              To:
-            </h3>
-            <p className="font-semibold">{invoiceData.to?.name}</p>
-            <p>{invoiceData.to?.address}</p>
-            <p>{invoiceData.to?.city}</p>
-            <p>{invoiceData.to?.email}</p>
-            <p>{invoiceData.to?.phone}</p>
-          </div>
-        </div>
+                {/* Invoice Details */}
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <h3
+                      className={`${
+                        styles?.sectionTitle || "font-semibold"
+                      } mb-2`}
+                    >
+                      From:
+                    </h3>
+                    <p className="font-semibold">{invoiceData.from?.name}</p>
+                    <p>{invoiceData.from?.address}</p>
+                    <p>{invoiceData.from?.city}</p>
+                    <p>{invoiceData.from?.email}</p>
+                    <p>{invoiceData.from?.phone}</p>
+                  </div>
 
-        {/* Invoice Info */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div>
-            <p className="text-gray-600">Invoice Number</p>
-            <p className="font-semibold">{invoiceData.number}</p>
-          </div>
-          <div>
-            <p className="text-gray-600">Date</p>
-            <p className="font-semibold">{invoiceData.date}</p>
-          </div>
-          <div>
-            <p className="text-gray-600">Due Date</p>
-            <p className="font-semibold">{invoiceData.dueDate}</p>
-          </div>
-        </div>
+                  <div>
+                    <h3
+                      className={`${
+                        styles?.sectionTitle || "font-semibold"
+                      } mb-2`}
+                    >
+                      To:
+                    </h3>
+                    <p className="font-semibold">{invoiceData.to?.name}</p>
+                    <p>{invoiceData.to?.address}</p>
+                    <p>{invoiceData.to?.city}</p>
+                    <p>{invoiceData.to?.email}</p>
+                    <p>{invoiceData.to?.phone}</p>
+                  </div>
+                </div>
 
-        {/* Vehicle Info */}
-        {invoiceData.vehicle && (
-          <div
-            className={`${
-              styles?.cardBg || "bg-gray-50"
-            } p-4 rounded mb-6`}
-          >
-            <h3
-              className={`${
-                styles?.sectionTitle || "font-semibold"
-              } mb-2`}
-            >
-              Vehicle Details:
-            </h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <p>
-                <span className="font-semibold">Registration:</span>{" "}
-                {invoiceData.vehicle.registration}
-              </p>
-              <p>
-                <span className="font-semibold">Make/Model:</span>{" "}
-                {invoiceData.vehicle.make} {invoiceData.vehicle.model}
-              </p>
-              <p>
-                <span className="font-semibold">Engine:</span>{" "}
-                {invoiceData.vehicle.engine}
-              </p>
-              <p>
-                <span className="font-semibold">VIN:</span>{" "}
-                {invoiceData.vehicle.vin}
-              </p>
-              <p>
-                <span className="font-semibold">Odometer:</span>{" "}
-                {invoiceData.vehicle.odometer}
-              </p>
+                {/* Invoice Info */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <p className="text-gray-600">Invoice Number</p>
+                    <p className="font-semibold">{invoiceData.number}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Date</p>
+                    <p className="font-semibold">{invoiceData.date}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Due Date</p>
+                    <p className="font-semibold">{invoiceData.dueDate}</p>
+                  </div>
+                </div>
+
+                {/* Vehicle Info */}
+                {invoiceData.vehicle && (
+                  <div
+                    className={`${
+                      styles?.cardBg || "bg-gray-50"
+                    } p-4 rounded mb-6`}
+                  >
+                    <h3
+                      className={`${
+                        styles?.sectionTitle || "font-semibold"
+                      } mb-2`}
+                    >
+                      Vehicle Details:
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <p>
+                        <span className="font-semibold">Registration:</span>{" "}
+                        {invoiceData.vehicle.registration}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Make/Model:</span>{" "}
+                        {invoiceData.vehicle.make} {invoiceData.vehicle.model}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Engine:</span>{" "}
+                        {invoiceData.vehicle.engine}
+                      </p>
+                      <p>
+                        <span className="font-semibold">VIN:</span>{" "}
+                        {invoiceData.vehicle.vin}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Odometer:</span>{" "}
+                        {invoiceData.vehicle.odometer}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Items Table */}
+                <div className="w-full overflow-x-auto mb-6">
+                  <table
+                    className={`w-full ${styles?.tableBorder || "border"}`}
+                  >
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="text-left p-3">Description</th>
+                        <th className="text-center p-3">Quantity</th>
+                        <th className="text-right p-3">Rate</th>
+                        <th className="text-right p-3">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoiceData.items?.map((item, index) => (
+                        <tr key={index} className="border-t">
+                          <td className="p-3">{item.description}</td>
+                          <td className="text-center p-3">{item.quantity}</td>
+                          <td className="text-right p-3">
+                            R {item.rate?.toFixed(2)}
+                          </td>
+                          <td className="text-right p-3">
+                            R {item.amount?.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Total */}
+                <div className="flex justify-end mb-6">
+                  <div className="w-64">
+                    <div className="flex justify-between py-2 border-t-2 border-gray-800 font-bold text-lg">
+                      <span>Total:</span>
+                      <span>
+                        R{" "}
+                        {invoiceData.items
+                          ?.reduce((sum, item) => sum + (item.amount || 0), 0)
+                          .toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {invoiceData.notes && (
+                  <div className="border-t pt-4">
+                    <p className="text-sm text-gray-600">{invoiceData.notes}</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Items Table */}
-        <div className="w-full overflow-x-auto mb-6">
-          <table className={`w-full ${styles?.tableBorder || "border"}`}>
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="text-left p-3">Description</th>
-                <th className="text-center p-3">Quantity</th>
-                <th className="text-right p-3">Rate</th>
-                <th className="text-right p-3">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoiceData.items?.map((item, index) => (
-                <tr key={index} className="border-t">
-                  <td className="p-3">{item.description}</td>
-                  <td className="text-center p-3">{item.quantity}</td>
-                  <td className="text-right p-3">
-                    R {item.rate?.toFixed(2)}
-                  </td>
-                  <td className="text-right p-3">
-                    R {item.amount?.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Total */}
-        <div className="flex justify-end mb-6">
-          <div className="w-64">
-            <div className="flex justify-between py-2 border-t-2 border-gray-800 font-bold text-lg">
-              <span>Total:</span>
-              <span>
-                R{" "}
-                {invoiceData.items
-                  ?.reduce((sum, item) => sum + (item.amount || 0), 0)
-                  .toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Notes */}
-        {invoiceData.notes && (
-          <div className="border-t pt-4">
-            <p className="text-sm text-gray-600">{invoiceData.notes}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  </>
-);
+          </>
+        );
       };
-     
+
       const InvoiceManager = () => {
         const [activeTab, setActiveTab] = useState("editor");
         const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -532,8 +915,8 @@
         const [branding, setBranding] = useState({
           logo: null,
           primaryColor: "#3B82F6",
-          companyName: "Your Business Ltd",
-          tagline: "Professional Services",
+          companyName: "",
+          tagline: "",
           font: "Inter, system-ui, sans-serif",
         });
 
@@ -728,17 +1111,17 @@
 
           const handleMouseUp = () => {
             setIsResizing(false);
-            document.body.style.cursor = '';
+            document.body.style.cursor = "";
           };
 
           if (isResizing) {
-            document.body.style.cursor = 'col-resize'; 
+            document.body.style.cursor = "col-resize";
             document.addEventListener("mousemove", handleMouseMove);
             document.addEventListener("mouseup", handleMouseUp);
           }
 
           return () => {
-            document.body.style.cursor = '';
+            document.body.style.cursor = "";
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
           };
@@ -1015,7 +1398,7 @@
             console.error("Error loading templates list:", error);
           }
         };
-      async function saveInvoiceToFirebase() {
+         async function saveInvoiceToFirebase() {
       console.log("💾 Attempting to save invoice...");
 
       // Helper to wait for firebaseReady flag
@@ -1135,7 +1518,6 @@
       }
     }
 
-
         // Helper function to check template availability
         const isTemplateAvailableCheck = (templateId, templates) => {
           return templates.some((t) => t.id === templateId);
@@ -1152,34 +1534,44 @@
 
         const { subtotal, tax, total } = calculateTotals();
         const createNewInvoice = async () => {
-  const user = auth.currentUser;
-  if (!user) return;
+          const user = auth.currentUser;
+          if (!user) return;
 
-  const counterRef = db.collection("users").doc(user.uid).collection("invoices");
+          const counterRef = db
+            .collection("users")
+            .doc(user.uid)
+            .collection("invoices");
 
-  await db.runTransaction(async (transaction) => {
-    const counterSnap = await transaction.get(counterRef);
+          await db.runTransaction(async (transaction) => {
+            const counterSnap = await transaction.get(counterRef);
 
-    let lastNumber = 0;
-    if (counterSnap.exists) {
-      lastNumber = counterSnap.data().lastNumber || 0;
-    }
+            let lastNumber = 0;
+            if (counterSnap.exists) {
+              lastNumber = counterSnap.data().lastNumber || 0;
+            }
 
-    const nextNumber = lastNumber + 1;
+            const nextNumber = lastNumber + 1;
 
-    // Format: INV-2026-001
-    const formattedNumber = `INV-2026-${String(nextNumber).padStart(3, "0")}`;
+            // Format: INV-2026-001
+            const formattedNumber = `INV-2026-${String(nextNumber).padStart(
+              3,
+              "0"
+            )}`;
 
-    // Update counter
-    transaction.set(counterRef, { lastNumber: nextNumber }, { merge: true });
+            // Update counter
+            transaction.set(
+              counterRef,
+              { lastNumber: nextNumber },
+              { merge: true }
+            );
 
-    // Set invoice number in state
-    setInvoiceData((prev) => ({
-      ...prev,
-      number: formattedNumber,
-    }));
-  });
-};
+            // Set invoice number in state
+            setInvoiceData((prev) => ({
+              ...prev,
+              number: formattedNumber,
+            }));
+          });
+        };
 
         const addLineItem = () => {
           setInvoiceData({
@@ -1261,259 +1653,339 @@
         const renderSection = (section) => {
           if (!section.visible) return null;
 
-  switch (section.id) {
-    case "header":
-      return (
-        <div key={section.id} className="border-b-4 border-gray-800 pb-6 mb-8">
-          <div className="flex flex-col md:flex-row justify-between gap-6">
-            <div className="flex-1">
-              {branding.logo && (
-                <img src={branding.logo} alt="Logo" className="h-20 mb-4" />
-              )}
-              <div className="text-3xl font-bold text-red-600 mb-4">
-                {branding.companyName || "V8 POWERED"}
-              </div>
-              {branding.tagline && (
-                <div className="text-sm text-gray-600 mb-4">{branding.tagline}</div>
-              )}
-              <div className="text-xs text-gray-600 space-y-1">
-                <div className="font-semibold">HEAD OFFICE:</div>
-                <div>8-10 CNR THIRD & ARKWRIGHT AVENUE</div>
-                <div>WYNBERG SANDTON 2090</div>
-                <div className="mt-2">W: v8poweredrc.co.za</div>
-                <div>E: info@v8poweredrc.co.za</div>
-                <div>T: 062 114 4500</div>
-              </div>
-            </div>
+          switch (section.id) {
+            case "header":
+              return (
+                <div
+                  key={section.id}
+                  className="border-b-4 border-gray-800 pb-6 mb-8 avoid-break"
+                >
+                  <div className="header-section grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Left side - Company Info */}
+                    <div>
+                      <div className="text-3xl font-bold text-red-600 mb-4">
+                        {branding.companyName || ""}
+                      </div>
+                      {branding.tagline && (
+                        <div className="text-sm text-gray-600 mb-4">
+                          {branding.tagline}
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-600 space-y-1">
+                        <div className="font-semibold">HEAD OFFICE:</div>
+                        <div>8-10 CNR THIRD & ARKWRIGHT AVENUE</div>
+                        <div>WYNBERG SANDTON 2090</div>
+                        <div className="mt-2">W: v8poweredrc.co.za</div>
+                        <div>E: info@v8poweredrc.co.za</div>
+                        <div>T: 062 114 4500</div>
+                      </div>
+                    </div>
 
-            <div className="md:w-80 space-y-2">
-              <div className="text-4xl font-bold text-right mb-4">INVOICE</div>
-              <div className="bg-gray-50 p-2 rounded flex justify-between">
-                <span className="text-xs font-semibold text-gray-600">Invoice No.</span>
-                <span className="text-sm font-bold">{invoiceData.number}</span>
-              </div>
-              <div className="bg-gray-50 p-2 rounded flex justify-between">
-                <span className="text-xs font-semibold text-gray-600">Date</span>
-                <span className="text-sm font-bold">{invoiceData.date}</span>
-              </div>
-              <div className="bg-gray-50 p-2 rounded flex justify-between">
-                <span className="text-xs font-semibold text-gray-600">Due Date</span>
-                <span className="text-sm font-bold">{invoiceData.dueDate}</span>
-              </div>
-              <div className="bg-gray-50 p-2 rounded flex justify-between">
-                <span className="text-xs font-semibold text-gray-600">Merchant Code</span>
-                <span className="text-sm font-bold">{invoiceData.merchantCode}</span>
-              </div>
-              <div className="bg-gray-50 p-2 rounded flex justify-between">
-                <span className="text-xs font-semibold text-gray-600">Service Type</span>
-                <span className="text-sm font-bold">{invoiceData.serviceType}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
+                    {/* Right side - Invoice Details */}
+                    <div className="space-y-2">
+                      <div className="text-4xl font-bold text-right mb-4">
+                        INVOICE
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded flex justify-between">
+                        <span className="text-xs font-semibold text-gray-600">
+                          Invoice No.
+                        </span>
+                        <span className="text-sm font-bold">
+                          {invoiceData.number}
+                        </span>
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded flex justify-between">
+                        <span className="text-xs font-semibold text-gray-600">
+                          Date
+                        </span>
+                        <span className="text-sm font-bold">
+                          {invoiceData.date}
+                        </span>
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded flex justify-between">
+                        <span className="text-xs font-semibold text-gray-600">
+                          Due Date
+                        </span>
+                        <span className="text-sm font-bold">
+                          {invoiceData.dueDate}
+                        </span>
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded flex justify-between">
+                        <span className="text-xs font-semibold text-gray-600">
+                          Merchant Code
+                        </span>
+                        <span className="text-sm font-bold">
+                          {invoiceData.merchantCode}
+                        </span>
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded flex justify-between">
+                        <span className="text-xs font-semibold text-gray-600">
+                          Service Type
+                        </span>
+                        <span className="text-sm font-bold">
+                          {invoiceData.serviceType}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            case "client":
+              return (
+                <div
+                  key={section.id}
+                  className="client-section grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 avoid-break"
+                >
+                  {/* Invoice From - LEFT COLUMN */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-600 text-white px-3 py-2 font-bold text-sm">
+                      INVOICE TO
+                    </div>
+                    <div className="p-3 space-y-1 text-xs">
+                      {invoiceData.from?.name && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            Name:
+                          </span>{" "}
+                          {invoiceData.from.name}
+                        </div>
+                      )}
+                      {invoiceData.from?.address && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            Address:
+                          </span>{" "}
+                          {invoiceData.from.address}
+                        </div>
+                      )}
+                      {invoiceData.from?.city && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            City:
+                          </span>{" "}
+                          {invoiceData.from.city}
+                        </div>
+                      )}
+                      {invoiceData.from?.email && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            Email:
+                          </span>{" "}
+                          {invoiceData.from.email}
+                        </div>
+                      )}
+                      {invoiceData.from?.phone && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            Phone:
+                          </span>{" "}
+                          {invoiceData.from.phone}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-    case "client":
-      return (
-        <div key={section.id} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Invoice To */}
-          <div className="border rounded-lg overflow-hidden">
-            <div className="bg-gray-600 text-white px-3 py-2 font-bold text-sm">
-              INVOICE TO
-            </div>
-            <div className="p-3 space-y-1 text-xs">
-              {invoiceData.from?.name && (
-                <div>
-                  <span className="font-semibold text-gray-600">Name:</span>{" "}
-                  {invoiceData.from.name}
+                  {/* Bill To - RIGHT COLUMN */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-800 text-white px-3 py-2 font-bold text-sm">
+                      BILL TO
+                    </div>
+                    <div className="p-3 space-y-1 text-xs">
+                      {invoiceData.to?.name && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            Name:
+                          </span>{" "}
+                          {invoiceData.to.name}
+                        </div>
+                      )}
+                      {invoiceData.to?.address && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            Address:
+                          </span>{" "}
+                          {invoiceData.to.address}
+                        </div>
+                      )}
+                      {invoiceData.to?.city && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            City:
+                          </span>{" "}
+                          {invoiceData.to.city}
+                        </div>
+                      )}
+                      {invoiceData.to?.email && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            Email:
+                          </span>{" "}
+                          {invoiceData.to.email}
+                        </div>
+                      )}
+                      {invoiceData.to?.phone && (
+                        <div>
+                          <span className="font-semibold text-gray-600">
+                            Phone:
+                          </span>{" "}
+                          {invoiceData.to.phone}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
-              {invoiceData.from?.address && (
-                <div>
-                  <span className="font-semibold text-gray-600">Address:</span>{" "}
-                  {invoiceData.from.address}
-                </div>
-              )}
-              {invoiceData.from?.city && (
-                <div>
-                  <span className="font-semibold text-gray-600">City:</span>{" "}
-                  {invoiceData.from.city}
-                </div>
-              )}
-              {invoiceData.from?.email && (
-                <div>
-                  <span className="font-semibold text-gray-600">Email:</span>{" "}
-                  {invoiceData.from.email}
-                </div>
-              )}
-              {invoiceData.from?.phone && (
-                <div>
-                  <span className="font-semibold text-gray-600">Phone:</span>{" "}
-                  {invoiceData.from.phone}
-                </div>
-              )}
-            </div>
-          </div>
+              );
 
-          {/* Bill To */}
-          <div className="border rounded-lg overflow-hidden">
-            <div className="bg-gray-600 text-white px-3 py-2 font-bold text-sm">
-              BILL TO
-            </div>
-            <div className="p-3 space-y-1 text-xs">
-              {invoiceData.to?.name && (
-                <div>
-                  <span className="font-semibold text-gray-600">Name:</span>{" "}
-                  {invoiceData.to.name}
+            case "vehicle":
+              if (!invoiceData.vehicle) return null;
+              return (
+                <div
+                  key={section.id}
+                  className="border rounded-lg overflow-hidden mb-8 avoid-break"
+                >
+                  <div className="bg-gray-600 text-white px-3 py-2 font-bold text-sm">
+                    VEHICLE DETAILS
+                  </div>
+                  <div className="p-4 grid grid-cols-2 gap-3 text-xs">
+                    {invoiceData.vehicle.registration && (
+                      <div>
+                        <span className="font-semibold text-gray-600">
+                          Registration:
+                        </span>{" "}
+                        {invoiceData.vehicle.registration}
+                      </div>
+                    )}
+                    {invoiceData.vehicle.make && (
+                      <div>
+                        <span className="font-semibold text-gray-600">
+                          Make:
+                        </span>{" "}
+                        {invoiceData.vehicle.make}
+                      </div>
+                    )}
+                    {invoiceData.vehicle.model && (
+                      <div>
+                        <span className="font-semibold text-gray-600">
+                          Model:
+                        </span>{" "}
+                        {invoiceData.vehicle.model}
+                      </div>
+                    )}
+                    {invoiceData.vehicle.engine && (
+                      <div>
+                        <span className="font-semibold text-gray-600">
+                          Engine:
+                        </span>{" "}
+                        {invoiceData.vehicle.engine}
+                      </div>
+                    )}
+                    {invoiceData.vehicle.vin && (
+                      <div>
+                        <span className="font-semibold text-gray-600">
+                          VIN:
+                        </span>{" "}
+                        {invoiceData.vehicle.vin}
+                      </div>
+                    )}
+                    {invoiceData.vehicle.odometer && (
+                      <div>
+                        <span className="font-semibold text-gray-600">
+                          Odometer:
+                        </span>{" "}
+                        {invoiceData.vehicle.odometer}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-              {invoiceData.to?.address && (
-                <div>
-                  <span className="font-semibold text-gray-600">Address:</span>{" "}
-                  {invoiceData.to.address}
+              );
+
+            case "items":
+              return (
+                <div key={section.id} className="mb-8 overflow-x-auto">
+                  <table className="w-full text-sm border">
+                    <thead>
+                      <tr className="bg-gray-800 text-white">
+                        <th className="text-left py-3 px-3">DESCRIPTION</th>
+                        <th className="text-center py-3 px-3 w-24">QTY</th>
+                        <th className="text-right py-3 px-3 w-32">
+                          UNIT PRICE
+                        </th>
+                        <th className="text-right py-3 px-3 w-32">AMOUNT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoiceData.items && invoiceData.items.length > 0 ? (
+                        invoiceData.items.map((item, index) => (
+                          <tr key={index} className="border-b avoid-break">
+                            <td className="py-2 px-3">
+                              {item.description || "-"}
+                            </td>
+                            <td className="text-center py-2 px-3">
+                              {item.quantity}
+                            </td>
+                            <td className="text-right py-2 px-3">
+                              R {(item.rate || 0).toFixed(2)}
+                            </td>
+                            <td className="text-right py-2 px-3 font-semibold">
+                              R {(item.amount || 0).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="4"
+                            className="text-center py-4 text-gray-500"
+                          >
+                            No items added yet
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-              {invoiceData.to?.city && (
-                <div>
-                  <span className="font-semibold text-gray-600">City:</span>{" "}
-                  {invoiceData.to.city}
+              );
+
+            case "totals":
+              return (
+                <div
+                  key={section.id}
+                  className="flex justify-end mb-8 avoid-break"
+                >
+                  <div className="w-72 space-y-2">
+                    <div className="flex justify-between py-2 text-sm border-t">
+                      <span>Subtotal:</span>
+                      <span className="font-semibold">
+                        R {subtotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-2 text-sm">
+                      <span>Tax (10%):</span>
+                      <span className="font-semibold">R {tax.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-3 bg-gray-800 text-white px-4 rounded font-bold text-lg">
+                      <span>TOTAL:</span>
+                      <span>R {total.toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-              {invoiceData.to?.email && (
-                <div>
-                  <span className="font-semibold text-gray-600">Email:</span>{" "}
-                  {invoiceData.to.email}
+              );
+
+            case "notes":
+              if (!invoiceData.notes) return null;
+              return (
+                <div
+                  key={section.id}
+                  className="border-t-2 pt-6 mb-6 avoid-break"
+                >
+                  <h4 className="font-semibold mb-2">Notes:</h4>
+                  <p className="text-sm text-gray-600">{invoiceData.notes}</p>
                 </div>
-              )}
-              {invoiceData.to?.phone && (
-                <div>
-                  <span className="font-semibold text-gray-600">Phone:</span>{" "}
-                  {invoiceData.to.phone}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      );
+              );
 
-    case "vehicle":
-      if (!invoiceData.vehicle) return null;
-      return (
-        <div key={section.id} className="border rounded-lg overflow-hidden mb-8">
-          <div className="bg-gray-600 text-white px-3 py-2 font-bold text-sm">
-            VEHICLE DETAILS
-          </div>
-          <div className="p-4 grid grid-cols-2 gap-3 text-xs">
-            {invoiceData.vehicle.registration && (
-              <div>
-                <span className="font-semibold text-gray-600">Registration:</span>{" "}
-                {invoiceData.vehicle.registration}
-              </div>
-            )}
-            {invoiceData.vehicle.make && (
-              <div>
-                <span className="font-semibold text-gray-600">Make:</span>{" "}
-                {invoiceData.vehicle.make}
-              </div>
-            )}
-            {invoiceData.vehicle.model && (
-              <div>
-                <span className="font-semibold text-gray-600">Model:</span>{" "}
-                {invoiceData.vehicle.model}
-              </div>
-            )}
-            {invoiceData.vehicle.engine && (
-              <div>
-                <span className="font-semibold text-gray-600">Engine:</span>{" "}
-                {invoiceData.vehicle.engine}
-              </div>
-            )}
-            {invoiceData.vehicle.vin && (
-              <div>
-                <span className="font-semibold text-gray-600">VIN:</span>{" "}
-                {invoiceData.vehicle.vin}
-              </div>
-            )}
-            {invoiceData.vehicle.odometer && (
-              <div>
-                <span className="font-semibold text-gray-600">Odometer:</span>{" "}
-                {invoiceData.vehicle.odometer}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-
-    case "items":
-      return (
-        <div key={section.id} className="mb-8 overflow-x-auto">
-          <table className="w-full text-sm border">
-            <thead>
-              <tr className="bg-gray-800 text-white">
-                <th className="text-left py-3 px-3">DESCRIPTION</th>
-                <th className="text-center py-3 px-3 w-24">QTY</th>
-                <th className="text-right py-3 px-3 w-32">UNIT PRICE</th>
-                <th className="text-right py-3 px-3 w-32">AMOUNT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoiceData.items && invoiceData.items.length > 0 ? (
-                invoiceData.items.map((item, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="py-2 px-3">{item.description || "-"}</td>
-                    <td className="text-center py-2 px-3">{item.quantity}</td>
-                    <td className="text-right py-2 px-3">
-                      R {(item.rate || 0).toFixed(2)}
-                    </td>
-                    <td className="text-right py-2 px-3 font-semibold">
-                      R {(item.amount || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="text-center py-4 text-gray-500">
-                    No items added yet
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      );
-
-    case "totals":
-      return (
-        <div key={section.id} className="flex justify-end mb-8">
-          <div className="w-72 space-y-2">
-            <div className="flex justify-between py-2 text-sm border-t">
-              <span>Subtotal:</span>
-              <span className="font-semibold">R {subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between py-2 text-sm">
-              <span>Tax (10%):</span>
-              <span className="font-semibold">R {tax.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between py-3 bg-gray-800 text-white px-4 rounded font-bold text-lg">
-              <span>TOTAL:</span>
-              <span>R {total.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
-      );
-
-    case "notes":
-      if (!invoiceData.notes) return null;
-      return (
-        <div key={section.id} className="border-t-2 pt-6 mb-6">
-          <h4 className="font-semibold mb-2">Notes:</h4>
-          <p className="text-sm text-gray-600">{invoiceData.notes}</p>
-        </div>
-      );
-
-    default:
-      return null;
-  }
+            default:
+              return null;
+          }
         };
 
         const renderTemplatePreview = () => {
@@ -1592,7 +2064,7 @@
                       👁️ <span className="hidden sm:inline">View</span>
                     </button>
                     <button
-                     onClick={saveInvoiceToFirebase}
+                      onClick={saveInvoiceToFirebase}
                       className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                     >
                       🖨️ <span className="hidden sm:inline">Save</span>
@@ -1675,12 +2147,12 @@
                           <label className="block text-sm font-medium mb-2">
                             Invoice Number
                           </label>
-                         <input
-                              type="text"
-                              value={invoiceData.number}
-                              readOnly
-                              className="w-full px-3 py-2 border rounded-lg mb-3 text-sm bg-gray-100 cursor-not-allowed"
-                            />
+                          <input
+                            type="text"
+                            value={invoiceData.number}
+                            readOnly
+                            className="w-full px-3 py-2 border rounded-lg mb-3 text-sm bg-gray-100 cursor-not-allowed"
+                          />
 
                           <label className="block text-sm font-medium mb-2">
                             Date
@@ -1730,8 +2202,7 @@
                           <label className="block text-sm font-medium mb-2">
                             Merchant Code
                           </label>
-                          <input
-                            type="text"
+                          <select
                             value={invoiceData.merchantCode}
                             onChange={(e) =>
                               setInvoiceData({
@@ -1740,7 +2211,13 @@
                               })
                             }
                             className="w-full px-3 py-2 border rounded-lg mb-3 text-sm"
-                          />
+                          >
+                            <option value="">Select Merchant Code</option>
+                            <option value="MC001">MC001 - Main Merchant</option>
+                            <option value="MC002">
+                              MC002 - Secondary Merchant
+                            </option>
+                          </select>
                         </div>
 
                         <div>
@@ -2271,9 +2748,7 @@
                         isResizing ? "bg-gray-500" : ""
                       }`}
                       onMouseDown={handleMouseDown}
-                    >
-                     
-                    </div>
+                    ></div>
                     {/* Saved Templates */}
                     <div
                       className="overflow-y-auto print:hidden mt-6 lg:mt-0"
@@ -2352,8 +2827,6 @@
         <InvoiceManager />
       );
     </script>
-    <script type="module">
-
-    </script>
+    <script type="module"></script>
   </body>
 </html>

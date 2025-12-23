@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>V8 Powered Auto - Invoice</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  
+  <style>
+    @media print {
+      body { background: white; }
+      .print\\:hidden { display: none !important; }
+      .print\\:block { display: block !important; }
+      @page { size: A4; margin: 10mm; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+      authDomain: "solidflow-1f753.firebaseapp.com",
+      projectId: "solidflow-1f753",
+      storageBucket: "solidflow-1f753.firebasestorage.app",
+      messagingSenderId: "68885400864",
+      appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+      measurementId: "G-RTL0CM1B44",
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Icons
+    const PrinterIcon = () => (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+        <rect x="6" y="14" width="12" height="8"></rect>
+      </svg>
+    );
+
+    const SaveIcon = () => (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        <polyline points="7 3 7 8 15 8"></polyline>
+      </svg>
+    );
+
+    const MenuIcon = () => (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    );
+
+    const XIcon = () => (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    );
+
+    function InvoiceApp() {
+      const [sidebarOpen, setSidebarOpen] = useState(false);
+      const [invoiceData, setInvoiceData] = useState({
+        number: "INV-2025-001",
+        date: new Date().toISOString().split("T")[0],
+        merchantCode: "811371",
+        serviceType: "SERVICE",
+        invoiceTo: { name: "", company: "", address: "", email: "", tel: "" },
+        billTo: { name: "", company: "", address: "", email: "", tel: "" },
+        vehicle: { registration: "", make: "", model: "", engine: "", vin: "", odometer: "", preAuth: "", authCode: "" },
+        items: [{ description: "", quantity: 1, unitPrice: 0 }],
+        notes: "",
+      });
+
+      const bankDetails = {
+        "811371": { bankName: "FNB", accountHolder: "V8 POWERED AUTO", branchName: "LIFESTYLE CENTURION", accountNumber: "63149991431" },
+        "807411": { bankName: "FNB", accountHolder: "V8 POWERED AUTO", branchName: "LIFESTYLE CENTURION", accountNumber: "63149991431" },
+      };
+
+      const calculateTotals = () => {
+        const subtotal = invoiceData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+        const vat = subtotal * 0.15;
+        const total = subtotal + vat;
+        return { subtotal, vat, total };
+      };
+
+      const { subtotal, vat, total } = calculateTotals();
+      const currentBankDetails = bankDetails[invoiceData.merchantCode];
+
+      const updateField = (section, field, value) => {
+        setInvoiceData(prev => ({
+          ...prev,
+          [section]: typeof prev[section] === "object"
+            ? { ...prev[section], [field]: value }
+            : value,
+        }));
+      };
+
+      const updateItem = (index, field, value) => {
+        setInvoiceData(prev => ({
+          ...prev,
+          items: prev.items.map((item, i) =>
+            i === index
+              ? { ...item, [field]: field === "quantity" || field === "unitPrice" ? parseFloat(value) || 0 : value }
+              : item
+          ),
+        }));
+      };
+
+      const addItem = () => {
+        setInvoiceData(prev => ({
+          ...prev,
+          items: [...prev.items, { description: "", quantity: 1, unitPrice: 0 }],
+        }));
+      };
+
+      const removeItem = (index) => {
+        if (invoiceData.items.length > 1) {
+          setInvoiceData(prev => ({
+            ...prev,
+            items: prev.items.filter((_, i) => i !== index),
+          }));
+        }
+      };
+
+      const handlePrint = () => window.print();
+
+      const handleSave = async () => {
+        try {
+          const user = auth.currentUser;
+          if (!user) {
+            alert("Please log in to save invoices");
+            return;
+          }
+
+          await db.collection("users").doc(user.uid).collection("invoices").doc(invoiceData.number).set({
+            ...invoiceData,
+            subtotal,
+            vat,
+            total,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+
+          alert("Invoice saved successfully!");
+        } catch (error) {
+          console.error("Error saving:", error);
+          alert("Failed to save invoice: " + error.message);
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-100 flex">
+          {/* Sidebar */}
+          <div className={`fixed lg:static inset-y-0 left-0 w-64 bg-gray-900 text-white transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 transition-transform duration-300 z-50 print:hidden`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-8">
+                <div className="text-xl font-bold">V8 POWERED</div>
+                <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
+                  <XIcon />
+                </button>
+              </div>
+              <nav className="space-y-2">
+                <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700">
+                  <span>📄</span><span>Invoices</span>
+                </a>
+                <button onClick={handlePrint} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700">
+                  🖨️ Print / Save PDF
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          {/* Overlay */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden print:hidden" onClick={() => setSidebarOpen(false)} />
+          )}
+
+          {/* Main Content */}
+          <div className="flex-1 overflow-auto">
+            {/* Header Actions */}
+            <div className="bg-white border-b px-4 py-3 flex items-center justify-between print:hidden">
+              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-gray-100 rounded">
+                <MenuIcon />
+              </button>
+              <div className="flex gap-2 ml-auto">
+                <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                  <PrinterIcon /><span className="hidden sm:inline">Print</span>
+                </button>
+                <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900">
+                  <SaveIcon /><span className="hidden sm:inline">Save</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Invoice */}
+            <div className="max-w-5xl mx-auto bg-white shadow-lg my-8 p-8 print:shadow-none print:my-0">
+              {/* Header */}
+              <div className="border-b-4 border-gray-800 pb-6 mb-8">
+                <div className="flex flex-col md:flex-row justify-between gap-6">
+                  <div className="flex-1">
+                    <div className="text-3xl font-bold text-red-600 mb-4">V8 POWERED</div>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div className="font-semibold">HEAD OFFICE:</div>
+                      <div>8-10 CNR THIRD & ARKWRIGHT AVENUE</div>
+                      <div>WYNBERG SANDTON 2090</div>
+                      <div className="mt-2">W: v8poweredrc.co.za</div>
+                      <div>E: info@v8poweredrc.co.za</div>
+                      <div>T: 062 114 4500</div>
+                    </div>
+                  </div>
+
+                  <div className="md:w-80 space-y-2">
+                    <div className="text-4xl font-bold text-right mb-4">INVOICE</div>
+                    <div className="bg-gray-50 p-2 rounded flex justify-between">
+                      <span className="text-xs font-semibold text-gray-600">Invoice No.</span>
+                      <input type="text" value={invoiceData.number} onChange={(e) => updateField("number", null, e.target.value)} className="text-sm font-bold text-right bg-transparent w-32 print:border-0" />
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded flex justify-between">
+                      <span className="text-xs font-semibold text-gray-600">Date</span>
+                      <input type="date" value={invoiceData.date} onChange={(e) => updateField("date", null, e.target.value)} className="text-sm font-bold text-right bg-transparent w-32 print:border-0" />
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded flex justify-between">
+                      <span className="text-xs font-semibold text-gray-600">Merchant Code</span>
+                      <select value={invoiceData.merchantCode} onChange={(e) => updateField("merchantCode", null, e.target.value)} className="text-sm font-bold text-right bg-transparent w-32 print:border-0">
+                        <option value="811371">811371</option>
+                        <option value="807411">807411</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Client & Vehicle Info */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {/* Invoice To */}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="bg-gray-600 text-white px-3 py-2 font-bold text-sm">INVOICE TO</div>
+                  <div className="p-3 space-y-2 text-xs">
+                    {Object.entries(invoiceData.invoiceTo).map(([key, value]) => (
+                      <div key={key}>
+                        <label className="font-semibold text-gray-600 capitalize block mb-1">{key}:</label>
+                        <input type="text" value={value} onChange={(e) => updateField("invoiceTo", key, e.target.value)} className="w-full border-b px-1 py-1 print:border-0" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bill To */}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="bg-gray-600 text-white px-3 py-2 font-bold text-sm">BILL TO</div>
+                  <div className="p-3 space-y-2 text-xs">
+                    {Object.entries(invoiceData.billTo).map(([key, value]) => (
+                      <div key={key}>
+                        <label className="font-semibold text-gray-600 capitalize block mb-1">{key}:</label>
+                        <input type="text" value={value} onChange={(e) => updateField("billTo", key, e.target.value)} className="w-full border-b px-1 py-1 print:border-0" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Vehicle */}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="bg-gray-600 text-white px-3 py-2 font-bold text-sm">VEHICLE DETAILS</div>
+                  <div className="p-3 space-y-2 text-xs">
+                    {Object.entries(invoiceData.vehicle).map(([key, value]) => (
+                      <div key={key}>
+                        <label className="font-semibold text-gray-600 capitalize block mb-1">{key}:</label>
+                        <input type="text" value={value} onChange={(e) => updateField("vehicle", key, e.target.value)} className="w-full border-b px-1 py-1 print:border-0" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="mb-8 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-800 text-white">
+                      <th className="text-left py-3 px-3">DESCRIPTION</th>
+                      <th className="text-center py-3 px-3 w-24">QTY</th>
+                      <th className="text-right py-3 px-3 w-32">UNIT PRICE</th>
+                      <th className="text-right py-3 px-3 w-32">NET PRICE</th>
+                      <th className="w-20 print:hidden"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoiceData.items.map((item, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="py-2 px-3">
+                          <input type="text" value={item.description} onChange={(e) => updateItem(index, "description", e.target.value)} className="w-full border-b px-1 py-1 print:border-0" placeholder="Item description" />
+                        </td>
+                        <td className="text-center py-2 px-3">
+                          <input type="number" value={item.quantity} onChange={(e) => updateItem(index, "quantity", e.target.value)} className="w-20 text-center border-b px-1 py-1 print:border-0" min="0" />
+                        </td>
+                        <td className="text-right py-2 px-3">
+                          <input type="number" value={item.unitPrice} onChange={(e) => updateItem(index, "unitPrice", e.target.value)} className="w-28 text-right border-b px-1 py-1 print:border-0" min="0" step="0.01" />
+                        </td>
+                        <td className="text-right py-2 px-3 font-semibold">R {(item.quantity * item.unitPrice).toFixed(2)}</td>
+                        <td className="text-center py-2 px-3 print:hidden">
+                          <button onClick={() => removeItem(index)} className="text-red-600 hover:text-red-800 font-bold text-xl" disabled={invoiceData.items.length === 1}>×</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <button onClick={addItem} className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium print:hidden">+ Add Item</button>
+              </div>
+
+              {/* Totals */}
+              <div className="flex justify-end mb-8">
+                <div className="w-72 space-y-2">
+                  <div className="flex justify-between py-2 text-sm border-t">
+                    <span>Subtotal:</span>
+                    <span className="font-semibold">R {subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 text-sm">
+                    <span>VAT (15%):</span>
+                    <span className="font-semibold">R {vat.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between py-3 bg-gray-800 text-white px-4 rounded font-bold text-lg">
+                    <span>TOTAL:</span>
+                    <span>R {total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Signatures */}
+              <div className="hidden print:block text-xs mb-6 pt-6 border-t">
+                <div className="flex flex-wrap gap-4">
+                  <span>WORKSHOP SIGNATURE __________________</span>
+                  <span>CLIENT SIGNATURE __________________</span>
+                  <span>CONTACT NUMBER: _________________________</span>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t-2 pt-6">
+                <div className="bg-gray-50 p-4 rounded mb-4">
+                  <h3 className="font-bold text-sm mb-3">BANKING DETAILS</h3>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                    <div><span className="font-semibold">Bank Name:</span> {currentBankDetails.bankName}</div>
+                    <div><span className="font-semibold">Account Holder:</span> {currentBankDetails.accountHolder}</div>
+                    <div><span className="font-semibold">Branch Name:</span> {currentBankDetails.branchName}</div>
+                    <div><span className="font-semibold">Account Number:</span> {currentBankDetails.accountNumber}</div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-red-700 font-semibold">NB: All our parts and workmanship have 12 months or 15000KM Guarantee.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+       
+          </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<InvoiceApp />);
+  </script>
+</body>
+</html>

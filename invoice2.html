@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      @page { size: A4; margin: 15mm; }
+      body { margin: 0; padding: 0; }
+      .a4-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      .a4-page { box-shadow: none !important; padding: 0 !important; }
+      .no-print { display: none !important; }
+      .invoice-content { padding: 20px !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+    .a4-container { max-width: 210mm; margin: 0 auto; }
+    .a4-page { width: 210mm; min-height: 297mm; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+  
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+const firebaseConfig = {
+  apiKey: "AIzaSyD1Xzk2DL-kuxEMgbomupgAF0IQZWso8PQ",
+  authDomain: "solidflow-1f753.firebaseapp.com",
+  projectId: "solidflow-1f753",
+  storageBucket: "solidflow-1f753.firebasestorage.app",
+  messagingSenderId: "68885400864",
+  appId: "1:68885400864:web:7788e19a073d9a8e79db45",
+  measurementId: "G-RTL0CM1B44",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+    const FileText = ({ size = 24, className = "" }) => (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    );
+
+    const Plus = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    );
+
+    const ArrowRight = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    );
+
+    // Storage Service
+    const storage = {
+     /* =======================
+     TEMPLATES
+     ======================= */
+  async saveTemplate(userId, template) {
+    const ref = db
+      .collection("users")
+      .doc(userId)
+      .collection("invoiceTemplates");
+
+    if (template.id) {
+      await ref.doc(template.id).set(
+        {
+          ...template,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+      return template;
+    } else {
+      const docRef = await ref.add({
+        ...template,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      return { ...template, id: docRef.id };
+    }
+  },
+
+  async getTemplates(userId) {
+    const snapshot = await db
+      .collection("users")
+      .doc(userId)
+      .collection("invoiceTemplates")
+      .get();
+
+    return snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+    }));
+  },
+
+  async deleteTemplate(userId, templateId) {
+    await db
+      .collection("users")
+      .doc(userId)
+      .collection("invoiceTemplates")
+      .doc(templateId)
+      .delete();
+  },
+
+  /* =======================
+     INVOICES
+     ======================= */
+  async saveInvoice(userId, invoice) {
+    const ref = db
+      .collection("users")
+      .doc(userId)
+      .collection("invoices");
+
+    if (invoice.id) {
+      await ref.doc(invoice.id).set(
+        {
+          ...invoice,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+      return invoice;
+    } else {
+      const docRef = await ref.add({
+        ...invoice,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      return { ...invoice, id: docRef.id };
+    }
+  },
+
+  async getInvoices(userId) {
+    const snapshot = await db
+      .collection("users")
+      .doc(userId)
+      .collection("invoices")
+      .get();
+
+    return snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+    }));
+  },
+    };
+
+    // Helper function
+    function calculateInvoiceTotal(invoice) {
+      const subtotal = invoice.items.reduce((sum, item) => sum + parseFloat(item.total || 0), 0);
+      const vat = subtotal * (invoice.invoiceDetails.vatRate / 100);
+      return subtotal + vat;
+    }
+
+    // Invoice Editor Component
+    function InvoiceEditor({ invoice, setInvoice, onSave, onBack }) {
+      if (!invoice) return null;
+
+      const updateCompanyData = (field, value) => {
+        setInvoice(prev => ({
+          ...prev,
+          companyData: { ...prev.companyData, [field]: value }
+        }));
+      };
+
+      const updateInvoiceDetails = (field, value) => {
+        setInvoice(prev => ({
+          ...prev,
+          invoiceDetails: { ...prev.invoiceDetails, [field]: value }
+        }));
+      };
+
+      const updateItem = (index, field, value) => {
+        setInvoice(prev => ({
+          ...prev,
+          items: prev.items.map((item, i) => 
+            i === index ? { ...item, [field]: value } : item
+          )
+        }));
+      };
+
+      const addRow = () => {
+        setInvoice(prev => ({
+          ...prev,
+          items: [...prev.items, { quantity: 1, description: '', total: 0 }]
+        }));
+      };
+
+      const removeRow = (index) => {
+        setInvoice(prev => ({
+          ...prev,
+          items: prev.items.filter((_, i) => i !== index)
+        }));
+      };
+
+      const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setInvoice(prev => ({ ...prev, logo: e.target.result }));
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const lockCompanyInfo = () => {
+        setInvoice(prev => ({ ...prev, isLocked: true }));
+      };
+
+      const calculateSubtotal = () => {
+        return invoice.items.reduce((sum, item) => sum + parseFloat(item.total || 0), 0);
+      };
+
+      const calculateVAT = () => {
+        return calculateSubtotal() * (invoice.invoiceDetails.vatRate / 100);
+      };
+
+      const calculateTotal = () => {
+        return calculateSubtotal() + calculateVAT();
+      };
+
+      const calculateBalance = () => {
+        return calculateTotal() - parseFloat(invoice.invoiceDetails.paymentReceived || 0);
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-50 p-4">
+          <div className="a4-container">
+            <div className="a4-page bg-gray-50">
+              <div className="no-print mb-4 flex gap-2 justify-between flex-wrap">
+                <button onClick={onBack} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                  ← Back
+                </button>
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={addRow} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    + Add Line Item
+                  </button>
+                  <button onClick={onSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    💾 Save Invoice
+                  </button>
+                  <button onClick={() => window.print()} className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">
+                    🖨️ Print
+                  </button>
+                  {!invoice.isLocked && (
+                    <button onClick={lockCompanyInfo} className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                      🔒 Lock Company Info
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {invoice.isLocked && (
+                <div className="no-print mb-4 bg-green-600 text-white p-2 rounded text-center text-sm">
+                  ✓ Company information is locked
+                </div>
+              )}
+
+              <div className="invoice-content bg-white p-8">
+                <div className="flex justify-between items-start pb-4 mb-6 border-b-2 border-gray-800">
+                  <div className="flex-1">
+                    <div className="mb-3">
+                      {!invoice.isLocked && (
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="no-print text-xs mb-1"
+                        />
+                      )}
+                      {invoice.logo && <img src={invoice.logo} alt="Logo" className="h-14 object-contain" />}
+                    </div>
+                    <div className={`text-xs ${invoice.isLocked ? 'bg-gray-50 p-2 border-l-4 border-green-600' : ''}`}>
+                      <div className="flex gap-4">
+                        <div className="space-y-1">
+                          <div
+                            contentEditable={!invoice.isLocked}
+                            suppressContentEditableWarning
+                            onBlur={(e) => updateCompanyData('name', e.target.innerText)}
+                            className={`${!invoice.isLocked ? 'border border-gray-300 p-1' : ''}`}
+                          >
+                            {invoice.companyData.name}
+                          </div>
+                          <div
+                            contentEditable={!invoice.isLocked}
+                            suppressContentEditableWarning
+                            onBlur={(e) => updateCompanyData('address', e.target.innerText)}
+                            className={`${!invoice.isLocked ? 'border border-gray-300 p-1' : ''} whitespace-pre-line`}
+                          >
+                            {invoice.companyData.address}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div
+                            contentEditable={!invoice.isLocked}
+                            suppressContentEditableWarning
+                            onBlur={(e) => updateCompanyData('contact', e.target.innerText)}
+                            className={`${!invoice.isLocked ? 'border border-gray-300 p-1' : ''} whitespace-pre-line`}
+                          >
+                            {invoice.companyData.contact}
+                          </div>
+                          <div
+                            contentEditable={!invoice.isLocked}
+                            suppressContentEditableWarning
+                            onBlur={(e) => updateCompanyData('vat', e.target.innerText)}
+                            className={`${!invoice.isLocked ? 'border border-gray-300 p-1' : ''} whitespace-pre-line`}
+                          >
+                            {invoice.companyData.vat}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-800">INVOICE</div>
+                </div>
+
+                <div className="flex justify-between mb-6 flex-wrap gap-4">
+                  <div className="flex-1 min-w-[250px]">
+                    <h3 className="font-bold text-xs mb-1">INVOICE TO:</h3>
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateInvoiceDetails('clientName', e.target.innerText)}
+                      className="border border-gray-300 p-1 text-xs mb-1"
+                    >
+                      {invoice.invoiceDetails.clientName}
+                    </div>
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateInvoiceDetails('clientAddress', e.target.innerText)}
+                      className="border border-gray-300 p-1 text-xs whitespace-pre-line"
+                    >
+                      {invoice.invoiceDetails.clientAddress}
+                    </div>
+                  </div>
+                  <div>
+                    <table className="text-xs">
+                      <tbody>
+                        <tr>
+                          <td className="font-bold pr-2 py-1">Date:</td>
+                          <td>
+                            <input
+                              type="date"
+                              value={invoice.invoiceDetails.date}
+                              onChange={(e) => updateInvoiceDetails('date', e.target.value)}
+                              className="border border-gray-300 px-1 py-1 text-xs"
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="font-bold pr-2 py-1">Account No:</td>
+                          <td>
+                            <input
+                              type="text"
+                              value={invoice.invoiceDetails.accountNo}
+                              onChange={(e) => updateInvoiceDetails('accountNo', e.target.value)}
+                              className="border border-gray-300 px-1 py-1 text-xs w-full"
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="font-bold pr-2 py-1">Invoice Number:</td>
+                          <td>
+                            <input
+                              type="text"
+                              value={invoice.invoiceDetails.invoiceNumber}
+                              onChange={(e) => updateInvoiceDetails('invoiceNumber', e.target.value)}
+                              className="border border-gray-300 px-1 py-1 text-xs w-full"
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="font-bold pr-2 py-1">Purchase Order:</td>
+                          <td>
+                            <input
+                              type="text"
+                              value={invoice.invoiceDetails.poNumber}
+                              onChange={(e) => updateInvoiceDetails('poNumber', e.target.value)}
+                              className="border border-gray-300 px-1 py-1 text-xs w-full"
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full mb-6">
+                    <thead>
+                      <tr className="bg-gray-800 text-white">
+                        <th className="text-center p-2 text-xs">Quantity</th>
+                        <th className="text-left p-2 text-xs">Description</th>
+                        <th className="text-right p-2 text-xs">Total</th>
+                        <th className="w-10 no-print"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoice.items.map((item, index) => (
+                        <tr key={index} className="border-b border-gray-300">
+                          <td className="text-center p-1">
+                            <input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                              className="w-12 border border-gray-300 px-1 py-1 text-xs text-center"
+                            />
+                          </td>
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={item.description}
+                              onChange={(e) => updateItem(index, 'description', e.target.value)}
+                              className="w-full border border-gray-300 px-1 py-1 text-xs"
+                            />
+                          </td>
+                          <td className="text-right p-1">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.total}
+                              onChange={(e) => updateItem(index, 'total', e.target.value)}
+                              className="w-20 border border-gray-300 px-1 py-1 text-xs text-right"
+                            />
+                          </td>
+                          <td className="text-center p-1 no-print">
+                            <button
+                              onClick={() => removeRow(index)}
+                              className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                            >
+                              ×
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex justify-between items-start flex-wrap gap-4">
+                  <div className="flex-1 min-w-[200px] bg-blue-50 p-3 rounded text-xs">
+                    <strong className="text-blue-800">Payment Information</strong>
+                    <br />
+                    Amount debited: R{parseFloat(invoice.invoiceDetails.paymentReceived || 0).toFixed(2)}
+                  </div>
+                  <div className="w-64">
+                    <table className="w-full text-xs">
+                      <tbody>
+                        <tr>
+                          <td className="text-right font-bold py-1 pr-2">Subtotal:</td>
+                          <td className="text-right py-1">R{calculateSubtotal().toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td className="text-right font-bold py-1 pr-2">
+                            VAT (
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={invoice.invoiceDetails.vatRate}
+                              onChange={(e) => updateInvoiceDetails('vatRate', parseFloat(e.target.value) || 0)}
+                              className="w-10 border border-gray-300 px-1 text-center"
+                            />
+                            %):
+                          </td>
+                          <td className="text-right py-1">R{calculateVAT().toFixed(2)}</td>
+                        </tr>
+                        <tr className="bg-gray-800 text-white font-bold">
+                          <td className="text-right py-2 pr-2">Total:</td>
+                          <td className="text-right py-2">R{calculateTotal().toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td className="text-right font-bold py-1 pr-2">Payment Received:</td>
+                          <td className="text-right py-1">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={invoice.invoiceDetails.paymentReceived}
+                              onChange={(e) => updateInvoiceDetails('paymentReceived', parseFloat(e.target.value) || 0)}
+                              className="w-20 border border-gray-300 px-1 py-1 text-xs text-right"
+                            />
+                          </td>
+                        </tr>
+                        <tr className="bg-green-600 text-white font-bold">
+                          <td className="text-right py-2 pr-2">Balance Due:</td>
+                          <td className="text-right py-2">R{calculateBalance().toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className={`mt-6 p-3 ${invoice.isLocked ? 'bg-gray-50' : 'bg-gray-100'} border-l-4 border-gray-800`}>
+                  <strong className="text-xs">Bank Details</strong>
+                  <div
+                    contentEditable={!invoice.isLocked}
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateCompanyData('bankDetails', e.target.innerText)}
+                    className={`${!invoice.isLocked ? 'border border-gray-300 p-1 mt-1' : 'mt-1'} text-xs whitespace-pre-line`}
+                  >
+                    {invoice.companyData.bankDetails}
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-gray-300">
+                  <div
+                    contentEditable={!invoice.isLocked}
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateCompanyData('footerNotes', e.target.innerText)}
+                    className={`${!invoice.isLocked ? 'border border-gray-300 p-1' : ''} text-xs text-gray-600 whitespace-pre-line`}
+                  >
+                    {invoice.companyData.footerNotes}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Main App Component
+    function InvoiceSystem() {
+      const [userId] = useState('user123');
+      const [view, setView] = useState('templates');
+      const [templates, setTemplates] = useState([]);
+      const [invoices, setInvoices] = useState([]);
+      const [currentInvoice, setCurrentInvoice] = useState(null);
+
+     useEffect(() => {
+  loadData();
+}, []);
+
+     const loadData = async () => {
+  setTemplates(await storage.getTemplates(userId));
+  setInvoices(await storage.getInvoices(userId));
+};
+const INVOICE_DESIGNS = {
+  classic: {
+    id: "towing",
+    name: "Towing",
+  },
+  modern: {
+    id: "modern",
+    name: "Modern",
+  },
+  consulting: {
+    id: "consulting",
+    name: "Consulting",
+  },
+  retail: {
+    id: "retail",
+    name: "Retail",
+  },
+  corporate: {
+    id: "corporate",
+    name: "Corporate",
+  },
+   corporate: {
+    id: "freelancer",
+    name: "Freelancer",
+  },
+   corporate: {
+    id: "agency",
+    name: "Agency",
+  },
+   corporate: {
+    id: "construction",
+    name: "Construction",
+  },
+   corporate: {
+    id: "legal",
+    name: "Legal",
+  },
+   corporate: {
+    id: "security",
+    name: "Security",
+  },
+   corporate: {
+    id: "it-services",
+    name: "IT-Services",
+  },
+   corporate: {
+    id: "healthcare",
+    name: "Healthcare",
+  },
+};
+
+  const TEMPLATE_PRESETS = [
+ 
+  {
+    name: "Modern Services",
+    designId: "modern",
+    branding: { companyName: "SOLIDFLO", tagline: "Modern Solutions" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Consulting",
+    designId: "consulting",
+    branding: { companyName: "SOLIDFLO Consulting", tagline: "Expert Advice" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Retail",
+    designId: "retail",
+    branding: { companyName: "SOLIDFLO Retail", tagline: "Quality Products" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Freelancer",
+    designId: "freelancer",
+    branding: { companyName: "SOLIDFLO Freelance", tagline: "Independent Services" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Agency",
+    designId: "agency",
+    branding: { companyName: "SOLIDFLO Agency", tagline: "Creative Solutions" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Construction",
+    designId: "construction",
+    branding: { companyName: "SOLIDFLO Construction", tagline: "Building Trust" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "IT Services",
+    designId: "it-services",
+    branding: { companyName: "SOLIDFLO IT", tagline: "Tech Excellence" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Legal",
+    designId: "legal",
+    branding: { companyName: "SOLIDFLO Legal", tagline: "Professional Legal Services" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Healthcare",
+    designId: "health",
+    branding: { companyName: "SOLIDFLO Health", tagline: "Caring Solutions" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+   {
+    name: "Mechanics",
+    designId: "mechanic",
+    branding: { companyName: "SOLIDFLO Mechanics", tagline: "Caring Solutions" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Towing",
+    designId: "towing",
+    branding: { companyName: "SOLIDFLO Mechanics", tagline: "Caring Solutions" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+  {
+    name: "Security",
+    designId: "security",
+    branding: { companyName: "SOLIDFLO Mechanics", tagline: "Caring Solutions" },
+    taxRate: 0.15,
+    defaultData: { items: [] },
+  },
+];
+
+
+
+if (view === "presetTemplates") {
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Choose a Template</h1>
+          <button
+            onClick={() => setView("templates")}
+            className="bg-gray-600 text-white px-4 py-2 rounded"
+          >
+            ← Back
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {TEMPLATE_PRESETS.map((preset, index) => (
+            <div
+              key={index}
+              className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition"
+            >
+              <h3 className="font-bold text-lg mb-2">{preset.name}</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {preset.branding.tagline}
+              </p>
+
+              <button
+                onClick={async () => {
+                  await storage.saveTemplate(userId, preset);
+                  await loadData();
+                  setView("templates");
+                }}
+                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+              >
+                Use This Template
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+      const createInvoiceFromTemplate = (template) => {
+        const newInvoice = {
+          templateId: template.id,
+          templateName: template.name,
+          designId: template.designId,
+          companyData: {
+            name: template.branding.companyName || 'SOLIDFLO',
+            address: '8-10 CNR THIRD & ARKWRIGHT AVENUE\nWYNBERG SANDTON 2090',
+            contact: 'W: v8poweredrc.co.za\nE: info@v8poweredrc.co.za\nT: 062 114 4500',
+            vat: 'VAT No: ',
+            bankDetails: 'Bank: Standard Bank\nAccount Name: \nAccount No: \nBranch Code: ',
+            footerNotes: 'Thank you for your business!'
+          },
+          invoiceDetails: {
+            clientName: 'Client Name',
+            clientAddress: 'Client Address\nCity, Postal Code',
+            date: new Date().toISOString().split('T')[0],
+            accountNo: '',
+            invoiceNumber: 'INV-' + Date.now().toString().slice(-6),
+            poNumber: '',
+            vatRate: (template.taxRate || 0.15) * 100,
+            paymentReceived: 0
+          },
+          items: template.defaultData?.items || [
+            { quantity: 1, description: 'Service/Product', total: 0 }
+          ],
+          logo: null,
+          isLocked: false
+        };
+        
+        setCurrentInvoice(newInvoice);
+        setView('invoice');
+      };
+
+   const renderModernTemplate = () => {
+            const calculateSubtotal = () => {
+      return items.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+    };
+
+    const calculateVAT = () => {
+      return calculateSubtotal() * (invoiceDetails.vatRate / 100);
+    };
+
+    const calculateTotal = () => {
+      return calculateSubtotal() + calculateVAT();
+    };
+
+    const calculateBalance = () => {
+      return calculateTotal() - parseFloat(invoiceDetails.paymentReceived || 0);
+    };
+
+    const handleLogoUpload = (e) => {
+      if (isLocked) {
+        alert('Company information is locked!');
+        return;
+      }
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setLogo(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const lockCompanyInfo = () => {
+      if (isLocked) {
+        alert('Company information is already locked!');
+        return;
+      }
+      if (window.confirm('Are you sure? Once locked, company information cannot be edited unless you reload the page.')) {
+        setIsLocked(true);
+      }
+    };
+
+    const addRow = () => {
+      setItems([...items, { quantity: 1, description: '', total: 0 }]);
+    };
+
+    const removeRow = (index) => {
+      setItems(items.filter((_, i) => i !== index));
+    };
+
+    const updateItem = (index, field, value) => {
+      const newItems = [...items];
+      newItems[index][field] = field === 'total' ? parseFloat(value) || 0 : value;
+      setItems(newItems);
+    };
+
+    const updateCompanyData = (field, value) => {
+      if (!isLocked) {
+        setCompanyData({ ...companyData, [field]: value });
+      }
+    };
+
+    const updateInvoiceDetails = (field, value) => {
+      setInvoiceDetails({ ...invoiceDetails, [field]: value });
+    };
+return (
+      <div className="a4-container">
+        <div className="a4-page bg-stone-50">
+          {/* Controls */}
+          <div className="no-print mb-4 flex gap-2 justify-end">
+            <button onClick={addRow} className="btn-modern">Add Item</button>
+            <button onClick={() => window.print()} className="btn-modern">Print</button>
+            {!isLocked && <button onClick={lockCompanyInfo} className="btn-lock">Lock Info</button>}
+          </div>
+
+          {/* Invoice Content */}
+          <div className="invoice-content bg-white">
+            {/* Header */}
+            <div className="flex justify-between items-center pb-6 mb-6 border-b border-neutral-200">
+              <div>
+                {!isLocked && (
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} className="no-print text-xs mb-2" />
+                )}
+                {logo && <img src={logo} alt="Logo" className="h-12 mb-2" />}
+                <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('name', e.target.innerText)} className="text-base font-semibold">
+                  {companyData.name}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-light tracking-wide">Invoice</div>
+                <div className="text-xs text-neutral-500 mt-1">#{invoiceDetails.invoiceNumber}</div>
+              </div>
+            </div>
+
+            {/* Company + Meta */}
+            <div className="grid grid-cols-2 gap-8 mb-6">
+              <div className="text-xs text-neutral-700 space-y-1">
+                <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('address', e.target.innerText)} className="whitespace-pre-line">{companyData.address}</div>
+                <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('contact', e.target.innerText)} className="whitespace-pre-line">{companyData.contact}</div>
+                <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('vat', e.target.innerText)}>{companyData.vat}</div>
+              </div>
+
+              <div className="text-xs">
+                <div className="flex justify-between py-1 border-b"><span className="text-neutral-500">Date</span><input type="date" className="text-right border-none text-xs" value={invoiceDetails.date} onChange={(e) => updateInvoiceDetails('date', e.target.value)} /></div>
+                <div className="flex justify-between py-1 border-b"><span className="text-neutral-500">Account</span><input className="text-right border-none text-xs" value={invoiceDetails.accountNo} onChange={(e) => updateInvoiceDetails('accountNo', e.target.value)} /></div>
+                <div className="flex justify-between py-1"><span className="text-neutral-500">PO Number</span><input className="text-right border-none text-xs" value={invoiceDetails.poNumber} onChange={(e) => updateInvoiceDetails('poNumber', e.target.value)} /></div>
+              </div>
+            </div>
+
+            {/* Bill To */}
+            <div className="mb-6">
+              <div className="text-xs uppercase tracking-widest text-neutral-500 mb-1">Bill To</div>
+              <div contentEditable suppressContentEditableWarning onBlur={(e) => updateInvoiceDetails('clientName', e.target.innerText)} className="text-sm font-medium">{invoiceDetails.clientName}</div>
+              <div contentEditable suppressContentEditableWarning onBlur={(e) => updateInvoiceDetails('clientAddress', e.target.innerText)} className="text-xs text-neutral-700 whitespace-pre-line">{invoiceDetails.clientAddress}</div>
+            </div>
+
+            {/* Items */}
+            <table className="w-full mb-6 text-xs">
+              <thead>
+                <tr className="border-b"><th className="pb-2 text-left">Description</th><th className="pb-2 text-center w-16">Qty</th><th className="pb-2 text-right w-24">Amount</th><th className="no-print w-8"></th></tr>
+              </thead>
+              <tbody>
+                {items.map((item, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="py-2"><input className="w-full border-none text-xs" value={item.description} onChange={(e) => updateItem(index, 'description', e.target.value)} /></td>
+                    <td className="text-center"><input type="number" className="w-12 text-center border-none text-xs" value={item.quantity} onChange={(e) => updateItem(index, 'quantity', e.target.value)} /></td>
+                    <td className="text-right"><input type="number" step="0.01" className="w-20 text-right border-none text-xs" value={item.total} onChange={(e) => updateItem(index, 'total', e.target.value)} /></td>
+                    <td className="no-print"><button onClick={() => removeRow(index)} className="text-neutral-400">×</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Totals */}
+            <div className="flex justify-end mb-6">
+              <div className="w-64 text-xs">
+                <div className="flex justify-between py-1"><span>Subtotal</span><span>R{calculateSubtotal().toFixed(2)}</span></div>
+                <div className="flex justify-between py-1"><span>VAT ({invoiceDetails.vatRate}%)</span><span>R{calculateVAT().toFixed(2)}</span></div>
+                <div className="flex justify-between py-2 text-sm font-medium border-t"><span>Total</span><span>R{calculateTotal().toFixed(2)}</span></div>
+                <div className="flex justify-between py-1"><span>Paid</span><span>R{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}</span></div>
+                <div className="flex justify-between py-2 font-semibold"><span>Balance Due</span><span>R{calculateBalance().toFixed(2)}</span></div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-6 pt-4 border-t text-xs text-neutral-600">
+              <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('bankDetails', e.target.innerText)} className="whitespace-pre-line mb-2">{companyData.bankDetails}</div>
+              <div>{companyData.footerNotes}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+};
+          
+
+          const renderClassicTemplate = () => {
+    const calculateSubtotal = () => {
+      return items.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+    };
+
+    const calculateVAT = () => {
+      return calculateSubtotal() * (invoiceDetails.vatRate / 100);
+    };
+
+    const calculateTotal = () => {
+      return calculateSubtotal() + calculateVAT();
+    };
+
+    const calculateBalance = () => {
+      return calculateTotal() - parseFloat(invoiceDetails.paymentReceived || 0);
+    };
+
+    const handleLogoUpload = (e) => {
+      if (isLocked) {
+        alert('Company information is locked!');
+        return;
+      }
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setLogo(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const lockCompanyInfo = () => {
+      if (isLocked) {
+        alert('Company information is already locked!');
+        return;
+      }
+      if (window.confirm('Are you sure? Once locked, company information cannot be edited unless you reload the page.')) {
+        setIsLocked(true);
+      }
+    };
+
+    const addRow = () => {
+      setItems([...items, { quantity: 1, description: '', total: 0 }]);
+    };
+
+    const removeRow = (index) => {
+      setItems(items.filter((_, i) => i !== index));
+    };
+
+    const updateItem = (index, field, value) => {
+      const newItems = [...items];
+      newItems[index][field] = field === 'total' ? parseFloat(value) || 0 : value;
+      setItems(newItems);
+    };
+
+    const updateCompanyData = (field, value) => {
+      if (!isLocked) {
+        setCompanyData({ ...companyData, [field]: value });
+      }
+    };
+
+    const updateInvoiceDetails = (field, value) => {
+      setInvoiceDetails({ ...invoiceDetails, [field]: value });
+    };
+
+    return (
+      <div className="a4-container">
+        <div className="a4-page bg-gray-50">
+          <div className="no-print mb-4 flex gap-2 justify-end">
+            <button onClick={addRow} className="btn-classic">+ Add Line Item</button>
+            <button onClick={() => window.print()} className="btn-classic">Print Invoice</button>
+            {!isLocked && <button onClick={lockCompanyInfo} className="btn-lock">Lock Company Info</button>}
+          </div>
+
+          {isLocked && <div className="no-print mb-4 bg-green-600 text-white p-2 rounded text-center text-sm">✓ Company information is locked</div>}
+
+          <div className="invoice-content bg-white">
+            <div className="flex justify-between items-start pb-4 mb-6 border-b-2 border-gray-800">
+              <div className="flex-1">
+                <div className="mb-3">
+                  {!isLocked && <input type="file" accept="image/*" onChange={handleLogoUpload} className="no-print text-xs mb-1" />}
+                  {logo && <img src={logo} alt="Logo" className="h-14 object-contain" />}
+                </div>
+                <div className={`text-xs ${isLocked ? 'bg-gray-50 p-2 border-l-4 border-green-600' : ''}`}>
+                  <div className="flex gap-4">
+                    <div className="space-y-1">
+                      <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('name', e.target.innerText)} className={`${!isLocked ? 'border border-gray-300 p-1' : ''}`}>{companyData.name}</div>
+                      <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('address', e.target.innerText)} className={`${!isLocked ? 'border border-gray-300 p-1' : ''} whitespace-pre-line`}>{companyData.address}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('contact', e.target.innerText)} className={`${!isLocked ? 'border border-gray-300 p-1' : ''} whitespace-pre-line`}>{companyData.contact}</div>
+                      <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('vat', e.target.innerText)} className={`${!isLocked ? 'border border-gray-300 p-1' : ''} whitespace-pre-line`}>{companyData.vat}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-gray-800">INVOICE</div>
+            </div>
+
+            <div className="flex justify-between mb-6">
+              <div className="flex-1">
+                <h3 className="font-bold text-xs mb-1">INVOICE TO:</h3>
+                <div contentEditable suppressContentEditableWarning onBlur={(e) => updateInvoiceDetails('clientName', e.target.innerText)} className="border border-gray-300 p-1 text-xs mb-1">{invoiceDetails.clientName}</div>
+                <div contentEditable suppressContentEditableWarning onBlur={(e) => updateInvoiceDetails('clientAddress', e.target.innerText)} className="border border-gray-300 p-1 text-xs whitespace-pre-line">{invoiceDetails.clientAddress}</div>
+              </div>
+              <div className="ml-6">
+                <table className="text-xs">
+                  <tbody>
+                    <tr><td className="font-bold pr-2 py-1">Date:</td><td><input type="date" value={invoiceDetails.date} onChange={(e) => updateInvoiceDetails('date', e.target.value)} className="border border-gray-300 px-1 py-1 text-xs" /></td></tr>
+                    <tr><td className="font-bold pr-2 py-1">Account No:</td><td><input type="text" value={invoiceDetails.accountNo} onChange={(e) => updateInvoiceDetails('accountNo', e.target.value)} className="border border-gray-300 px-1 py-1 text-xs w-full" /></td></tr>
+                    <tr><td className="font-bold pr-2 py-1">Invoice Number:</td><td><input type="text" value={invoiceDetails.invoiceNumber} onChange={(e) => updateInvoiceDetails('invoiceNumber', e.target.value)} className="border border-gray-300 px-1 py-1 text-xs w-full" /></td></tr>
+                    <tr><td className="font-bold pr-2 py-1">Purchase Order:</td><td><input type="text" value={invoiceDetails.poNumber} onChange={(e) => updateInvoiceDetails('poNumber', e.target.value)} className="border border-gray-300 px-1 py-1 text-xs w-full" /></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <table className="w-full mb-6">
+              <thead>
+                <tr className="bg-gray-800 text-white">
+                  <th className="text-center p-2 text-xs">Quantity</th>
+                  <th className="text-left p-2 text-xs">Description</th>
+                  <th className="text-right p-2 text-xs">Total</th>
+                  <th className="w-10 no-print"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, index) => (
+                  <tr key={index} className="border-b border-gray-300">
+                    <td className="text-center p-1"><input type="number" value={item.quantity} onChange={(e) => updateItem(index, 'quantity', e.target.value)} className="w-12 border border-gray-300 px-1 py-1 text-xs text-center" /></td>
+                    <td className="p-1"><input type="text" value={item.description} onChange={(e) => updateItem(index, 'description', e.target.value)} className="w-full border border-gray-300 px-1 py-1 text-xs" /></td>
+                    <td className="text-right p-1"><input type="number" step="0.01" value={item.total} onChange={(e) => updateItem(index, 'total', e.target.value)} className="w-20 border border-gray-300 px-1 py-1 text-xs text-right" /></td>
+                    <td className="text-center p-1 no-print"><button onClick={() => removeRow(index)} className="bg-red-600 text-white px-1 py-0 rounded text-xs">×</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="flex justify-between items-start">
+              <div className="flex-1 bg-blue-50 p-3 rounded text-xs mr-3">
+                <strong className="text-blue-800">Payment Information</strong><br />
+                Amount debited: R{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}
+              </div>
+              <div className="w-64">
+                <table className="w-full text-xs">
+                  <tbody>
+                    <tr><td className="text-right font-bold py-1 pr-2">Subtotal:</td><td className="text-right py-1">R{calculateSubtotal().toFixed(2)}</td></tr>
+                    <tr><td className="text-right font-bold py-1 pr-2">VAT (<input type="number" step="0.1" value={invoiceDetails.vatRate} onChange={(e) => updateInvoiceDetails('vatRate', parseFloat(e.target.value) || 0)} className="w-10 border border-gray-300 px-1 text-center" />%):</td><td className="text-right py-1">R{calculateVAT().toFixed(2)}</td></tr>
+                    <tr className="bg-gray-800 text-white font-bold"><td className="text-right py-2 pr-2">Total:</td><td className="text-right py-2">R{calculateTotal().toFixed(2)}</td></tr>
+                    <tr><td className="text-right font-bold py-1 pr-2">Payment Received:</td><td className="text-right py-1"><input type="number" step="0.01" value={invoiceDetails.paymentReceived} onChange={(e) => updateInvoiceDetails('paymentReceived', parseFloat(e.target.value) || 0)} className="w-20 border border-gray-300 px-1 py-1 text-xs text-right" /></td></tr>
+                    <tr className="bg-green-600 text-white font-bold"><td className="text-right py-2 pr-2">Balance Due:</td><td className="text-right py-2">R{calculateBalance().toFixed(2)}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className={`mt-6 p-3 ${isLocked ? 'bg-gray-50' : 'bg-gray-100'} border-l-4 border-gray-800`}>
+              <strong className="text-xs">Bank Details</strong>
+              <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('bankDetails', e.target.innerText)} className={`${!isLocked ? 'border border-gray-300 p-1 mt-1' : 'mt-1'} text-xs whitespace-pre-line`}>{companyData.bankDetails}</div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-300">
+              <div contentEditable={!isLocked} suppressContentEditableWarning onBlur={(e) => updateCompanyData('footerNotes', e.target.innerText)} className={`${!isLocked ? 'border border-gray-300 p-1' : ''} text-xs text-gray-600 whitespace-pre-line`}>{companyData.footerNotes}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
+          const renderCreativeTemplate = () => {
+            const calculateSubtotal = () => {
+      return items.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+    };
+
+    const calculateVAT = () => {
+      return calculateSubtotal() * (invoiceDetails.vatRate / 100);
+    };
+
+    const calculateTotal = () => {
+      return calculateSubtotal() + calculateVAT();
+    };
+
+    const calculateBalance = () => {
+      return calculateTotal() - parseFloat(invoiceDetails.paymentReceived || 0);
+    };
+
+    const handleLogoUpload = (e) => {
+      if (isLocked) {
+        alert('Company information is locked!');
+        return;
+      }
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setLogo(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const lockCompanyInfo = () => {
+      if (isLocked) {
+        alert('Company information is already locked!');
+        return;
+      }
+      if (window.confirm('Are you sure? Once locked, company information cannot be edited unless you reload the page.')) {
+        setIsLocked(true);
+      }
+    };
+
+    const addRow = () => {
+      setItems([...items, { quantity: 1, description: '', total: 0 }]);
+    };
+
+    const removeRow = (index) => {
+      setItems(items.filter((_, i) => i !== index));
+    };
+
+    const updateItem = (index, field, value) => {
+      const newItems = [...items];
+      newItems[index][field] = field === 'total' ? parseFloat(value) || 0 : value;
+      setItems(newItems);
+    };
+
+    const updateCompanyData = (field, value) => {
+      if (!isLocked) {
+        setCompanyData({ ...companyData, [field]: value });
+      }
+    };
+
+    const updateInvoiceDetails = (field, value) => {
+      setInvoiceDetails({ ...invoiceDetails, [field]: value });
+    };
+
+   return (
+  <div className="bg-neutral-100 print:bg-white flex justify-center py-6 print:py-0">
+
+    {/* ACTION BUTTONS (SCREEN ONLY) */}
+    <div className="fixed top-4 right-4 flex gap-2 print:hidden z-50">
+      <button onClick={addRow} className="px-4 py-2 bg-neutral-900 text-white text-sm rounded">
+        Add Item
+      </button>
+      <button onClick={() => window.print()} className="px-4 py-2 bg-neutral-700 text-white text-sm rounded">
+        Print
+      </button>
+    </div>
+
+    {/* A4 PAGE */}
+    <div
+      className="
+        w-[210mm] min-h-[297mm]
+        bg-white text-neutral-900
+        px-[15mm] py-[15mm]
+        shadow-lg print:shadow-none
+      "
+    >
+
+      {/* HEADER */}
+      <div className="flex justify-between items-start mb-[10mm]">
+        <div>
+          {logo && (
+            <img src={logo} alt="Logo" className="h-[22mm] mb-2 object-contain" />
+          )}
+
+          <div
+            contentEditable={!isLocked}
+            suppressContentEditableWarning
+            onBlur={(e) => updateCompanyData('name', e.target.innerText)}
+            className="text-lg font-semibold"
+          >
+            {companyData.name}
+          </div>
+
+          <div
+            contentEditable={!isLocked}
+            suppressContentEditableWarning
+            onBlur={(e) => updateCompanyData('address', e.target.innerText)}
+            className="text-xs whitespace-pre-line mt-1"
+          >
+            {companyData.address}
+          </div>
+
+          <div
+            contentEditable={!isLocked}
+            suppressContentEditableWarning
+            onBlur={(e) => updateCompanyData('contact', e.target.innerText)}
+            className="text-xs whitespace-pre-line mt-1"
+          >
+            {companyData.contact}
+          </div>
+        </div>
+
+        <div className="text-right">
+          <div className="text-3xl font-light tracking-wide">INVOICE</div>
+          <div className="text-xs mt-2">
+            <div>Date: {invoiceDetails.date}</div>
+            <div>Invoice #: {invoiceDetails.invoiceNumber}</div>
+            <div>PO #: {invoiceDetails.poNumber}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* BILL TO */}
+      <div className="mb-[8mm]">
+        <div className="text-xs uppercase tracking-widest text-neutral-500 mb-2">
+          Invoice To
+        </div>
+
+        <div
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={(e) => updateInvoiceDetails('clientName', e.target.innerText)}
+          className="text-sm font-medium"
+        >
+          {invoiceDetails.clientName}
+        </div>
+
+        <div
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={(e) => updateInvoiceDetails('clientAddress', e.target.innerText)}
+          className="text-xs whitespace-pre-line mt-1"
+        >
+          {invoiceDetails.clientAddress}
+        </div>
+      </div>
+
+      {/* ITEMS TABLE */}
+      <table className="w-full text-xs border-collapse mb-[10mm]">
+        <thead>
+          <tr className="border-b border-neutral-400">
+            <th className="py-2 text-left w-[15mm]">Qty</th>
+            <th className="py-2 text-left">Description</th>
+            <th className="py-2 text-right w-[30mm]">Amount</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {items.map((item, index) => (
+            <tr
+              key={index}
+              className="border-b border-neutral-200 break-inside-avoid"
+            >
+              <td className="py-2">
+                <input
+                  type="number"
+                  value={item.quantity}
+                  onChange={(e) =>
+                    updateItem(index, 'quantity', e.target.value)
+                  }
+                  className="w-full text-xs"
+                />
+              </td>
+
+              <td className="py-2">
+                <input
+                  type="text"
+                  value={item.description}
+                  onChange={(e) =>
+                    updateItem(index, 'description', e.target.value)
+                  }
+                  className="w-full text-xs"
+                />
+              </td>
+
+              <td className="py-2 text-right">
+                <input
+                  type="number"
+                  value={item.total}
+                  onChange={(e) =>
+                    updateItem(index, 'total', e.target.value)
+                  }
+                  className="w-full text-xs text-right"
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* TOTALS */}
+      <div className="flex justify-end mb-[10mm]">
+        <div className="w-[70mm] text-xs space-y-2">
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>R{calculateSubtotal().toFixed(2)}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>VAT ({invoiceDetails.vatRate}%)</span>
+            <span>R{calculateVAT().toFixed(2)}</span>
+          </div>
+
+          <div className="flex justify-between font-semibold border-t pt-2">
+            <span>Total</span>
+            <span>R{calculateTotal().toFixed(2)}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Paid</span>
+            <span>R{invoiceDetails.paymentReceived.toFixed(2)}</span>
+          </div>
+
+          <div className="flex justify-between font-semibold">
+            <span>Balance Due</span>
+            <span>R{calculateBalance().toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* BANK */}
+      <div className="mb-[8mm] text-xs">
+        <div className="uppercase tracking-widest text-neutral-500 mb-2">
+          Bank Details
+        </div>
+        <div
+          contentEditable={!isLocked}
+          suppressContentEditableWarning
+          onBlur={(e) =>
+            updateCompanyData('bankDetails', e.target.innerText)
+          }
+          className="whitespace-pre-line"
+        >
+          {companyData.bankDetails}
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <div className="border-t pt-3 text-[10px] text-neutral-600">
+        <div
+          contentEditable={!isLocked}
+          suppressContentEditableWarning
+          onBlur={(e) =>
+            updateCompanyData('footerNotes', e.target.innerText)
+          }
+          className="whitespace-pre-line"
+        >
+          {companyData.footerNotes}
+        </div>
+      </div>
+    </div>
+
+    {/* PRINT RULES */}
+    <style>{`
+      @media print {
+        body {
+          margin: 0;
+          background: white;
+        }
+
+        input {
+          border: none !important;
+          padding: 0 !important;
+        }
+
+        table {
+          page-break-inside: auto;
+        }
+
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+      }
+    `}</style>
+  </div>
+);
+
+  };
+
+          const renderCorporateTemplate = () => {
+
+              const calculateSubtotal = () => {
+      return items.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+    };
+
+    const calculateVAT = () => {
+      return calculateSubtotal() * (invoiceDetails.vatRate / 100);
+    };
+
+    const calculateTotal = () => {
+      return calculateSubtotal() + calculateVAT();
+    };
+
+    const calculateBalance = () => {
+      return calculateTotal() - parseFloat(invoiceDetails.paymentReceived || 0);
+    };
+
+    const handleLogoUpload = (e) => {
+      if (isLocked) {
+        alert('Company information is locked!');
+        return;
+      }
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setLogo(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const lockCompanyInfo = () => {
+      if (isLocked) {
+        alert('Company information is already locked!');
+        return;
+      }
+      if (window.confirm('Are you sure? Once locked, company information cannot be edited unless you reload the page.')) {
+        setIsLocked(true);
+      }
+    };
+
+    const addRow = () => {
+      setItems([...items, { quantity: 1, description: '', total: 0 }]);
+    };
+
+    const removeRow = (index) => {
+      setItems(items.filter((_, i) => i !== index));
+    };
+
+    const updateItem = (index, field, value) => {
+      const newItems = [...items];
+      newItems[index][field] = field === 'total' ? parseFloat(value) || 0 : value;
+      setItems(newItems);
+    };
+
+    const updateCompanyData = (field, value) => {
+      if (!isLocked) {
+        setCompanyData({ ...companyData, [field]: value });
+      }
+    };
+
+    const updateInvoiceDetails = (field, value) => {
+      setInvoiceDetails({ ...invoiceDetails, [field]: value });
+    };
+
+           return (
+  <div className="min-h-screen bg-slate-100 p-6 print:p-0">
+    {/* Controls */}
+    <div className="max-w-5xl mx-auto mb-6 flex flex-wrap gap-3 justify-end print:hidden">
+      <button
+        onClick={addRow}
+        className="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 text-sm rounded"
+      >
+        Add Line Item
+      </button>
+      <button
+        onClick={() => window.print()}
+        className="bg-slate-600 hover:bg-slate-700 text-white px-5 py-2 text-sm rounded"
+      >
+        Print
+      </button>
+      {!isLocked && (
+        <button
+          onClick={lockCompanyInfo}
+          className="bg-red-700 hover:bg-red-800 text-white px-5 py-2 text-sm rounded"
+        >
+          Lock Company Info
+        </button>
+      )}
+    </div>
+
+    {/* Invoice */}
+    <div className="max-w-5xl mx-auto bg-white shadow-md border border-slate-200 p-10">
+      {/* Header */}
+      <div className="flex justify-between items-start border-b border-slate-300 pb-6 mb-8">
+        <div>
+          {!isLocked && (
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              className="text-xs mb-3 print:hidden"
+            />
+          )}
+          {logo && <img src={logo} alt="Logo" className="h-16 mb-3" />}
+
+          <div className="text-xs text-slate-700 space-y-1">
+            <div
+              contentEditable={!isLocked}
+              onBlur={(e) => updateCompanyData('name', e.target.innerText)}
+              className="font-semibold text-sm"
+            >
+              {companyData.name}
+            </div>
+            <div
+              contentEditable={!isLocked}
+              onBlur={(e) => updateCompanyData('address', e.target.innerText)}
+              className="whitespace-pre-line"
+            >
+              {companyData.address}
+            </div>
+            <div
+              contentEditable={!isLocked}
+              onBlur={(e) => updateCompanyData('contact', e.target.innerText)}
+              className="whitespace-pre-line"
+            >
+              {companyData.contact}
+            </div>
+            <div
+              contentEditable={!isLocked}
+              onBlur={(e) => updateCompanyData('vat', e.target.innerText)}
+            >
+              {companyData.vat}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-right">
+          <h1 className="text-3xl font-semibold tracking-wide text-slate-800">
+            INVOICE
+          </h1>
+        </div>
+      </div>
+
+      {/* Client + Meta */}
+      <div className="grid grid-cols-2 gap-10 mb-10">
+        <div>
+          <h3 className="text-xs font-semibold text-slate-600 mb-2">
+            BILL TO
+          </h3>
+          <div
+            contentEditable
+            onBlur={(e) => updateInvoiceDetails('clientName', e.target.innerText)}
+            className="border border-slate-300 p-2 text-sm mb-2"
+          >
+            {invoiceDetails.clientName}
+          </div>
+          <div
+            contentEditable
+            onBlur={(e) => updateInvoiceDetails('clientAddress', e.target.innerText)}
+            className="border border-slate-300 p-2 text-sm whitespace-pre-line"
+          >
+            {invoiceDetails.clientAddress}
+          </div>
+        </div>
+
+        <table className="text-sm w-full">
+          <tbody className="divide-y divide-slate-200">
+            <tr>
+              <td className="py-2 font-medium">Invoice No</td>
+              <td className="py-2 text-right">
+                <input
+                  className="border border-slate-300 px-2 py-1 w-full text-right"
+                  value={invoiceDetails.invoiceNumber}
+                  onChange={(e) =>
+                    updateInvoiceDetails('invoiceNumber', e.target.value)
+                  }
+                />
+              </td>
+            </tr>
+            <tr>
+              <td className="py-2 font-medium">Date</td>
+              <td className="py-2 text-right">
+                <input
+                  type="date"
+                  className="border border-slate-300 px-2 py-1 w-full text-right"
+                  value={invoiceDetails.date}
+                  onChange={(e) =>
+                    updateInvoiceDetails('date', e.target.value)
+                  }
+                />
+              </td>
+            </tr>
+            <tr>
+              <td className="py-2 font-medium">Account No</td>
+              <td className="py-2 text-right">
+                <input
+                  className="border border-slate-300 px-2 py-1 w-full text-right"
+                  value={invoiceDetails.accountNo}
+                  onChange={(e) =>
+                    updateInvoiceDetails('accountNo', e.target.value)
+                  }
+                />
+              </td>
+            </tr>
+            <tr>
+              <td className="py-2 font-medium">PO Number</td>
+              <td className="py-2 text-right">
+                <input
+                  className="border border-slate-300 px-2 py-1 w-full text-right"
+                  value={invoiceDetails.poNumber}
+                  onChange={(e) =>
+                    updateInvoiceDetails('poNumber', e.target.value)
+                  }
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Items */}
+      <table className="w-full mb-10 border border-slate-300">
+        <thead className="bg-slate-800 text-white text-xs">
+          <tr>
+            <th className="p-3 text-center w-20">Qty</th>
+            <th className="p-3 text-left">Description</th>
+            <th className="p-3 text-right w-32">Amount</th>
+            <th className="print:hidden w-10"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, index) => (
+            <tr key={index} className="border-t border-slate-200 text-sm">
+              <td className="p-2 text-center">
+                <input
+                  type="number"
+                  className="border border-slate-300 w-16 text-center"
+                  value={item.quantity}
+                  onChange={(e) =>
+                    updateItem(index, 'quantity', e.target.value)
+                  }
+                />
+              </td>
+              <td className="p-2">
+                <input
+                  className="border border-slate-300 w-full"
+                  value={item.description}
+                  onChange={(e) =>
+                    updateItem(index, 'description', e.target.value)
+                  }
+                />
+              </td>
+              <td className="p-2 text-right">
+                <input
+                  type="number"
+                  step="0.01"
+                  className="border border-slate-300 w-24 text-right"
+                  value={item.total}
+                  onChange={(e) =>
+                    updateItem(index, 'total', e.target.value)
+                  }
+                />
+              </td>
+              <td className="print:hidden text-center">
+                <button
+                  onClick={() => removeRow(index)}
+                  className="text-red-700 font-bold"
+                >
+                  ×
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Totals */}
+      <div className="flex justify-end">
+        <table className="text-sm w-96 border border-slate-300">
+          <tbody>
+            <tr>
+              <td className="p-3 font-medium text-right">Subtotal</td>
+              <td className="p-3 text-right">
+                R{calculateSubtotal().toFixed(2)}
+              </td>
+            </tr>
+            <tr>
+              <td className="p-3 font-medium text-right">
+                VAT ({invoiceDetails.vatRate}%)
+              </td>
+              <td className="p-3 text-right">
+                R{calculateVAT().toFixed(2)}
+              </td>
+            </tr>
+            <tr className="bg-slate-800 text-white font-semibold">
+              <td className="p-3 text-right">Total</td>
+              <td className="p-3 text-right">
+                R{calculateTotal().toFixed(2)}
+              </td>
+            </tr>
+            <tr>
+              <td className="p-3 font-medium text-right">Paid</td>
+              <td className="p-3 text-right">
+                R{parseFloat(invoiceDetails.paymentReceived || 0).toFixed(2)}
+              </td>
+            </tr>
+            <tr className="bg-slate-100 font-semibold">
+              <td className="p-3 text-right">Balance Due</td>
+              <td className="p-3 text-right">
+                R{calculateBalance().toFixed(2)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Bank + Footer */}
+      <div className="mt-10 text-xs text-slate-600 border-t pt-4">
+        <div
+          contentEditable={!isLocked}
+          onBlur={(e) =>
+            updateCompanyData('bankDetails', e.target.innerText)
+          }
+          className="whitespace-pre-line"
+        >
+          {companyData.bankDetails}
+        </div>
+        <div className="mt-4">
+          {companyData.footerNotes}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+ 
+     };
+          const renderTemplate = () => {
+            switch (selectedTemplate) {
+              case "classic":
+                return renderClassicTemplate();
+              case "creative":
+                return renderCreativeTemplate();
+              case "consulting":
+                return renderCorporateTemplate();
+              case "freelancer":
+                return renderInvoicePreview()
+              case "modern":
+              default:
+                return renderModernTemplate();
+            }
+          };
+      const saveCurrentInvoice = async () => {
+  if (!currentInvoice) return;
+  const saved = await storage.saveInvoice(userId, currentInvoice);
+  setCurrentInvoice(saved);
+  await loadData();
+  alert("Invoice saved successfully!");
+};
+
+      const loadInvoice = (invoice) => {
+        setCurrentInvoice(invoice);
+        setView('invoice');
+      };
+
+  
+      if (view === 'templates') {
+        return (
+          <div className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+                <h1 className="text-3xl font-bold text-gray-800">Invoice Templates</h1>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+  onClick={() => setView("presetTemplates")}
+  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+>
+  <Plus size={20} />
+  Choose Template
+</button>
+                  <button
+                    onClick={() => setView('invoiceList')}
+                    className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 flex items-center gap-2"
+                  >
+                    <FileText size={20} />
+                    View Invoices ({invoices.length})
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {templates.map(template => (
+                  <div key={template.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                    <div className="flex items-center gap-3 mb-4">
+                      <FileText className="text-blue-600" size={24} />
+                     <div>
+                        <h3 className="font-bold text-lg">{template.name}</h3>
+                        <span className="text-xs bg-gray-200 px-2 py-1 rounded">
+                        {INVOICE_DESIGNS[template.designId]?.name}
+                        </span>
+                    </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 mb-4">
+                      Company: {template.branding.companyName}
+                    </p>
+                    
+                    <div className="text-xs text-gray-500 mb-4">
+                      Updated: {new Date(template.updatedAt).toLocaleDateString()}
+                    </div>
+
+                    <button
+                      onClick={() => createInvoiceFromTemplate(template)}
+                      className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center justify-center gap-2"
+                    >
+                      Create Invoice
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                  
+                ))}
+
+                {templates.length === 0 && (
+                  <div className="col-span-full text-center py-12 text-gray-500">
+                    <FileText size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>No templates yet. Create your first template!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (view === 'invoiceList') {
+        return (
+          <div className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+                <h1 className="text-3xl font-bold text-gray-800">My Invoices</h1>
+                <button
+                  onClick={() => setView('templates')}
+                  className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700"
+                >
+                  ← Back to Templates
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {invoices.map(invoice => (
+                  <div key={invoice.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                    <div className="flex justify-between items-start flex-wrap gap-4">
+                      <div>
+                        <h3 className="font-bold text-lg mb-2">
+                          Invoice #{invoice.invoiceDetails.invoiceNumber}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Client: {invoice.invoiceDetails.clientName}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Date: {invoice.invoiceDetails.date}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Template: {invoice.templateName}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-green-600">
+                          R {calculateInvoiceTotal(invoice).toFixed(2)}
+                        </div>
+                        <button
+                          onClick={() => loadInvoice(invoice)}
+                          className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                        >
+                          Open
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {invoices.length === 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    <FileText size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>No invoices yet. Create one from a template!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return <InvoiceEditor invoice={currentInvoice} setInvoice={setCurrentInvoice} onSave={saveCurrentInvoice} onBack={() => setView('templates')} />;
+    }
+
+    // Render the app
+    ReactDOM.render(<InvoiceSystem />, document.getElementById('root'));
+  </script>
+</body>
+</html>
